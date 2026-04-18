@@ -48,3 +48,6 @@ data/
 *.vrp
 benchmark_outputs/
 *.log
+
+# Ignore FILO2 specific massive result logs
+baselines/filo2/results/
