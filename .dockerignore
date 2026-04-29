@@ -1,0 +1,8 @@
+.git
+.github
+__pycache__
+*.pyc
+.gemini
+results/benchmark_outputs*
+results/*.csv
+baselines/*/build
