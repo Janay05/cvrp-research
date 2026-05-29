@@ -42,6 +42,7 @@ cmake-build-release/
 venv/
 __pycache__/
 .cache/
+cvrp_env/
 
 # Datasets and Benchmark Outputs
 data/

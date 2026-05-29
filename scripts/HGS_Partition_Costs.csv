@@ -1,0 +1,2379 @@
+Original Instance,Chunk File,Cost,Exec Time (s),Status/Notes
+Emilia-Romagna,Emilia-Romagna_chunk_0.vrp,3245960.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_102.vrp,3753360.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_100.vrp,1674960.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_10.vrp,8849480.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_101.vrp,3478210.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_1.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_104.vrp,3410130.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_107.vrp,4010300.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_106.vrp,3265020.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_103.vrp,25612600.0,132.27,OK
+Emilia-Romagna,Emilia-Romagna_chunk_108.vrp,2617730.0,132.05,OK
+Emilia-Romagna,Emilia-Romagna_chunk_105.vrp,28484000.0,132.34,OK
+Emilia-Romagna,Emilia-Romagna_chunk_11.vrp,7990490.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_110.vrp,9899350.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_112.vrp,1535660.0,132.05,OK
+Emilia-Romagna,Emilia-Romagna_chunk_113.vrp,8809750.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_109.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_111.vrp,2109590.0,133.07,OK
+Emilia-Romagna,Emilia-Romagna_chunk_114.vrp,5737670.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_115.vrp,12281100.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_117.vrp,6119760.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_118.vrp,20087700.0,132.32,OK
+Emilia-Romagna,Emilia-Romagna_chunk_119.vrp,6157520.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_116.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_120.vrp,5667520.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_121.vrp,1890210.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_12.vrp,9508500.0,132.35,OK
+Emilia-Romagna,Emilia-Romagna_chunk_122.vrp,7060050.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_123.vrp,3246500.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_124.vrp,4671710.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_126.vrp,4108740.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_127.vrp,2793600.0,132.37,OK
+Emilia-Romagna,Emilia-Romagna_chunk_125.vrp,5897280.0,132.74,OK
+Emilia-Romagna,Emilia-Romagna_chunk_128.vrp,5871030.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_129.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_13.vrp,6377320.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_133.vrp,9954530.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_131.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_132.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_134.vrp,3638350.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_135.vrp,5010540.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_130.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_136.vrp,8492560.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_137.vrp,6615340.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_138.vrp,5564320.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_14.vrp,5598970.0,133.58,OK
+Emilia-Romagna,Emilia-Romagna_chunk_140.vrp,2475860.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_139.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_141.vrp,4570940.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_142.vrp,2542080.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_143.vrp,7705920.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_144.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_145.vrp,11745600.0,133.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_146.vrp,3955100.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_147.vrp,2578500.0,132.28,OK
+Emilia-Romagna,Emilia-Romagna_chunk_148.vrp,5893350.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_149.vrp,9295380.0,132.36,OK
+Emilia-Romagna,Emilia-Romagna_chunk_15.vrp,5075380.0,133.54,OK
+Emilia-Romagna,Emilia-Romagna_chunk_150.vrp,2359740.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_151.vrp,3407030.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_152.vrp,3643440.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_153.vrp,27720700.0,132.61,OK
+Emilia-Romagna,Emilia-Romagna_chunk_154.vrp,16809400.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_155.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_156.vrp,14525700.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_157.vrp,2398510.0,132.36,OK
+Emilia-Romagna,Emilia-Romagna_chunk_158.vrp,6137920.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_16.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_159.vrp,18313700.0,139.99,OK
+Emilia-Romagna,Emilia-Romagna_chunk_161.vrp,6357350.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_160.vrp,12472000.0,132.79,OK
+Emilia-Romagna,Emilia-Romagna_chunk_162.vrp,5649020.0,133.45,OK
+Emilia-Romagna,Emilia-Romagna_chunk_163.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_164.vrp,7423280.0,131.42,OK
+Emilia-Romagna,Emilia-Romagna_chunk_165.vrp,7537140.0,131.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_166.vrp,15908300.0,131.26,OK
+Emilia-Romagna,Emilia-Romagna_chunk_167.vrp,7063160.0,131.37,OK
+Emilia-Romagna,Emilia-Romagna_chunk_168.vrp,2420650.0,130.83,OK
+Emilia-Romagna,Emilia-Romagna_chunk_169.vrp,11055400.0,125.47,OK
+Emilia-Romagna,Emilia-Romagna_chunk_17.vrp,3416150.0,125.46,OK
+Emilia-Romagna,Emilia-Romagna_chunk_170.vrp,2260400.0,125.46,OK
+Emilia-Romagna,Emilia-Romagna_chunk_171.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_172.vrp,2598450.0,125.44,OK
+Emilia-Romagna,Emilia-Romagna_chunk_173.vrp,16957900.0,126.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_174.vrp,2915630.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_175.vrp,23007800.0,132.32,OK
+Emilia-Romagna,Emilia-Romagna_chunk_176.vrp,3678790.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_177.vrp,841225.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_178.vrp,10617700.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_179.vrp,6872040.0,133.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_18.vrp,7521180.0,132.8,OK
+Emilia-Romagna,Emilia-Romagna_chunk_180.vrp,12413400.0,132.47,OK
+Emilia-Romagna,Emilia-Romagna_chunk_181.vrp,4383740.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_182.vrp,5353000.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_183.vrp,4940920.0,132.52,OK
+Emilia-Romagna,Emilia-Romagna_chunk_184.vrp,9740590.0,132.47,OK
+Emilia-Romagna,Emilia-Romagna_chunk_185.vrp,1813810.0,132.59,OK
+Emilia-Romagna,Emilia-Romagna_chunk_186.vrp,3087400.0,132.35,OK
+Emilia-Romagna,Emilia-Romagna_chunk_187.vrp,4435380.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_188.vrp,3932080.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_189.vrp,2364550.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_19.vrp,2011420.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_190.vrp,7485900.0,134.04,OK
+Emilia-Romagna,Emilia-Romagna_chunk_191.vrp,13073800.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_192.vrp,6038590.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_193.vrp,6418520.0,132.47,OK
+Emilia-Romagna,Emilia-Romagna_chunk_194.vrp,3135740.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_195.vrp,6751830.0,132.27,OK
+Emilia-Romagna,Emilia-Romagna_chunk_196.vrp,7112070.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_197.vrp,8202720.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_198.vrp,15484600.0,132.34,OK
+Emilia-Romagna,Emilia-Romagna_chunk_199.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_2.vrp,6185340.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_20.vrp,3056340.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_200.vrp,1581120.0,132.54,OK
+Emilia-Romagna,Emilia-Romagna_chunk_201.vrp,5823250.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_202.vrp,10319500.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_203.vrp,5744970.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_205.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_204.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_206.vrp,5932560.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_207.vrp,3857500.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_208.vrp,4816980.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_209.vrp,991767.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_210.vrp,2548390.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_21.vrp,35103000.0,143.3,OK
+Emilia-Romagna,Emilia-Romagna_chunk_212.vrp,3848560.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_211.vrp,2045400.0,134.0,OK
+Emilia-Romagna,Emilia-Romagna_chunk_213.vrp,3526890.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_214.vrp,6366410.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_215.vrp,6017310.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_216.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_217.vrp,7776580.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_218.vrp,5993050.0,133.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_219.vrp,2346340.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_22.vrp,8686500.0,132.48,OK
+Emilia-Romagna,Emilia-Romagna_chunk_220.vrp,6107580.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_221.vrp,7550660.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_222.vrp,10555600.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_223.vrp,2106260.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_224.vrp,5626190.0,133.38,OK
+Emilia-Romagna,Emilia-Romagna_chunk_225.vrp,4728750.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_226.vrp,9003580.0,132.51,OK
+Emilia-Romagna,Emilia-Romagna_chunk_227.vrp,5488920.0,132.27,OK
+Emilia-Romagna,Emilia-Romagna_chunk_228.vrp,4759200.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_229.vrp,4718660.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_23.vrp,8727330.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_230.vrp,8585220.0,132.33,OK
+Emilia-Romagna,Emilia-Romagna_chunk_231.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_232.vrp,12398300.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_233.vrp,1389040.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_234.vrp,3024380.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_235.vrp,9994300.0,135.54,OK
+Emilia-Romagna,Emilia-Romagna_chunk_236.vrp,5096560.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_237.vrp,1222610.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_238.vrp,2061030.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_239.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_24.vrp,962879.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_240.vrp,1391250.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_241.vrp,10194200.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_242.vrp,3560850.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_243.vrp,4607850.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_244.vrp,5844380.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_245.vrp,18360500.0,135.77,OK
+Emilia-Romagna,Emilia-Romagna_chunk_247.vrp,24879400.0,132.31,OK
+Emilia-Romagna,Emilia-Romagna_chunk_246.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_248.vrp,8370230.0,133.68,OK
+Emilia-Romagna,Emilia-Romagna_chunk_249.vrp,4617950.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_25.vrp,8485990.0,132.5,OK
+Emilia-Romagna,Emilia-Romagna_chunk_250.vrp,2710430.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_251.vrp,3908400.0,132.35,OK
+Emilia-Romagna,Emilia-Romagna_chunk_252.vrp,7987900.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_253.vrp,2849980.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_254.vrp,2157030.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_255.vrp,9734580.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_256.vrp,5106220.0,132.33,OK
+Emilia-Romagna,Emilia-Romagna_chunk_257.vrp,2188400.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_258.vrp,5731960.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_26.vrp,16726900.0,133.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_259.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_260.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_261.vrp,7918070.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_262.vrp,8328880.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_263.vrp,1853670.0,132.08,OK
+Emilia-Romagna,Emilia-Romagna_chunk_264.vrp,19529400.0,132.67,OK
+Emilia-Romagna,Emilia-Romagna_chunk_265.vrp,5238330.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_266.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_267.vrp,5350900.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_268.vrp,4912730.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_269.vrp,2315590.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_27.vrp,7368940.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_270.vrp,2571440.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_271.vrp,6198400.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_272.vrp,1090110.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_273.vrp,8859300.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_274.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_275.vrp,5545750.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_276.vrp,4667040.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_277.vrp,8584020.0,132.5,OK
+Emilia-Romagna,Emilia-Romagna_chunk_278.vrp,1352190.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_279.vrp,2990100.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_28.vrp,18237200.0,132.37,OK
+Emilia-Romagna,Emilia-Romagna_chunk_281.vrp,826379.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_280.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_282.vrp,2213570.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_283.vrp,3987300.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_284.vrp,6028370.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_285.vrp,7789180.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_286.vrp,11808900.0,134.56,OK
+Emilia-Romagna,Emilia-Romagna_chunk_287.vrp,8642150.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_289.vrp,269207.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_29.vrp,4455370.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_288.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_290.vrp,7591800.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_291.vrp,13530900.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_292.vrp,13335700.0,132.7,OK
+Emilia-Romagna,Emilia-Romagna_chunk_293.vrp,3645760.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_295.vrp,2399940.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_294.vrp,10493600.0,132.27,OK
+Emilia-Romagna,Emilia-Romagna_chunk_296.vrp,24619000.0,133.74,OK
+Emilia-Romagna,Emilia-Romagna_chunk_297.vrp,2920010.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_298.vrp,7034370.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_3.vrp,4339140.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_30.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_300.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_299.vrp,18429400.0,152.65,OK
+Emilia-Romagna,Emilia-Romagna_chunk_301.vrp,40148600.0,132.44,OK
+Emilia-Romagna,Emilia-Romagna_chunk_302.vrp,4026660.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_303.vrp,8267100.0,137.93,OK
+Emilia-Romagna,Emilia-Romagna_chunk_304.vrp,9937090.0,132.63,OK
+Emilia-Romagna,Emilia-Romagna_chunk_305.vrp,2904820.0,132.59,OK
+Emilia-Romagna,Emilia-Romagna_chunk_306.vrp,4478980.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_307.vrp,2215780.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_308.vrp,26992200.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_309.vrp,4461120.0,132.32,OK
+Emilia-Romagna,Emilia-Romagna_chunk_31.vrp,14449800.0,132.38,OK
+Emilia-Romagna,Emilia-Romagna_chunk_310.vrp,8010500.0,135.31,OK
+Emilia-Romagna,Emilia-Romagna_chunk_311.vrp,2444160.0,132.53,OK
+Emilia-Romagna,Emilia-Romagna_chunk_312.vrp,2737870.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_313.vrp,1801250.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_314.vrp,5255390.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_315.vrp,2449860.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_316.vrp,2562660.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_317.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_318.vrp,19477900.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_319.vrp,5106260.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_32.vrp,2948420.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_320.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_321.vrp,20454000.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_322.vrp,5920240.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_323.vrp,4690110.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_324.vrp,7770780.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_325.vrp,6435760.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_326.vrp,3291750.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_327.vrp,3967450.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_328.vrp,3056960.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_329.vrp,1858770.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_33.vrp,4830970.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_330.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_331.vrp,1951750.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_332.vrp,8604800.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_333.vrp,4981400.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_334.vrp,5849040.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_335.vrp,3076600.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_336.vrp,13858500.0,132.31,OK
+Emilia-Romagna,Emilia-Romagna_chunk_337.vrp,2360190.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_338.vrp,1621200.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_339.vrp,10946500.0,133.06,OK
+Emilia-Romagna,Emilia-Romagna_chunk_34.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_340.vrp,7942420.0,132.26,OK
+Emilia-Romagna,Emilia-Romagna_chunk_341.vrp,8250270.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_342.vrp,1469560.0,132.08,OK
+Emilia-Romagna,Emilia-Romagna_chunk_343.vrp,2637570.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_344.vrp,11618100.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_345.vrp,2882070.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_346.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_347.vrp,2444410.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_348.vrp,2744100.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_349.vrp,13010600.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_35.vrp,2861950.0,132.75,OK
+Emilia-Romagna,Emilia-Romagna_chunk_350.vrp,5965320.0,132.3,OK
+Emilia-Romagna,Emilia-Romagna_chunk_351.vrp,6952880.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_353.vrp,1481160.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_352.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_354.vrp,6632750.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_355.vrp,6970260.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_356.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_357.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_358.vrp,7080610.0,132.35,OK
+Emilia-Romagna,Emilia-Romagna_chunk_359.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_36.vrp,13043800.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_360.vrp,7193070.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_361.vrp,1472820.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_362.vrp,2864440.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_363.vrp,5272340.0,132.26,OK
+Emilia-Romagna,Emilia-Romagna_chunk_364.vrp,7317210.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_365.vrp,2483380.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_366.vrp,11015700.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_367.vrp,7746730.0,133.49,OK
+Emilia-Romagna,Emilia-Romagna_chunk_368.vrp,3257720.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_369.vrp,1947900.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_37.vrp,11431400.0,132.39,OK
+Emilia-Romagna,Emilia-Romagna_chunk_370.vrp,1052220.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_371.vrp,13517300.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_372.vrp,3003950.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_373.vrp,2968400.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_374.vrp,1933080.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_375.vrp,5191320.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_376.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_377.vrp,3586080.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_378.vrp,4161420.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_379.vrp,12805400.0,132.48,OK
+Emilia-Romagna,Emilia-Romagna_chunk_38.vrp,1361410.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_380.vrp,7143630.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_381.vrp,19922100.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_382.vrp,737629.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_383.vrp,3405600.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_384.vrp,2774680.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_385.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_386.vrp,3792800.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_387.vrp,25302900.0,132.45,OK
+Emilia-Romagna,Emilia-Romagna_chunk_388.vrp,5186310.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_389.vrp,10239500.0,132.5,OK
+Emilia-Romagna,Emilia-Romagna_chunk_39.vrp,23160400.0,137.68,OK
+Emilia-Romagna,Emilia-Romagna_chunk_390.vrp,2785130.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_391.vrp,2663100.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_392.vrp,12620900.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_393.vrp,6727540.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_394.vrp,2777210.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_395.vrp,4727640.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_396.vrp,2369480.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_397.vrp,4302960.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_398.vrp,1637550.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_399.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_4.vrp,9552910.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_40.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_400.vrp,5284310.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_401.vrp,4129970.0,132.29,OK
+Emilia-Romagna,Emilia-Romagna_chunk_402.vrp,10999700.0,134.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_403.vrp,1750680.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_404.vrp,4496850.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_405.vrp,9671320.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_406.vrp,3059310.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_407.vrp,7791020.0,132.26,OK
+Emilia-Romagna,Emilia-Romagna_chunk_408.vrp,31264500.0,132.28,OK
+Emilia-Romagna,Emilia-Romagna_chunk_409.vrp,9795100.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_41.vrp,10474600.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_410.vrp,13386100.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_411.vrp,2454230.0,132.48,OK
+Emilia-Romagna,Emilia-Romagna_chunk_412.vrp,5340040.0,132.21,OK
+Emilia-Romagna,Emilia-Romagna_chunk_413.vrp,2323750.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_414.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_415.vrp,8591700.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_416.vrp,5519680.0,134.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_417.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_418.vrp,1207230.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_419.vrp,7311690.0,132.55,OK
+Emilia-Romagna,Emilia-Romagna_chunk_42.vrp,2266490.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_420.vrp,2527470.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_421.vrp,8040490.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_422.vrp,1403270.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_423.vrp,3080040.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_424.vrp,2642240.0,132.08,OK
+Emilia-Romagna,Emilia-Romagna_chunk_425.vrp,912839.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_426.vrp,20315300.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_427.vrp,927724.0,132.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_428.vrp,3970120.0,132.28,OK
+Emilia-Romagna,Emilia-Romagna_chunk_429.vrp,3114490.0,132.09,OK
+Emilia-Romagna,Emilia-Romagna_chunk_43.vrp,1225100.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_430.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_431.vrp,8020740.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_432.vrp,3045250.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_433.vrp,1405730.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_434.vrp,9928930.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_435.vrp,4398060.0,132.58,OK
+Emilia-Romagna,Emilia-Romagna_chunk_436.vrp,8178520.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_437.vrp,17646900.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_438.vrp,3630660.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_439.vrp,2232980.0,132.29,OK
+Emilia-Romagna,Emilia-Romagna_chunk_44.vrp,3716660.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_440.vrp,1646190.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_441.vrp,2549670.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_442.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_443.vrp,7803450.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_444.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_445.vrp,1349300.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_446.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_447.vrp,18450000.0,132.16,OK
+Emilia-Romagna,Emilia-Romagna_chunk_448.vrp,10668000.0,132.36,OK
+Emilia-Romagna,Emilia-Romagna_chunk_45.vrp,4361300.0,133.62,OK
+Emilia-Romagna,Emilia-Romagna_chunk_46.vrp,11405400.0,132.46,OK
+Emilia-Romagna,Emilia-Romagna_chunk_47.vrp,26849900.0,132.28,OK
+Emilia-Romagna,Emilia-Romagna_chunk_48.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_49.vrp,4020490.0,132.24,OK
+Emilia-Romagna,Emilia-Romagna_chunk_5.vrp,6295930.0,133.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_50.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_51.vrp,9683620.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_52.vrp,5950010.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_53.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_54.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_55.vrp,9682340.0,132.11,OK
+Emilia-Romagna,Emilia-Romagna_chunk_56.vrp,6069230.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_57.vrp,4986780.0,132.29,OK
+Emilia-Romagna,Emilia-Romagna_chunk_58.vrp,8004380.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_59.vrp,2954640.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_6.vrp,1519380.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_60.vrp,9558640.0,132.3,OK
+Emilia-Romagna,Emilia-Romagna_chunk_61.vrp,4875460.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_62.vrp,4536240.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_63.vrp,614730.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_64.vrp,7508010.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_65.vrp,11976000.0,132.2,OK
+Emilia-Romagna,Emilia-Romagna_chunk_66.vrp,7764630.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_67.vrp,7592160.0,132.53,OK
+Emilia-Romagna,Emilia-Romagna_chunk_68.vrp,21966600.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_69.vrp,7509960.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_7.vrp,42015500.0,133.91,OK
+Emilia-Romagna,Emilia-Romagna_chunk_70.vrp,1981910.0,132.17,OK
+Emilia-Romagna,Emilia-Romagna_chunk_71.vrp,4232420.0,132.18,OK
+Emilia-Romagna,Emilia-Romagna_chunk_72.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_73.vrp,3088050.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_74.vrp,4201140.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_76.vrp,5320060.0,132.22,OK
+Emilia-Romagna,Emilia-Romagna_chunk_75.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_77.vrp,2903200.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_78.vrp,6197890.0,133.1,OK
+Emilia-Romagna,Emilia-Romagna_chunk_79.vrp,4274610.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_8.vrp,7815150.0,132.71,OK
+Emilia-Romagna,Emilia-Romagna_chunk_80.vrp,11900800.0,132.62,OK
+Emilia-Romagna,Emilia-Romagna_chunk_81.vrp,7219300.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_82.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_83.vrp,14202400.0,137.69,OK
+Emilia-Romagna,Emilia-Romagna_chunk_84.vrp,6465200.0,132.19,OK
+Emilia-Romagna,Emilia-Romagna_chunk_85.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_86.vrp,25514300.0,132.31,OK
+Emilia-Romagna,Emilia-Romagna_chunk_87.vrp,17182500.0,132.23,OK
+Emilia-Romagna,Emilia-Romagna_chunk_88.vrp,3709250.0,132.25,OK
+Emilia-Romagna,Emilia-Romagna_chunk_89.vrp,5783900.0,132.38,OK
+Emilia-Romagna,Emilia-Romagna_chunk_9.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_90.vrp,843254.0,132.14,OK
+Emilia-Romagna,Emilia-Romagna_chunk_91.vrp,19055800.0,132.59,OK
+Emilia-Romagna,Emilia-Romagna_chunk_92.vrp,32942200.0,133.52,OK
+Emilia-Romagna,Emilia-Romagna_chunk_93.vrp,2921910.0,132.15,OK
+Emilia-Romagna,Emilia-Romagna_chunk_94.vrp,9828560.0,132.13,OK
+Emilia-Romagna,Emilia-Romagna_chunk_95.vrp,1750360.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_96.vrp,26050500.0,132.28,OK
+Emilia-Romagna,Emilia-Romagna_chunk_97.vrp,4831150.0,132.12,OK
+Emilia-Romagna,Emilia-Romagna_chunk_98.vrp,ERROR,0,No feasible route found in 60s.
+Emilia-Romagna,Emilia-Romagna_chunk_99.vrp,17270000.0,132.18,OK
+Emilia-Romagna,[TOTAL AGGREGATE],INCOMPLETE,2809106413.0,Only 392/449 succeeded
+Lazio,Lazio_chunk_101.vrp,3024340.0,132.18,OK
+Lazio,Lazio_chunk_1.vrp,7584310.0,132.18,OK
+Lazio,Lazio_chunk_102.vrp,3088650.0,132.19,OK
+Lazio,Lazio_chunk_10.vrp,4803470.0,132.24,OK
+Lazio,Lazio_chunk_100.vrp,9756860.0,132.26,OK
+Lazio,Lazio_chunk_0.vrp,1327680.0,132.35,OK
+Lazio,Lazio_chunk_107.vrp,4600780.0,132.16,OK
+Lazio,Lazio_chunk_106.vrp,8743660.0,132.22,OK
+Lazio,Lazio_chunk_104.vrp,2593630.0,132.55,OK
+Lazio,Lazio_chunk_105.vrp,3218990.0,132.56,OK
+Lazio,Lazio_chunk_108.vrp,9027290.0,132.34,OK
+Lazio,Lazio_chunk_103.vrp,ERROR,0,No feasible route found in 60s.
+Lazio,Lazio_chunk_11.vrp,4778890.0,132.16,OK
+Lazio,Lazio_chunk_110.vrp,6050720.0,132.11,OK
+Lazio,Lazio_chunk_111.vrp,3375160.0,132.14,OK
+Lazio,Lazio_chunk_112.vrp,7357560.0,132.35,OK
+Lazio,Lazio_chunk_113.vrp,15558300.0,132.2,OK
+Lazio,Lazio_chunk_109.vrp,1572930.0,135.66,OK
+Lazio,Lazio_chunk_115.vrp,9877390.0,132.14,OK
+Lazio,Lazio_chunk_116.vrp,4358870.0,132.28,OK
+Lazio,Lazio_chunk_118.vrp,1174030.0,132.0,OK
+Lazio,Lazio_chunk_114.vrp,ERROR,0,No feasible route found in 60s.
+Lazio,Lazio_chunk_119.vrp,8745900.0,132.02,OK
+Lazio,Lazio_chunk_117.vrp,32471200.0,135.27,OK
+Lazio,Lazio_chunk_12.vrp,16476100.0,132.17,OK
+Lazio,Lazio_chunk_120.vrp,3708600.0,132.1,OK
+Lazio,Lazio_chunk_122.vrp,3005770.0,133.11,OK
+Lazio,Lazio_chunk_123.vrp,3571930.0,132.15,OK
+Lazio,Lazio_chunk_121.vrp,2720980.0,134.54,OK
+Lazio,Lazio_chunk_124.vrp,3029630.0,132.22,OK
+Lazio,Lazio_chunk_126.vrp,12001200.0,132.54,OK
+Lazio,Lazio_chunk_127.vrp,1740600.0,132.09,OK
+Lazio,Lazio_chunk_125.vrp,20265400.0,134.04,OK
+Lazio,Lazio_chunk_128.vrp,10444400.0,132.16,OK
+Lazio,Lazio_chunk_129.vrp,2029400.0,132.09,OK
+Lazio,Lazio_chunk_13.vrp,8238380.0,132.35,OK
+Lazio,Lazio_chunk_132.vrp,2211490.0,132.21,OK
+Lazio,Lazio_chunk_131.vrp,8143610.0,132.32,OK
+Lazio,Lazio_chunk_130.vrp,17568400.0,133.78,OK
+Lazio,Lazio_chunk_133.vrp,5064200.0,132.12,OK
+Lazio,Lazio_chunk_134.vrp,9874670.0,132.37,OK
+Lazio,Lazio_chunk_135.vrp,3332740.0,132.22,OK
+Lazio,Lazio_chunk_136.vrp,11296900.0,132.25,OK
+Lazio,Lazio_chunk_138.vrp,12038500.0,132.2,OK
+Lazio,Lazio_chunk_139.vrp,2516930.0,132.29,OK
+Lazio,Lazio_chunk_14.vrp,7308970.0,132.4,OK
+Lazio,Lazio_chunk_140.vrp,1746750.0,133.56,OK
+Lazio,Lazio_chunk_137.vrp,12237000.0,137.05,OK
+Lazio,Lazio_chunk_141.vrp,5765580.0,132.11,OK
+Lazio,Lazio_chunk_142.vrp,21218700.0,132.37,OK
+Lazio,Lazio_chunk_143.vrp,13442700.0,132.21,OK
+Lazio,Lazio_chunk_144.vrp,8033720.0,132.32,OK
+Lazio,Lazio_chunk_145.vrp,2633800.0,132.16,OK
+Lazio,Lazio_chunk_146.vrp,14695400.0,132.31,OK
+Lazio,Lazio_chunk_147.vrp,5128150.0,132.28,OK
+Lazio,Lazio_chunk_148.vrp,8002470.0,132.17,OK
+Lazio,Lazio_chunk_149.vrp,4341760.0,132.18,OK
+Lazio,Lazio_chunk_15.vrp,2596840.0,132.11,OK
+Lazio,Lazio_chunk_150.vrp,4137010.0,133.01,OK
+Lazio,Lazio_chunk_151.vrp,12054400.0,133.85,OK
+Lazio,Lazio_chunk_152.vrp,4604520.0,132.12,OK
+Lazio,Lazio_chunk_154.vrp,8532010.0,132.31,OK
+Lazio,Lazio_chunk_155.vrp,6126470.0,132.11,OK
+Lazio,Lazio_chunk_153.vrp,17187300.0,133.88,OK
+Lazio,Lazio_chunk_156.vrp,2933130.0,132.35,OK
+Lazio,Lazio_chunk_157.vrp,4412040.0,132.13,OK
+Lazio,Lazio_chunk_158.vrp,4855360.0,132.2,OK
+Lazio,Lazio_chunk_16.vrp,6786280.0,132.26,OK
+Lazio,Lazio_chunk_160.vrp,14003800.0,132.18,OK
+Lazio,Lazio_chunk_159.vrp,11674700.0,133.09,OK
+Lazio,Lazio_chunk_161.vrp,3432490.0,132.16,OK
+Lazio,Lazio_chunk_162.vrp,607371.0,132.13,OK
+Lazio,Lazio_chunk_164.vrp,1870240.0,132.25,OK
+Lazio,Lazio_chunk_166.vrp,8082580.0,132.19,OK
+Lazio,Lazio_chunk_165.vrp,8596540.0,132.58,OK
+Lazio,Lazio_chunk_167.vrp,20243600.0,132.41,OK
+Lazio,Lazio_chunk_168.vrp,3413240.0,133.14,OK
+Lazio,Lazio_chunk_163.vrp,3361030.0,140.99,OK
+Lazio,Lazio_chunk_17.vrp,2166160.0,132.14,OK
+Lazio,Lazio_chunk_170.vrp,6894660.0,132.16,OK
+Lazio,Lazio_chunk_169.vrp,16175700.0,133.66,OK
+Lazio,Lazio_chunk_171.vrp,13200900.0,132.15,OK
+Lazio,Lazio_chunk_172.vrp,940453.0,132.13,OK
+Lazio,Lazio_chunk_173.vrp,8289840.0,133.09,OK
+Lazio,Lazio_chunk_174.vrp,2861430.0,132.73,OK
+Lazio,Lazio_chunk_175.vrp,6096250.0,132.64,OK
+Lazio,Lazio_chunk_176.vrp,10600700.0,132.29,OK
+Lazio,Lazio_chunk_177.vrp,2398750.0,132.58,OK
+Lazio,Lazio_chunk_178.vrp,4116780.0,132.1,OK
+Lazio,Lazio_chunk_179.vrp,3587820.0,132.11,OK
+Lazio,Lazio_chunk_180.vrp,19306100.0,132.42,OK
+Lazio,Lazio_chunk_181.vrp,5642470.0,132.59,OK
+Lazio,Lazio_chunk_182.vrp,21790000.0,132.22,OK
+Lazio,Lazio_chunk_184.vrp,5954150.0,132.08,OK
+Lazio,Lazio_chunk_18.vrp,ERROR,0,No feasible route found in 60s.
+Lazio,Lazio_chunk_183.vrp,2351300.0,134.98,OK
+Lazio,Lazio_chunk_185.vrp,2511850.0,132.19,OK
+Lazio,Lazio_chunk_186.vrp,2421980.0,132.16,OK
+Lazio,Lazio_chunk_187.vrp,2762710.0,132.18,OK
+Lazio,Lazio_chunk_188.vrp,4925320.0,132.31,OK
+Lazio,Lazio_chunk_19.vrp,15519000.0,132.3,OK
+Lazio,Lazio_chunk_189.vrp,2575490.0,133.01,OK
+Lazio,Lazio_chunk_190.vrp,4682680.0,132.22,OK
+Lazio,Lazio_chunk_191.vrp,10614000.0,132.23,OK
+Lazio,Lazio_chunk_192.vrp,13001100.0,132.46,OK
+Lazio,Lazio_chunk_194.vrp,2496670.0,132.54,OK
+Lazio,Lazio_chunk_195.vrp,18476000.0,132.43,OK
+Lazio,Lazio_chunk_193.vrp,5668160.0,135.83,OK
+Lazio,Lazio_chunk_196.vrp,2172420.0,132.56,OK
+Lazio,Lazio_chunk_197.vrp,1131730.0,132.17,OK
+Lazio,Lazio_chunk_198.vrp,1505690.0,132.15,OK
+Lazio,Lazio_chunk_199.vrp,9510830.0,132.41,OK
+Lazio,Lazio_chunk_2.vrp,1323620.0,132.08,OK
+Lazio,Lazio_chunk_20.vrp,1307310.0,132.18,OK
+Lazio,Lazio_chunk_200.vrp,3723120.0,132.2,OK
+Lazio,Lazio_chunk_201.vrp,1701920.0,132.15,OK
+Lazio,Lazio_chunk_202.vrp,2806830.0,132.2,OK
+Lazio,Lazio_chunk_203.vrp,4612270.0,132.14,OK
+Lazio,Lazio_chunk_204.vrp,13118900.0,134.47,OK
+Lazio,Lazio_chunk_205.vrp,3968770.0,132.25,OK
+Lazio,Lazio_chunk_206.vrp,5441220.0,132.15,OK
+Lazio,Lazio_chunk_207.vrp,8566080.0,132.2,OK
+Lazio,Lazio_chunk_208.vrp,2497640.0,132.17,OK
+Lazio,Lazio_chunk_209.vrp,3483640.0,132.14,OK
+Lazio,Lazio_chunk_21.vrp,788625.0,132.13,OK
+Lazio,Lazio_chunk_210.vrp,5655600.0,132.29,OK
+Lazio,Lazio_chunk_212.vrp,3082770.0,132.18,OK
+Lazio,Lazio_chunk_211.vrp,2989700.0,132.41,OK
+Lazio,Lazio_chunk_213.vrp,3614170.0,132.15,OK
+Lazio,Lazio_chunk_215.vrp,2293730.0,132.09,OK
+Lazio,Lazio_chunk_216.vrp,7852160.0,132.14,OK
+Lazio,Lazio_chunk_214.vrp,5822230.0,135.46,OK
+Lazio,Lazio_chunk_217.vrp,1038180.0,132.12,OK
+Lazio,Lazio_chunk_218.vrp,5974710.0,132.21,OK
+Lazio,Lazio_chunk_219.vrp,5109280.0,132.16,OK
+Lazio,Lazio_chunk_22.vrp,1520340.0,132.21,OK
+Lazio,Lazio_chunk_220.vrp,13087500.0,132.16,OK
+Lazio,Lazio_chunk_221.vrp,3504110.0,133.95,OK
+Lazio,Lazio_chunk_222.vrp,1628010.0,132.11,OK
+Lazio,Lazio_chunk_223.vrp,2698580.0,132.15,OK
+Lazio,Lazio_chunk_224.vrp,35442500.0,134.54,OK
+Lazio,Lazio_chunk_225.vrp,9870340.0,132.17,OK
+Lazio,Lazio_chunk_226.vrp,11402700.0,132.22,OK
+Lazio,Lazio_chunk_227.vrp,2870050.0,132.2,OK
+Lazio,Lazio_chunk_228.vrp,3239620.0,132.17,OK
+Lazio,Lazio_chunk_229.vrp,5055080.0,132.14,OK
+Lazio,Lazio_chunk_23.vrp,10315100.0,132.14,OK
+Lazio,Lazio_chunk_230.vrp,4773790.0,132.17,OK
+Lazio,Lazio_chunk_231.vrp,1534700.0,133.53,OK
+Lazio,Lazio_chunk_232.vrp,1832300.0,132.16,OK
+Lazio,Lazio_chunk_234.vrp,7068040.0,132.54,OK
+Lazio,Lazio_chunk_233.vrp,991800.0,133.01,OK
+Lazio,Lazio_chunk_235.vrp,4003520.0,132.47,OK
+Lazio,Lazio_chunk_236.vrp,1747040.0,132.18,OK
+Lazio,Lazio_chunk_238.vrp,2363650.0,133.09,OK
+Lazio,Lazio_chunk_237.vrp,3763710.0,134.12,OK
+Lazio,Lazio_chunk_239.vrp,8147610.0,132.4,OK
+Lazio,Lazio_chunk_24.vrp,16403400.0,132.83,OK
+Lazio,Lazio_chunk_240.vrp,1852930.0,132.25,OK
+Lazio,Lazio_chunk_241.vrp,23516000.0,132.3,OK
+Lazio,Lazio_chunk_243.vrp,5144430.0,132.26,OK
+Lazio,Lazio_chunk_242.vrp,4019330.0,136.46,OK
+Lazio,Lazio_chunk_245.vrp,5465550.0,132.45,OK
+Lazio,Lazio_chunk_244.vrp,4941830.0,133.53,OK
+Lazio,Lazio_chunk_246.vrp,5961910.0,132.37,OK
+Lazio,Lazio_chunk_247.vrp,2554830.0,134.33,OK
+Lazio,Lazio_chunk_248.vrp,3320550.0,132.19,OK
+Lazio,Lazio_chunk_249.vrp,14310900.0,132.37,OK
+Lazio,Lazio_chunk_250.vrp,1836960.0,132.07,OK
+Lazio,Lazio_chunk_25.vrp,3112320.0,132.76,OK
+Lazio,Lazio_chunk_251.vrp,2075650.0,132.17,OK
+Lazio,Lazio_chunk_252.vrp,4420720.0,132.1,OK
+Lazio,Lazio_chunk_253.vrp,11792100.0,132.45,OK
+Lazio,Lazio_chunk_254.vrp,3967230.0,132.17,OK
+Lazio,Lazio_chunk_255.vrp,2141150.0,132.25,OK
+Lazio,Lazio_chunk_256.vrp,10424600.0,133.72,OK
+Lazio,Lazio_chunk_257.vrp,1424890.0,132.25,OK
+Lazio,Lazio_chunk_258.vrp,4475540.0,132.77,OK
+Lazio,Lazio_chunk_259.vrp,4326410.0,132.24,OK
+Lazio,Lazio_chunk_26.vrp,11880400.0,132.15,OK
+Lazio,Lazio_chunk_260.vrp,16372900.0,132.41,OK
+Lazio,Lazio_chunk_261.vrp,4234920.0,132.53,OK
+Lazio,Lazio_chunk_262.vrp,23243000.0,132.54,OK
+Lazio,Lazio_chunk_263.vrp,1519330.0,132.15,OK
+Lazio,Lazio_chunk_264.vrp,5420310.0,132.06,OK
+Lazio,Lazio_chunk_265.vrp,18080200.0,132.17,OK
+Lazio,Lazio_chunk_266.vrp,4248030.0,132.06,OK
+Lazio,Lazio_chunk_268.vrp,12090400.0,132.15,OK
+Lazio,Lazio_chunk_267.vrp,6682830.0,132.55,OK
+Lazio,Lazio_chunk_269.vrp,6364450.0,132.2,OK
+Lazio,Lazio_chunk_27.vrp,1829260.0,132.22,OK
+Lazio,Lazio_chunk_270.vrp,3576870.0,133.52,OK
+Lazio,Lazio_chunk_271.vrp,2568870.0,132.57,OK
+Lazio,Lazio_chunk_273.vrp,2564510.0,132.56,OK
+Lazio,Lazio_chunk_272.vrp,6604010.0,132.69,OK
+Lazio,Lazio_chunk_274.vrp,2737210.0,132.06,OK
+Lazio,Lazio_chunk_275.vrp,7057420.0,132.2,OK
+Lazio,Lazio_chunk_276.vrp,7104270.0,132.11,OK
+Lazio,Lazio_chunk_277.vrp,15900800.0,132.43,OK
+Lazio,Lazio_chunk_279.vrp,1849950.0,132.11,OK
+Lazio,Lazio_chunk_278.vrp,11315800.0,132.14,OK
+Lazio,Lazio_chunk_28.vrp,790180.0,132.09,OK
+Lazio,Lazio_chunk_280.vrp,2193140.0,132.08,OK
+Lazio,Lazio_chunk_281.vrp,2294580.0,132.14,OK
+Lazio,Lazio_chunk_282.vrp,4205260.0,132.19,OK
+Lazio,Lazio_chunk_283.vrp,3479760.0,132.45,OK
+Lazio,Lazio_chunk_284.vrp,3233200.0,133.36,OK
+Lazio,Lazio_chunk_285.vrp,6886140.0,132.16,OK
+Lazio,Lazio_chunk_286.vrp,1288490.0,132.23,OK
+Lazio,Lazio_chunk_287.vrp,5771550.0,132.1,OK
+Lazio,Lazio_chunk_29.vrp,7785090.0,132.14,OK
+Lazio,Lazio_chunk_288.vrp,3064820.0,135.91,OK
+Lazio,Lazio_chunk_289.vrp,4707440.0,133.31,OK
+Lazio,Lazio_chunk_290.vrp,3006220.0,132.24,OK
+Lazio,Lazio_chunk_291.vrp,1990260.0,132.36,OK
+Lazio,Lazio_chunk_292.vrp,1820070.0,132.1,OK
+Lazio,Lazio_chunk_293.vrp,5201660.0,132.11,OK
+Lazio,Lazio_chunk_294.vrp,6977100.0,132.18,OK
+Lazio,Lazio_chunk_295.vrp,2161400.0,132.16,OK
+Lazio,Lazio_chunk_296.vrp,3366090.0,132.08,OK
+Lazio,Lazio_chunk_297.vrp,4398470.0,132.34,OK
+Lazio,Lazio_chunk_298.vrp,861207.0,132.38,OK
+Lazio,Lazio_chunk_299.vrp,1460660.0,132.24,OK
+Lazio,Lazio_chunk_30.vrp,1064550.0,132.13,OK
+Lazio,Lazio_chunk_3.vrp,21204700.0,136.21,OK
+Lazio,Lazio_chunk_300.vrp,6727920.0,132.11,OK
+Lazio,Lazio_chunk_301.vrp,12924300.0,132.22,OK
+Lazio,Lazio_chunk_302.vrp,6662490.0,132.2,OK
+Lazio,Lazio_chunk_303.vrp,7630760.0,132.11,OK
+Lazio,Lazio_chunk_304.vrp,3493060.0,132.23,OK
+Lazio,Lazio_chunk_305.vrp,3741500.0,132.12,OK
+Lazio,Lazio_chunk_306.vrp,999212.0,132.2,OK
+Lazio,Lazio_chunk_307.vrp,2296900.0,132.17,OK
+Lazio,Lazio_chunk_308.vrp,6141230.0,132.13,OK
+Lazio,Lazio_chunk_309.vrp,1260890.0,132.08,OK
+Lazio,Lazio_chunk_31.vrp,19184200.0,132.35,OK
+Lazio,Lazio_chunk_310.vrp,10583300.0,132.24,OK
+Lazio,Lazio_chunk_311.vrp,2418730.0,132.66,OK
+Lazio,Lazio_chunk_312.vrp,8122520.0,132.4,OK
+Lazio,Lazio_chunk_313.vrp,12474700.0,132.38,OK
+Lazio,Lazio_chunk_314.vrp,2103890.0,132.08,OK
+Lazio,Lazio_chunk_315.vrp,2550360.0,132.09,OK
+Lazio,Lazio_chunk_316.vrp,7920760.0,132.19,OK
+Lazio,Lazio_chunk_317.vrp,8861520.0,132.09,OK
+Lazio,Lazio_chunk_318.vrp,2011500.0,132.22,OK
+Lazio,Lazio_chunk_319.vrp,6300660.0,132.15,OK
+Lazio,Lazio_chunk_32.vrp,3083090.0,132.1,OK
+Lazio,Lazio_chunk_320.vrp,2000520.0,132.15,OK
+Lazio,Lazio_chunk_322.vrp,2051520.0,132.98,OK
+Lazio,Lazio_chunk_321.vrp,1489120.0,135.43,OK
+Lazio,Lazio_chunk_323.vrp,12678600.0,132.23,OK
+Lazio,Lazio_chunk_324.vrp,2378870.0,132.08,OK
+Lazio,Lazio_chunk_325.vrp,1075230.0,132.06,OK
+Lazio,Lazio_chunk_326.vrp,1939370.0,132.09,OK
+Lazio,Lazio_chunk_327.vrp,4462530.0,132.55,OK
+Lazio,Lazio_chunk_328.vrp,1583900.0,132.19,OK
+Lazio,Lazio_chunk_329.vrp,1831920.0,132.44,OK
+Lazio,Lazio_chunk_33.vrp,2223880.0,132.32,OK
+Lazio,Lazio_chunk_330.vrp,1627380.0,132.1,OK
+Lazio,Lazio_chunk_331.vrp,1636300.0,132.13,OK
+Lazio,Lazio_chunk_332.vrp,4094810.0,132.09,OK
+Lazio,Lazio_chunk_333.vrp,6341170.0,132.32,OK
+Lazio,Lazio_chunk_334.vrp,9474800.0,132.26,OK
+Lazio,Lazio_chunk_335.vrp,909367.0,132.86,OK
+Lazio,Lazio_chunk_336.vrp,5297260.0,132.15,OK
+Lazio,Lazio_chunk_337.vrp,11143300.0,132.2,OK
+Lazio,Lazio_chunk_338.vrp,1737990.0,132.08,OK
+Lazio,Lazio_chunk_339.vrp,6394490.0,132.18,OK
+Lazio,Lazio_chunk_34.vrp,7084060.0,132.3,OK
+Lazio,Lazio_chunk_340.vrp,6771440.0,132.44,OK
+Lazio,Lazio_chunk_342.vrp,2542310.0,127.96,OK
+Lazio,Lazio_chunk_341.vrp,1756680.0,130.62,OK
+Lazio,Lazio_chunk_343.vrp,8633530.0,127.75,OK
+Lazio,Lazio_chunk_344.vrp,3133420.0,127.71,OK
+Lazio,Lazio_chunk_345.vrp,20736200.0,127.61,OK
+Lazio,Lazio_chunk_346.vrp,1897030.0,127.34,OK
+Lazio,Lazio_chunk_347.vrp,3525120.0,124.72,OK
+Lazio,Lazio_chunk_348.vrp,7552770.0,124.91,OK
+Lazio,Lazio_chunk_349.vrp,2598660.0,124.76,OK
+Lazio,Lazio_chunk_350.vrp,3099990.0,124.97,OK
+Lazio,Lazio_chunk_351.vrp,4067730.0,124.79,OK
+Lazio,Lazio_chunk_35.vrp,45863400.0,136.12,OK
+Lazio,Lazio_chunk_352.vrp,2683370.0,124.35,OK
+Lazio,Lazio_chunk_353.vrp,4149230.0,124.38,OK
+Lazio,Lazio_chunk_354.vrp,2033440.0,124.48,OK
+Lazio,Lazio_chunk_355.vrp,1448340.0,125.39,OK
+Lazio,Lazio_chunk_356.vrp,2846160.0,124.51,OK
+Lazio,Lazio_chunk_357.vrp,2640440.0,124.47,OK
+Lazio,Lazio_chunk_358.vrp,12030100.0,124.19,OK
+Lazio,Lazio_chunk_359.vrp,7454930.0,124.19,OK
+Lazio,Lazio_chunk_36.vrp,1944610.0,123.98,OK
+Lazio,Lazio_chunk_360.vrp,2637590.0,124.08,OK
+Lazio,Lazio_chunk_361.vrp,1300680.0,124.2,OK
+Lazio,Lazio_chunk_362.vrp,6578140.0,124.12,OK
+Lazio,Lazio_chunk_363.vrp,2146520.0,124.11,OK
+Lazio,Lazio_chunk_364.vrp,1713380.0,124.25,OK
+Lazio,Lazio_chunk_365.vrp,2568200.0,126.05,OK
+Lazio,Lazio_chunk_366.vrp,6348060.0,124.01,OK
+Lazio,Lazio_chunk_367.vrp,4395470.0,124.13,OK
+Lazio,Lazio_chunk_368.vrp,2463980.0,125.23,OK
+Lazio,Lazio_chunk_369.vrp,2714800.0,123.42,OK
+Lazio,Lazio_chunk_37.vrp,1359760.0,123.33,OK
+Lazio,Lazio_chunk_370.vrp,6373810.0,123.38,OK
+Lazio,Lazio_chunk_371.vrp,3194430.0,124.81,OK
+Lazio,Lazio_chunk_372.vrp,3494910.0,123.17,OK
+Lazio,Lazio_chunk_373.vrp,1600120.0,124.38,OK
+Lazio,Lazio_chunk_374.vrp,4692970.0,121.28,OK
+Lazio,Lazio_chunk_375.vrp,1068990.0,124.41,OK
+Lazio,Lazio_chunk_376.vrp,5096280.0,121.14,OK
+Lazio,Lazio_chunk_378.vrp,8228720.0,121.23,OK
+Lazio,Lazio_chunk_377.vrp,2471260.0,123.57,OK
+Lazio,Lazio_chunk_379.vrp,7708320.0,120.82,OK
+Lazio,Lazio_chunk_38.vrp,13726000.0,120.16,OK
+Lazio,Lazio_chunk_380.vrp,5686510.0,119.91,OK
+Lazio,Lazio_chunk_381.vrp,3341060.0,120.21,OK
+Lazio,Lazio_chunk_382.vrp,5116450.0,119.9,OK
+Lazio,Lazio_chunk_383.vrp,2382440.0,119.88,OK
+Lazio,Lazio_chunk_384.vrp,6187710.0,120.09,OK
+Lazio,Lazio_chunk_385.vrp,3394060.0,119.9,OK
+Lazio,Lazio_chunk_386.vrp,3346480.0,120.3,OK
+Lazio,Lazio_chunk_387.vrp,24713600.0,120.57,OK
+Lazio,Lazio_chunk_389.vrp,5836250.0,120.23,OK
+Lazio,Lazio_chunk_388.vrp,2860560.0,120.64,OK
+Lazio,Lazio_chunk_39.vrp,1918620.0,120.02,OK
+Lazio,Lazio_chunk_390.vrp,2221780.0,120.07,OK
+Lazio,Lazio_chunk_391.vrp,12592500.0,120.17,OK
+Lazio,Lazio_chunk_392.vrp,2322340.0,120.16,OK
+Lazio,Lazio_chunk_393.vrp,7206000.0,120.14,OK
+Lazio,Lazio_chunk_394.vrp,2298120.0,120.77,OK
+Lazio,Lazio_chunk_395.vrp,ERROR,0,No feasible route found in 60s.
+Lazio,Lazio_chunk_396.vrp,7588160.0,120.28,OK
+Lazio,Lazio_chunk_397.vrp,1311880.0,120.18,OK
+Lazio,Lazio_chunk_398.vrp,2404540.0,120.15,OK
+Lazio,Lazio_chunk_399.vrp,2847850.0,120.22,OK
+Lazio,Lazio_chunk_4.vrp,5190860.0,122.77,OK
+Lazio,Lazio_chunk_40.vrp,12310300.0,120.26,OK
+Lazio,Lazio_chunk_400.vrp,4069710.0,121.63,OK
+Lazio,Lazio_chunk_401.vrp,6326170.0,120.2,OK
+Lazio,Lazio_chunk_402.vrp,5682830.0,122.3,OK
+Lazio,Lazio_chunk_403.vrp,6186580.0,122.55,OK
+Lazio,Lazio_chunk_404.vrp,2972780.0,120.26,OK
+Lazio,Lazio_chunk_405.vrp,2627330.0,120.18,OK
+Lazio,Lazio_chunk_406.vrp,2924980.0,123.15,OK
+Lazio,Lazio_chunk_407.vrp,4942390.0,120.08,OK
+Lazio,Lazio_chunk_408.vrp,1069410.0,120.13,OK
+Lazio,Lazio_chunk_409.vrp,5184330.0,120.2,OK
+Lazio,Lazio_chunk_41.vrp,2908680.0,120.08,OK
+Lazio,Lazio_chunk_410.vrp,8195520.0,120.11,OK
+Lazio,Lazio_chunk_411.vrp,9030670.0,120.12,OK
+Lazio,Lazio_chunk_412.vrp,3704030.0,120.11,OK
+Lazio,Lazio_chunk_413.vrp,2030400.0,120.54,OK
+Lazio,Lazio_chunk_414.vrp,11719700.0,120.11,OK
+Lazio,Lazio_chunk_415.vrp,674051.0,120.07,OK
+Lazio,Lazio_chunk_416.vrp,3268900.0,121.56,OK
+Lazio,Lazio_chunk_417.vrp,12760600.0,120.19,OK
+Lazio,Lazio_chunk_418.vrp,12115300.0,120.58,OK
+Lazio,Lazio_chunk_419.vrp,2732800.0,120.18,OK
+Lazio,Lazio_chunk_42.vrp,8373350.0,120.09,OK
+Lazio,Lazio_chunk_420.vrp,911256.0,120.07,OK
+Lazio,Lazio_chunk_421.vrp,7371940.0,123.56,OK
+Lazio,Lazio_chunk_422.vrp,14325600.0,123.03,OK
+Lazio,Lazio_chunk_423.vrp,18226800.0,122.63,OK
+Lazio,Lazio_chunk_424.vrp,22473600.0,121.47,OK
+Lazio,Lazio_chunk_425.vrp,1896330.0,120.15,OK
+Lazio,Lazio_chunk_426.vrp,3835030.0,120.4,OK
+Lazio,Lazio_chunk_427.vrp,4645730.0,120.08,OK
+Lazio,Lazio_chunk_428.vrp,3437490.0,120.12,OK
+Lazio,Lazio_chunk_429.vrp,672050.0,120.11,OK
+Lazio,Lazio_chunk_43.vrp,6769270.0,121.51,OK
+Lazio,Lazio_chunk_430.vrp,3407450.0,120.54,OK
+Lazio,Lazio_chunk_431.vrp,3312120.0,120.19,OK
+Lazio,Lazio_chunk_432.vrp,3361550.0,120.15,OK
+Lazio,Lazio_chunk_433.vrp,5743560.0,120.53,OK
+Lazio,Lazio_chunk_434.vrp,1715090.0,120.1,OK
+Lazio,Lazio_chunk_435.vrp,1963720.0,120.11,OK
+Lazio,Lazio_chunk_436.vrp,5047780.0,120.21,OK
+Lazio,Lazio_chunk_437.vrp,3908980.0,126.93,OK
+Lazio,Lazio_chunk_438.vrp,3532580.0,120.13,OK
+Lazio,Lazio_chunk_44.vrp,15653600.0,120.19,OK
+Lazio,Lazio_chunk_439.vrp,8134290.0,120.47,OK
+Lazio,Lazio_chunk_440.vrp,4346590.0,120.13,OK
+Lazio,Lazio_chunk_441.vrp,4222070.0,121.7,OK
+Lazio,Lazio_chunk_442.vrp,7319250.0,120.31,OK
+Lazio,Lazio_chunk_443.vrp,1892100.0,120.29,OK
+Lazio,Lazio_chunk_445.vrp,3192320.0,120.13,OK
+Lazio,Lazio_chunk_444.vrp,5022460.0,120.35,OK
+Lazio,Lazio_chunk_446.vrp,1994040.0,120.12,OK
+Lazio,Lazio_chunk_447.vrp,3507490.0,120.17,OK
+Lazio,Lazio_chunk_448.vrp,3982360.0,120.15,OK
+Lazio,Lazio_chunk_449.vrp,1283520.0,120.11,OK
+Lazio,Lazio_chunk_450.vrp,3232260.0,120.22,OK
+Lazio,Lazio_chunk_451.vrp,3799740.0,120.16,OK
+Lazio,Lazio_chunk_45.vrp,1249600.0,126.76,OK
+Lazio,Lazio_chunk_452.vrp,4941050.0,120.68,OK
+Lazio,Lazio_chunk_453.vrp,7771010.0,121.16,OK
+Lazio,Lazio_chunk_454.vrp,3953820.0,120.5,OK
+Lazio,Lazio_chunk_455.vrp,2275380.0,120.17,OK
+Lazio,Lazio_chunk_456.vrp,1880950.0,120.13,OK
+Lazio,Lazio_chunk_457.vrp,23025400.0,121.69,OK
+Lazio,Lazio_chunk_458.vrp,1495520.0,120.37,OK
+Lazio,Lazio_chunk_459.vrp,2733530.0,120.14,OK
+Lazio,Lazio_chunk_46.vrp,6067100.0,120.54,OK
+Lazio,Lazio_chunk_460.vrp,2689010.0,120.15,OK
+Lazio,Lazio_chunk_461.vrp,5693110.0,120.16,OK
+Lazio,Lazio_chunk_462.vrp,2174540.0,120.27,OK
+Lazio,Lazio_chunk_463.vrp,13479000.0,120.57,OK
+Lazio,Lazio_chunk_464.vrp,3594900.0,120.14,OK
+Lazio,Lazio_chunk_465.vrp,1612930.0,120.3,OK
+Lazio,Lazio_chunk_466.vrp,2161390.0,120.22,OK
+Lazio,Lazio_chunk_467.vrp,2488510.0,120.3,OK
+Lazio,Lazio_chunk_468.vrp,3146360.0,120.12,OK
+Lazio,Lazio_chunk_469.vrp,4746700.0,120.23,OK
+Lazio,Lazio_chunk_470.vrp,3227410.0,120.13,OK
+Lazio,Lazio_chunk_47.vrp,7866870.0,127.74,OK
+Lazio,Lazio_chunk_471.vrp,719938.0,120.14,OK
+Lazio,Lazio_chunk_472.vrp,4008540.0,120.26,OK
+Lazio,Lazio_chunk_473.vrp,13646000.0,120.21,OK
+Lazio,Lazio_chunk_474.vrp,974636.0,120.17,OK
+Lazio,Lazio_chunk_475.vrp,3265430.0,120.19,OK
+Lazio,Lazio_chunk_476.vrp,4328820.0,120.21,OK
+Lazio,Lazio_chunk_477.vrp,5108160.0,120.22,OK
+Lazio,Lazio_chunk_478.vrp,1778230.0,121.26,OK
+Lazio,Lazio_chunk_479.vrp,2745900.0,120.1,OK
+Lazio,Lazio_chunk_48.vrp,6800700.0,120.17,OK
+Lazio,Lazio_chunk_480.vrp,2741340.0,120.1,OK
+Lazio,Lazio_chunk_481.vrp,1665450.0,120.12,OK
+Lazio,Lazio_chunk_482.vrp,21330400.0,122.43,OK
+Lazio,Lazio_chunk_483.vrp,1685510.0,120.17,OK
+Lazio,Lazio_chunk_484.vrp,2865210.0,120.14,OK
+Lazio,Lazio_chunk_485.vrp,2409690.0,121.7,OK
+Lazio,Lazio_chunk_486.vrp,8830910.0,120.29,OK
+Lazio,Lazio_chunk_487.vrp,6440360.0,122.65,OK
+Lazio,Lazio_chunk_488.vrp,3013500.0,120.28,OK
+Lazio,Lazio_chunk_489.vrp,7726850.0,120.28,OK
+Lazio,Lazio_chunk_49.vrp,750694.0,120.17,OK
+Lazio,Lazio_chunk_490.vrp,1331700.0,122.58,OK
+Lazio,Lazio_chunk_491.vrp,9681220.0,120.22,OK
+Lazio,Lazio_chunk_492.vrp,3318560.0,120.12,OK
+Lazio,Lazio_chunk_493.vrp,1871170.0,123.14,OK
+Lazio,Lazio_chunk_494.vrp,1902430.0,120.38,OK
+Lazio,Lazio_chunk_495.vrp,2211330.0,120.15,OK
+Lazio,Lazio_chunk_496.vrp,5752840.0,121.33,OK
+Lazio,Lazio_chunk_497.vrp,2164720.0,120.5,OK
+Lazio,Lazio_chunk_498.vrp,1884480.0,120.15,OK
+Lazio,Lazio_chunk_50.vrp,5040230.0,120.24,OK
+Lazio,Lazio_chunk_51.vrp,3324290.0,120.18,OK
+Lazio,Lazio_chunk_5.vrp,ERROR,0,No feasible route found in 60s.
+Lazio,Lazio_chunk_52.vrp,4956070.0,120.14,OK
+Lazio,Lazio_chunk_53.vrp,4480830.0,120.34,OK
+Lazio,Lazio_chunk_54.vrp,3824710.0,120.13,OK
+Lazio,Lazio_chunk_55.vrp,4644010.0,120.35,OK
+Lazio,Lazio_chunk_56.vrp,1783040.0,120.15,OK
+Lazio,Lazio_chunk_58.vrp,5223270.0,120.38,OK
+Lazio,Lazio_chunk_59.vrp,3230860.0,124.93,OK
+Lazio,Lazio_chunk_6.vrp,4217840.0,120.22,OK
+Lazio,Lazio_chunk_57.vrp,43285100.0,170.34,OK
+Lazio,Lazio_chunk_60.vrp,4341240.0,120.87,OK
+Lazio,Lazio_chunk_62.vrp,7166110.0,120.25,OK
+Lazio,Lazio_chunk_61.vrp,3682020.0,134.5,OK
+Lazio,Lazio_chunk_63.vrp,8044510.0,120.29,OK
+Lazio,Lazio_chunk_64.vrp,12057900.0,120.25,OK
+Lazio,Lazio_chunk_65.vrp,7639740.0,120.39,OK
+Lazio,Lazio_chunk_66.vrp,1396890.0,120.49,OK
+Lazio,Lazio_chunk_67.vrp,ERROR,0,No feasible route found in 60s.
+Lazio,Lazio_chunk_68.vrp,7871970.0,123.01,OK
+Lazio,Lazio_chunk_7.vrp,3167090.0,120.41,OK
+Lazio,Lazio_chunk_69.vrp,7044460.0,122.1,OK
+Lazio,Lazio_chunk_70.vrp,11698500.0,121.69,OK
+Lazio,Lazio_chunk_71.vrp,2297740.0,120.47,OK
+Lazio,Lazio_chunk_72.vrp,2060250.0,120.12,OK
+Lazio,Lazio_chunk_73.vrp,6865020.0,120.61,OK
+Lazio,Lazio_chunk_74.vrp,6405590.0,120.15,OK
+Lazio,Lazio_chunk_75.vrp,15524200.0,120.26,OK
+Lazio,Lazio_chunk_76.vrp,4229840.0,120.17,OK
+Lazio,Lazio_chunk_77.vrp,7251280.0,120.22,OK
+Lazio,Lazio_chunk_78.vrp,6688790.0,120.21,OK
+Lazio,Lazio_chunk_79.vrp,12956900.0,120.49,OK
+Lazio,Lazio_chunk_8.vrp,2903400.0,120.28,OK
+Lazio,Lazio_chunk_80.vrp,5297000.0,120.13,OK
+Lazio,Lazio_chunk_81.vrp,18120100.0,125.42,OK
+Lazio,Lazio_chunk_82.vrp,7557070.0,127.8,OK
+Lazio,Lazio_chunk_83.vrp,2541910.0,120.2,OK
+Lazio,Lazio_chunk_84.vrp,8539540.0,120.48,OK
+Lazio,Lazio_chunk_85.vrp,3147570.0,120.15,OK
+Lazio,Lazio_chunk_86.vrp,2226180.0,120.3,OK
+Emilia-Romagna,[TOTAL AGGREGATE],INCOMPLETE,0.0,Only 0/0 succeeded
+Lazio,Lazio_chunk_89.vrp,13435600.0,120.11,OK
+Lazio,Lazio_chunk_87.vrp,5398540.0,120.23,OK
+Lazio,Lazio_chunk_88.vrp,4695680.0,120.46,OK
+Lazio,Lazio_chunk_9.vrp,18632000.0,121.5,OK
+Lazio,Lazio_chunk_90.vrp,7011150.0,120.1,OK
+Lazio,Lazio_chunk_92.vrp,1951490.0,120.06,OK
+Lazio,Lazio_chunk_91.vrp,2967530.0,122.29,OK
+Lazio,Lazio_chunk_93.vrp,1609200.0,121.93,OK
+Lazio,Lazio_chunk_94.vrp,1885220.0,120.08,OK
+Lazio,Lazio_chunk_95.vrp,17499700.0,120.24,OK
+Lazio,Lazio_chunk_96.vrp,4275860.0,120.98,OK
+Lazio,Lazio_chunk_97.vrp,8128430.0,120.25,OK
+Lazio,Lazio_chunk_98.vrp,9904300.0,120.2,OK
+Lazio,Lazio_chunk_99.vrp,8350620.0,120.07,OK
+Lazio,[TOTAL AGGREGATE],105745320.0,1688.5,ALL CHUNKS SUCCESSFUL
+Veneto,Veneto_chunk_100.vrp,928396.0,120.09,OK
+Veneto,Veneto_chunk_0.vrp,2458990.0,120.26,OK
+Veneto,Veneto_chunk_1.vrp,810660.0,120.73,OK
+Veneto,Veneto_chunk_10.vrp,2800310.0,123.42,OK
+Veneto,Veneto_chunk_101.vrp,2096120.0,120.15,OK
+Veneto,Veneto_chunk_102.vrp,2088480.0,120.13,OK
+Veneto,Veneto_chunk_103.vrp,3326470.0,120.39,OK
+Veneto,Veneto_chunk_104.vrp,2756320.0,120.23,OK
+Veneto,Veneto_chunk_105.vrp,3330600.0,120.53,OK
+Veneto,Veneto_chunk_106.vrp,1959250.0,120.63,OK
+Veneto,Veneto_chunk_107.vrp,4025880.0,121.72,OK
+Veneto,Veneto_chunk_108.vrp,1800270.0,120.46,OK
+Veneto,Veneto_chunk_109.vrp,1756500.0,120.41,OK
+Veneto,Veneto_chunk_11.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_110.vrp,1932860.0,120.29,OK
+Veneto,Veneto_chunk_111.vrp,3075500.0,121.47,OK
+Veneto,Veneto_chunk_112.vrp,2036710.0,120.29,OK
+Veneto,Veneto_chunk_114.vrp,3331430.0,120.33,OK
+Veneto,Veneto_chunk_113.vrp,1367840.0,121.25,OK
+Veneto,Veneto_chunk_115.vrp,565866.0,120.19,OK
+Veneto,Veneto_chunk_116.vrp,2647050.0,120.58,OK
+Veneto,Veneto_chunk_117.vrp,1512910.0,120.14,OK
+Veneto,Veneto_chunk_118.vrp,3429970.0,120.37,OK
+Veneto,Veneto_chunk_119.vrp,1476550.0,120.22,OK
+Veneto,Veneto_chunk_12.vrp,841456.0,120.63,OK
+Veneto,Veneto_chunk_120.vrp,2683410.0,120.75,OK
+Veneto,Veneto_chunk_121.vrp,859440.0,120.37,OK
+Veneto,Veneto_chunk_122.vrp,5807880.0,122.22,OK
+Veneto,Veneto_chunk_123.vrp,4058230.0,120.35,OK
+Veneto,Veneto_chunk_124.vrp,5582750.0,120.92,OK
+Veneto,Veneto_chunk_125.vrp,2098780.0,122.83,OK
+Veneto,Veneto_chunk_126.vrp,1921320.0,120.82,OK
+Veneto,Veneto_chunk_127.vrp,1128990.0,120.1,OK
+Veneto,Veneto_chunk_128.vrp,4529130.0,121.79,OK
+Veneto,Veneto_chunk_129.vrp,1389030.0,120.4,OK
+Veneto,Veneto_chunk_13.vrp,3423920.0,120.22,OK
+Veneto,Veneto_chunk_130.vrp,3616430.0,121.05,OK
+Veneto,Veneto_chunk_131.vrp,1499110.0,120.36,OK
+Veneto,Veneto_chunk_132.vrp,1103460.0,120.43,OK
+Veneto,Veneto_chunk_133.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_133.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_133.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+Veneto,Veneto_chunk_134.vrp,3290560.0,120.21,OK
+Veneto,Veneto_chunk_136.vrp,4856440.0,120.7,OK
+Veneto,Veneto_chunk_135.vrp,7597700.0,127.12,OK
+Veneto,Veneto_chunk_137.vrp,2779150.0,120.2,OK
+Veneto,Veneto_chunk_138.vrp,3173500.0,122.11,OK
+Veneto,Veneto_chunk_139.vrp,3521590.0,120.41,OK
+Veneto,Veneto_chunk_14.vrp,1667500.0,120.11,OK
+Veneto,Veneto_chunk_140.vrp,1906070.0,120.16,OK
+Veneto,Veneto_chunk_141.vrp,2379070.0,120.09,OK
+Veneto,Veneto_chunk_142.vrp,2898920.0,120.61,OK
+Veneto,Veneto_chunk_143.vrp,10082100.0,123.72,OK
+Veneto,Veneto_chunk_144.vrp,2284940.0,120.18,OK
+Veneto,Veneto_chunk_145.vrp,1090940.0,120.6,OK
+Veneto,Veneto_chunk_146.vrp,2526990.0,120.5,OK
+Veneto,Veneto_chunk_147.vrp,2981430.0,120.43,OK
+Veneto,Veneto_chunk_148.vrp,1984370.0,120.45,OK
+Veneto,Veneto_chunk_149.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_15.vrp,1422460.0,120.3,OK
+Veneto,Veneto_chunk_150.vrp,1316020.0,120.08,OK
+Veneto,Veneto_chunk_151.vrp,6624870.0,124.63,OK
+Veneto,Veneto_chunk_152.vrp,811524.0,120.2,OK
+Veneto,Veneto_chunk_153.vrp,1402160.0,120.27,OK
+Veneto,Veneto_chunk_154.vrp,1348210.0,120.08,OK
+Veneto,Veneto_chunk_155.vrp,2805120.0,120.73,OK
+Veneto,Veneto_chunk_156.vrp,1524140.0,120.15,OK
+Veneto,Veneto_chunk_157.vrp,3814390.0,120.62,OK
+Veneto,Veneto_chunk_158.vrp,3660930.0,120.29,OK
+Veneto,Veneto_chunk_159.vrp,655228.0,120.6,OK
+Veneto,Veneto_chunk_16.vrp,2522250.0,120.23,OK
+Veneto,Veneto_chunk_160.vrp,6187920.0,122.17,OK
+Veneto,Veneto_chunk_161.vrp,4435420.0,121.39,OK
+Veneto,Veneto_chunk_162.vrp,1642480.0,120.22,OK
+Veneto,Veneto_chunk_163.vrp,869258.0,120.36,OK
+Veneto,Veneto_chunk_164.vrp,1719990.0,121.2,OK
+Veneto,Veneto_chunk_165.vrp,907326.0,120.43,OK
+Veneto,Veneto_chunk_166.vrp,4210110.0,120.26,OK
+Veneto,Veneto_chunk_167.vrp,2061510.0,120.09,OK
+Veneto,Veneto_chunk_168.vrp,2988940.0,123.27,OK
+Veneto,Veneto_chunk_169.vrp,1643200.0,120.27,OK
+Veneto,Veneto_chunk_17.vrp,2544420.0,121.64,OK
+Veneto,Veneto_chunk_170.vrp,1556460.0,120.12,OK
+Veneto,Veneto_chunk_171.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_172.vrp,1631170.0,120.18,OK
+Veneto,Veneto_chunk_173.vrp,1634880.0,120.44,OK
+Veneto,Veneto_chunk_174.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_174.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_174.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+Veneto,Veneto_chunk_175.vrp,1215900.0,120.1,OK
+Veneto,Veneto_chunk_176.vrp,3957900.0,121.87,OK
+Veneto,Veneto_chunk_177.vrp,3947400.0,120.57,OK
+Veneto,Veneto_chunk_178.vrp,1678870.0,120.33,OK
+Veneto,Veneto_chunk_179.vrp,628781.0,120.29,OK
+Veneto,Veneto_chunk_18.vrp,3278530.0,121.62,OK
+Veneto,Veneto_chunk_180.vrp,3025860.0,122.31,OK
+Veneto,Veneto_chunk_181.vrp,3312410.0,120.41,OK
+Veneto,Veneto_chunk_182.vrp,3189780.0,121.25,OK
+Veneto,Veneto_chunk_183.vrp,3290090.0,120.8,OK
+Veneto,Veneto_chunk_184.vrp,8003020.0,122.07,OK
+Veneto,Veneto_chunk_185.vrp,3795380.0,120.23,OK
+Veneto,Veneto_chunk_186.vrp,4997020.0,121.15,OK
+Veneto,Veneto_chunk_187.vrp,710115.0,120.24,OK
+Veneto,Veneto_chunk_188.vrp,1923170.0,120.22,OK
+Veneto,Veneto_chunk_189.vrp,2004000.0,120.33,OK
+Veneto,Veneto_chunk_190.vrp,1611080.0,120.14,OK
+Veneto,Veneto_chunk_19.vrp,9699740.0,127.09,OK
+Veneto,Veneto_chunk_191.vrp,688182.0,120.12,OK
+Veneto,Veneto_chunk_192.vrp,1344430.0,120.14,OK
+Veneto,Veneto_chunk_193.vrp,2618780.0,121.0,OK
+Veneto,Veneto_chunk_194.vrp,619820.0,120.27,OK
+Veneto,Veneto_chunk_195.vrp,2355380.0,120.3,OK
+Veneto,Veneto_chunk_196.vrp,2506800.0,120.2,OK
+Veneto,Veneto_chunk_197.vrp,464147.0,120.1,OK
+Veneto,Veneto_chunk_198.vrp,2746590.0,120.67,OK
+Veneto,Veneto_chunk_199.vrp,682131.0,120.3,OK
+Veneto,Veneto_chunk_2.vrp,2856940.0,121.72,OK
+Veneto,Veneto_chunk_20.vrp,4846140.0,122.39,OK
+Veneto,Veneto_chunk_200.vrp,1281810.0,121.07,OK
+Veneto,Veneto_chunk_201.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_202.vrp,2536460.0,120.31,OK
+Veneto,Veneto_chunk_203.vrp,1534420.0,120.11,OK
+Veneto,Veneto_chunk_205.vrp,4825380.0,120.57,OK
+Veneto,Veneto_chunk_204.vrp,6033160.0,126.31,OK
+Veneto,Veneto_chunk_206.vrp,985231.0,120.12,OK
+Veneto,Veneto_chunk_207.vrp,2450610.0,120.49,OK
+Veneto,Veneto_chunk_208.vrp,459624.0,120.27,OK
+Veneto,Veneto_chunk_209.vrp,1348260.0,120.32,OK
+Veneto,Veneto_chunk_21.vrp,4323730.0,122.65,OK
+Veneto,Veneto_chunk_210.vrp,3102370.0,120.28,OK
+Veneto,Veneto_chunk_211.vrp,2804940.0,120.72,OK
+Veneto,Veneto_chunk_212.vrp,1587630.0,120.17,OK
+Veneto,Veneto_chunk_213.vrp,1941370.0,120.3,OK
+Veneto,Veneto_chunk_215.vrp,1418620.0,120.18,OK
+Veneto,Veneto_chunk_214.vrp,8497560.0,129.48,OK
+Veneto,Veneto_chunk_216.vrp,867660.0,120.47,OK
+Veneto,Veneto_chunk_217.vrp,1477350.0,121.79,OK
+Veneto,Veneto_chunk_218.vrp,3553640.0,121.54,OK
+Veneto,Veneto_chunk_219.vrp,2723390.0,120.52,OK
+Veneto,Veneto_chunk_22.vrp,4629940.0,125.77,OK
+Veneto,Veneto_chunk_220.vrp,802628.0,120.37,OK
+Veneto,Veneto_chunk_221.vrp,4832040.0,121.94,OK
+Veneto,Veneto_chunk_222.vrp,6500420.0,121.01,OK
+Veneto,Veneto_chunk_223.vrp,1296920.0,120.43,OK
+Veneto,Veneto_chunk_224.vrp,1560710.0,120.28,OK
+Veneto,Veneto_chunk_225.vrp,2625050.0,120.35,OK
+Veneto,Veneto_chunk_226.vrp,1270690.0,120.44,OK
+Veneto,Veneto_chunk_227.vrp,4276690.0,120.64,OK
+Veneto,Veneto_chunk_228.vrp,3966170.0,121.48,OK
+Veneto,Veneto_chunk_229.vrp,2356750.0,120.32,OK
+Veneto,Veneto_chunk_230.vrp,5157820.0,120.95,OK
+Veneto,Veneto_chunk_23.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_23.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_23.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+Veneto,Veneto_chunk_231.vrp,4689470.0,120.82,OK
+Veneto,Veneto_chunk_232.vrp,1398510.0,120.45,OK
+Veneto,Veneto_chunk_233.vrp,5465110.0,120.5,OK
+Veneto,Veneto_chunk_234.vrp,5192740.0,121.5,OK
+Veneto,Veneto_chunk_235.vrp,1572320.0,120.28,OK
+Veneto,Veneto_chunk_236.vrp,2030430.0,121.34,OK
+Veneto,Veneto_chunk_237.vrp,1430780.0,120.2,OK
+Veneto,Veneto_chunk_238.vrp,2070910.0,120.23,OK
+Veneto,Veneto_chunk_239.vrp,1091690.0,120.16,OK
+Veneto,Veneto_chunk_24.vrp,1765200.0,121.01,OK
+Veneto,Veneto_chunk_240.vrp,5549320.0,123.66,OK
+Veneto,Veneto_chunk_241.vrp,1590760.0,120.3,OK
+Veneto,Veneto_chunk_242.vrp,1554360.0,120.16,OK
+Veneto,Veneto_chunk_243.vrp,1314540.0,120.23,OK
+Veneto,Veneto_chunk_244.vrp,190322.0,120.13,OK
+Veneto,Veneto_chunk_245.vrp,2302780.0,120.15,OK
+Veneto,Veneto_chunk_246.vrp,3313440.0,120.49,OK
+Veneto,Veneto_chunk_247.vrp,1633540.0,120.08,OK
+Veneto,Veneto_chunk_248.vrp,1160740.0,121.2,OK
+Veneto,Veneto_chunk_249.vrp,1550710.0,120.12,OK
+Veneto,Veneto_chunk_25.vrp,1352800.0,120.16,OK
+Veneto,Veneto_chunk_250.vrp,3859280.0,121.09,OK
+Veneto,Veneto_chunk_251.vrp,3231410.0,120.37,OK
+Veneto,Veneto_chunk_252.vrp,2166780.0,120.28,OK
+Veneto,Veneto_chunk_253.vrp,1788890.0,120.22,OK
+Veneto,Veneto_chunk_254.vrp,2076800.0,120.22,OK
+Veneto,Veneto_chunk_255.vrp,3311320.0,120.32,OK
+Veneto,Veneto_chunk_256.vrp,1417000.0,122.19,OK
+Veneto,Veneto_chunk_257.vrp,1655660.0,120.28,OK
+Veneto,Veneto_chunk_258.vrp,2624820.0,120.91,OK
+Veneto,Veneto_chunk_259.vrp,995409.0,126.32,OK
+Veneto,Veneto_chunk_26.vrp,7568920.0,126.25,OK
+Veneto,Veneto_chunk_260.vrp,3660940.0,120.32,OK
+Veneto,Veneto_chunk_261.vrp,3829120.0,120.19,OK
+Veneto,Veneto_chunk_262.vrp,1938240.0,120.33,OK
+Veneto,Veneto_chunk_263.vrp,1170510.0,120.5,OK
+Veneto,Veneto_chunk_264.vrp,2888810.0,120.7,OK
+Veneto,Veneto_chunk_265.vrp,1216610.0,120.64,OK
+Veneto,Veneto_chunk_266.vrp,1287320.0,120.22,OK
+Veneto,Veneto_chunk_267.vrp,974054.0,120.11,OK
+Veneto,Veneto_chunk_268.vrp,1426550.0,120.32,OK
+Veneto,Veneto_chunk_269.vrp,1340670.0,120.1,OK
+Veneto,Veneto_chunk_27.vrp,3223450.0,120.15,OK
+Veneto,Veneto_chunk_270.vrp,2831340.0,120.17,OK
+Veneto,Veneto_chunk_271.vrp,3310680.0,120.35,OK
+Veneto,Veneto_chunk_272.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_273.vrp,2513120.0,120.15,OK
+Veneto,Veneto_chunk_274.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_275.vrp,1667440.0,120.15,OK
+Veneto,Veneto_chunk_276.vrp,1137340.0,120.12,OK
+Veneto,Veneto_chunk_277.vrp,836901.0,120.18,OK
+Veneto,Veneto_chunk_278.vrp,1799640.0,121.98,OK
+Veneto,Veneto_chunk_279.vrp,1708530.0,120.78,OK
+Veneto,Veneto_chunk_28.vrp,868993.0,120.12,OK
+Veneto,Veneto_chunk_280.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_281.vrp,5228240.0,120.24,OK
+Veneto,Veneto_chunk_282.vrp,206427.0,120.26,OK
+Veneto,Veneto_chunk_283.vrp,912341.0,120.16,OK
+Veneto,Veneto_chunk_284.vrp,5909530.0,121.78,OK
+Veneto,Veneto_chunk_285.vrp,5264350.0,121.18,OK
+Veneto,Veneto_chunk_286.vrp,3440990.0,121.29,OK
+Veneto,Veneto_chunk_287.vrp,1118830.0,120.16,OK
+Veneto,Veneto_chunk_288.vrp,3458440.0,121.0,OK
+Veneto,Veneto_chunk_289.vrp,1209240.0,120.67,OK
+Veneto,Veneto_chunk_29.vrp,8020850.0,121.5,OK
+Veneto,Veneto_chunk_290.vrp,772689.0,120.59,OK
+Veneto,Veneto_chunk_291.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_292.vrp,1463720.0,120.09,OK
+Veneto,Veneto_chunk_293.vrp,3080830.0,120.1,OK
+Veneto,Veneto_chunk_294.vrp,828223.0,120.46,OK
+Veneto,Veneto_chunk_295.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_296.vrp,1298860.0,120.28,OK
+Veneto,Veneto_chunk_297.vrp,937176.0,120.11,OK
+Veneto,Veneto_chunk_298.vrp,2252860.0,120.26,OK
+Veneto,Veneto_chunk_299.vrp,2696540.0,120.21,OK
+Veneto,Veneto_chunk_3.vrp,6057580.0,124.14,OK
+Veneto,Veneto_chunk_30.vrp,2720860.0,120.26,OK
+Veneto,Veneto_chunk_300.vrp,2335450.0,120.43,OK
+Veneto,Veneto_chunk_301.vrp,980055.0,120.28,OK
+Veneto,Veneto_chunk_302.vrp,3571480.0,120.28,OK
+Veneto,Veneto_chunk_303.vrp,1255650.0,120.16,OK
+Veneto,Veneto_chunk_304.vrp,3141000.0,120.36,OK
+Veneto,Veneto_chunk_305.vrp,1783830.0,120.16,OK
+Veneto,Veneto_chunk_306.vrp,2074420.0,120.17,OK
+Veneto,Veneto_chunk_307.vrp,1024610.0,120.19,OK
+Veneto,Veneto_chunk_308.vrp,2231330.0,120.18,OK
+Veneto,Veneto_chunk_309.vrp,1751680.0,120.54,OK
+Veneto,Veneto_chunk_31.vrp,3804280.0,122.14,OK
+Veneto,Veneto_chunk_310.vrp,2030140.0,122.2,OK
+Veneto,Veneto_chunk_311.vrp,6934840.0,129.85,OK
+Veneto,Veneto_chunk_312.vrp,7745250.0,128.47,OK
+Veneto,Veneto_chunk_313.vrp,1128610.0,120.3,OK
+Veneto,Veneto_chunk_314.vrp,2486850.0,120.18,OK
+Veneto,Veneto_chunk_315.vrp,1204200.0,120.37,OK
+Veneto,Veneto_chunk_316.vrp,8950860.0,125.62,OK
+Veneto,Veneto_chunk_317.vrp,1209940.0,120.42,OK
+Veneto,Veneto_chunk_318.vrp,1233590.0,120.21,OK
+Veneto,Veneto_chunk_319.vrp,1304380.0,120.19,OK
+Veneto,Veneto_chunk_32.vrp,1495810.0,120.51,OK
+Veneto,Veneto_chunk_320.vrp,386051.0,120.25,OK
+Veneto,Veneto_chunk_321.vrp,1903340.0,120.16,OK
+Veneto,Veneto_chunk_322.vrp,3886540.0,120.8,OK
+Veneto,Veneto_chunk_323.vrp,1308720.0,120.59,OK
+Veneto,Veneto_chunk_324.vrp,865552.0,120.13,OK
+Veneto,Veneto_chunk_325.vrp,2657620.0,120.43,OK
+Veneto,Veneto_chunk_326.vrp,1923340.0,120.29,OK
+Veneto,Veneto_chunk_327.vrp,1209680.0,120.77,OK
+Veneto,Veneto_chunk_328.vrp,1406120.0,123.11,OK
+Veneto,Veneto_chunk_329.vrp,1935960.0,120.29,OK
+Veneto,Veneto_chunk_33.vrp,2350230.0,122.39,OK
+Veneto,Veneto_chunk_330.vrp,3775870.0,120.11,OK
+Veneto,Veneto_chunk_331.vrp,510226.0,120.14,OK
+Veneto,Veneto_chunk_332.vrp,569877.0,120.12,OK
+Veneto,Veneto_chunk_333.vrp,4398300.0,122.25,OK
+Veneto,Veneto_chunk_334.vrp,1634190.0,120.18,OK
+Veneto,Veneto_chunk_335.vrp,2207860.0,120.14,OK
+Veneto,Veneto_chunk_336.vrp,1505220.0,121.56,OK
+Veneto,Veneto_chunk_337.vrp,1353890.0,120.37,OK
+Veneto,Veneto_chunk_338.vrp,650824.0,120.16,OK
+Veneto,Veneto_chunk_339.vrp,3200360.0,120.42,OK
+Veneto,Veneto_chunk_34.vrp,2890300.0,120.13,OK
+Veneto,Veneto_chunk_340.vrp,1270450.0,120.3,OK
+Veneto,Veneto_chunk_341.vrp,1593350.0,120.36,OK
+Veneto,Veneto_chunk_342.vrp,1080610.0,120.21,OK
+Veneto,Veneto_chunk_343.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_344.vrp,2256720.0,120.31,OK
+Veneto,Veneto_chunk_345.vrp,1451560.0,120.74,OK
+Veneto,Veneto_chunk_346.vrp,1018280.0,120.14,OK
+Veneto,Veneto_chunk_347.vrp,1431150.0,120.62,OK
+Veneto,Veneto_chunk_348.vrp,1102000.0,120.12,OK
+Veneto,Veneto_chunk_349.vrp,1177920.0,120.22,OK
+Veneto,Veneto_chunk_35.vrp,1354110.0,121.09,OK
+Veneto,Veneto_chunk_350.vrp,1793930.0,120.43,OK
+Veneto,Veneto_chunk_351.vrp,2009870.0,120.34,OK
+Veneto,Veneto_chunk_352.vrp,1430870.0,121.16,OK
+Veneto,Veneto_chunk_353.vrp,1266060.0,120.65,OK
+Veneto,Veneto_chunk_354.vrp,702271.0,120.33,OK
+Veneto,Veneto_chunk_355.vrp,1452560.0,120.12,OK
+Veneto,Veneto_chunk_356.vrp,1568330.0,120.2,OK
+Veneto,Veneto_chunk_357.vrp,4065060.0,124.12,OK
+Veneto,Veneto_chunk_358.vrp,1579580.0,120.3,OK
+Veneto,Veneto_chunk_359.vrp,6554530.0,121.26,OK
+Veneto,Veneto_chunk_36.vrp,2607600.0,120.61,OK
+Veneto,Veneto_chunk_360.vrp,1302480.0,120.62,OK
+Veneto,Veneto_chunk_361.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_361.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_361.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+Veneto,Veneto_chunk_362.vrp,2080460.0,120.1,OK
+Veneto,Veneto_chunk_363.vrp,1618380.0,120.15,OK
+Veneto,Veneto_chunk_364.vrp,2976830.0,121.24,OK
+Veneto,Veneto_chunk_365.vrp,2274960.0,120.97,OK
+Veneto,Veneto_chunk_366.vrp,2090490.0,120.18,OK
+Veneto,Veneto_chunk_367.vrp,740069.0,122.94,OK
+Veneto,Veneto_chunk_368.vrp,1909740.0,120.11,OK
+Veneto,Veneto_chunk_369.vrp,2376740.0,120.2,OK
+Veneto,Veneto_chunk_37.vrp,873698.0,120.2,OK
+Veneto,Veneto_chunk_370.vrp,1898040.0,120.29,OK
+Veneto,Veneto_chunk_371.vrp,3116190.0,120.63,OK
+Veneto,Veneto_chunk_372.vrp,4484630.0,120.41,OK
+Veneto,Veneto_chunk_373.vrp,1536490.0,120.11,OK
+Veneto,Veneto_chunk_374.vrp,6394810.0,120.81,OK
+Veneto,Veneto_chunk_375.vrp,1328730.0,121.0,OK
+Veneto,Veneto_chunk_376.vrp,3854410.0,120.25,OK
+Veneto,Veneto_chunk_377.vrp,3684190.0,121.03,OK
+Veneto,Veneto_chunk_378.vrp,2956260.0,123.25,OK
+Veneto,Veneto_chunk_379.vrp,1924690.0,120.51,OK
+Veneto,Veneto_chunk_38.vrp,5021690.0,122.61,OK
+Veneto,Veneto_chunk_380.vrp,2399440.0,120.99,OK
+Veneto,Veneto_chunk_381.vrp,3369680.0,120.62,OK
+Veneto,Veneto_chunk_382.vrp,2166150.0,120.44,OK
+Veneto,Veneto_chunk_383.vrp,972417.0,120.23,OK
+Veneto,Veneto_chunk_384.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_385.vrp,1356210.0,120.27,OK
+Veneto,Veneto_chunk_386.vrp,2837840.0,121.06,OK
+Veneto,Veneto_chunk_387.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_388.vrp,1774000.0,120.4,OK
+Veneto,Veneto_chunk_389.vrp,1241000.0,120.26,OK
+Veneto,Veneto_chunk_39.vrp,1554380.0,120.26,OK
+Veneto,Veneto_chunk_390.vrp,3029620.0,120.18,OK
+Veneto,Veneto_chunk_391.vrp,3096060.0,120.45,OK
+Veneto,Veneto_chunk_392.vrp,2995410.0,120.59,OK
+Veneto,Veneto_chunk_393.vrp,1628540.0,120.53,OK
+Veneto,Veneto_chunk_394.vrp,1080440.0,120.13,OK
+Veneto,Veneto_chunk_395.vrp,1913080.0,120.2,OK
+Veneto,Veneto_chunk_396.vrp,729993.0,120.26,OK
+Veneto,Veneto_chunk_397.vrp,1975300.0,120.18,OK
+Veneto,Veneto_chunk_398.vrp,2156050.0,120.55,OK
+Veneto,Veneto_chunk_399.vrp,ERROR,0,No feasible route found in 60s.
+Veneto,Veneto_chunk_4.vrp,2530530.0,120.33,OK
+Veneto,Veneto_chunk_40.vrp,2914620.0,120.82,OK
+Veneto,Veneto_chunk_400.vrp,1972870.0,120.52,OK
+Veneto,Veneto_chunk_401.vrp,920130.0,120.15,OK
+Veneto,Veneto_chunk_402.vrp,1092870.0,120.55,OK
+Veneto,Veneto_chunk_403.vrp,691271.0,120.06,OK
+Veneto,Veneto_chunk_404.vrp,2416030.0,121.03,OK
+Veneto,Veneto_chunk_405.vrp,1516020.0,120.88,OK
+Veneto,Veneto_chunk_406.vrp,2483160.0,120.11,OK
+Veneto,Veneto_chunk_407.vrp,824756.0,120.11,OK
+Veneto,Veneto_chunk_408.vrp,1378640.0,120.39,OK
+Veneto,Veneto_chunk_409.vrp,928626.0,120.08,OK
+Veneto,Veneto_chunk_41.vrp,2070680.0,120.4,OK
+Veneto,Veneto_chunk_410.vrp,1070990.0,120.18,OK
+Veneto,Veneto_chunk_411.vrp,2451150.0,120.72,OK
+Veneto,Veneto_chunk_412.vrp,2355930.0,120.16,OK
+Veneto,Veneto_chunk_413.vrp,978569.0,120.45,OK
+Veneto,Veneto_chunk_414.vrp,3106160.0,121.15,OK
+Veneto,Veneto_chunk_416.vrp,1997460.0,120.29,OK
+Veneto,Veneto_chunk_415.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_415.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_415.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+Veneto,Veneto_chunk_417.vrp,2309690.0,120.14,OK
+Veneto,Veneto_chunk_418.vrp,1788700.0,120.11,OK
+Veneto,Veneto_chunk_42.vrp,645903.0,120.17,OK
+Veneto,Veneto_chunk_419.vrp,1264520.0,120.15,OK
+Veneto,Veneto_chunk_420.vrp,2010000.0,120.15,OK
+Veneto,Veneto_chunk_421.vrp,3120680.0,120.18,OK
+Veneto,Veneto_chunk_423.vrp,464912.0,120.09,OK
+Veneto,Veneto_chunk_422.vrp,926461.0,120.33,OK
+Veneto,Veneto_chunk_43.vrp,618382.0,120.57,OK
+Veneto,Veneto_chunk_44.vrp,3663370.0,124.08,OK
+Veneto,Veneto_chunk_45.vrp,1014970.0,120.1,OK
+Veneto,Veneto_chunk_46.vrp,2687760.0,120.48,OK
+Veneto,Veneto_chunk_47.vrp,2508620.0,120.13,OK
+Veneto,Veneto_chunk_48.vrp,12265000.0,128.88,OK
+Veneto,Veneto_chunk_5.vrp,2047230.0,120.64,OK
+Veneto,Veneto_chunk_49.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_49.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/Veneto_partitions/Veneto_chunk_49.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+Veneto,Veneto_chunk_50.vrp,5589100.0,120.56,OK
+Veneto,Veneto_chunk_51.vrp,1986110.0,120.14,OK
+Veneto,Veneto_chunk_52.vrp,5543220.0,120.72,OK
+Veneto,Veneto_chunk_53.vrp,2203630.0,120.31,OK
+Veneto,Veneto_chunk_54.vrp,1700010.0,120.15,OK
+Veneto,Veneto_chunk_55.vrp,1070230.0,120.22,OK
+Veneto,Veneto_chunk_56.vrp,677542.0,120.1,OK
+Veneto,Veneto_chunk_57.vrp,4703610.0,121.92,OK
+Veneto,Veneto_chunk_58.vrp,2166310.0,120.39,OK
+Veneto,Veneto_chunk_59.vrp,1988910.0,120.11,OK
+Veneto,Veneto_chunk_6.vrp,1513120.0,120.12,OK
+Veneto,Veneto_chunk_60.vrp,1740840.0,120.4,OK
+Veneto,Veneto_chunk_61.vrp,1964460.0,120.24,OK
+Veneto,Veneto_chunk_62.vrp,747956.0,120.18,OK
+Veneto,Veneto_chunk_63.vrp,3338170.0,120.71,OK
+Veneto,Veneto_chunk_64.vrp,1964590.0,120.09,OK
+Veneto,Veneto_chunk_65.vrp,1278880.0,120.5,OK
+Veneto,Veneto_chunk_66.vrp,5874490.0,123.97,OK
+Veneto,Veneto_chunk_67.vrp,1185620.0,120.19,OK
+Veneto,Veneto_chunk_68.vrp,6893930.0,122.44,OK
+Veneto,Veneto_chunk_69.vrp,2014950.0,120.76,OK
+Veneto,Veneto_chunk_7.vrp,4062100.0,120.41,OK
+Veneto,Veneto_chunk_70.vrp,6198200.0,120.53,OK
+Veneto,Veneto_chunk_71.vrp,3892020.0,121.35,OK
+Veneto,Veneto_chunk_72.vrp,5494820.0,120.49,OK
+Veneto,Veneto_chunk_73.vrp,3705010.0,121.79,OK
+Veneto,Veneto_chunk_74.vrp,5828220.0,125.62,OK
+Veneto,Veneto_chunk_75.vrp,814293.0,120.16,OK
+Veneto,Veneto_chunk_76.vrp,2600600.0,120.29,OK
+Veneto,Veneto_chunk_77.vrp,6308960.0,127.96,OK
+Veneto,Veneto_chunk_78.vrp,3933960.0,120.66,OK
+Veneto,Veneto_chunk_79.vrp,2453760.0,120.27,OK
+Veneto,Veneto_chunk_8.vrp,2258840.0,121.27,OK
+Veneto,Veneto_chunk_80.vrp,2400720.0,123.77,OK
+Veneto,Veneto_chunk_81.vrp,4450070.0,121.17,OK
+Veneto,Veneto_chunk_82.vrp,2836610.0,120.53,OK
+Veneto,Veneto_chunk_83.vrp,1253340.0,121.05,OK
+Veneto,Veneto_chunk_84.vrp,2519360.0,120.8,OK
+Veneto,Veneto_chunk_85.vrp,2780800.0,120.27,OK
+Veneto,Veneto_chunk_86.vrp,1939260.0,120.18,OK
+Veneto,Veneto_chunk_87.vrp,1188600.0,121.8,OK
+Veneto,Veneto_chunk_88.vrp,1838900.0,121.51,OK
+Veneto,Veneto_chunk_89.vrp,616809.0,121.91,OK
+Veneto,Veneto_chunk_9.vrp,5295510.0,120.45,OK
+Veneto,Veneto_chunk_90.vrp,4034310.0,120.32,OK
+Veneto,Veneto_chunk_91.vrp,2218220.0,120.58,OK
+Veneto,Veneto_chunk_92.vrp,2525820.0,121.09,OK
+Veneto,Veneto_chunk_93.vrp,1165740.0,120.1,OK
+Veneto,Veneto_chunk_94.vrp,557444.0,120.15,OK
+Veneto,Veneto_chunk_95.vrp,1602160.0,120.29,OK
+Veneto,Veneto_chunk_96.vrp,1164210.0,120.3,OK
+Veneto,Veneto_chunk_97.vrp,6153870.0,120.3,OK
+Veneto,Veneto_chunk_98.vrp,816139.0,120.09,OK
+Veneto,Veneto_chunk_99.vrp,372636.0,120.11,OK
+Veneto,[TOTAL AGGREGATE],INCOMPLETE,1013631320.0,Only 405/424 succeeded
+XML1000000_2324_01,XML1000000_2324_01_chunk_100.vrp,106589000.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_0.vrp,117243000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_10.vrp,57167400.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_1.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_101.vrp,58283500.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_102.vrp,30738200.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_103.vrp,113247000.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_104.vrp,95639400.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_106.vrp,82998400.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_107.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_105.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_108.vrp,103597000.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_110.vrp,159579000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_11.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_109.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_111.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_112.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_114.vrp,82604400.0,120.4,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_113.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_115.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_116.vrp,109583000.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_117.vrp,117810000.0,120.31,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_119.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_118.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_12.vrp,90641900.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_120.vrp,60795900.0,120.32,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_122.vrp,80655100.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_121.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_123.vrp,109040000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_124.vrp,86766600.0,120.49,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_125.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_126.vrp,ERROR,0,"Crash: Command '['/mnt/c/internship/iitm/cvrp/baselines/HGS-CVRP/build_linux/hgs', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/XML1000000_2324_01_partitions/XML1000000_2324_01_chunk_126.vrp', '/mnt/c/internship/iitm/cvrp/data/instances/hgs_partitions/XML1000000_2324_01_partitions/XML1000000_2324_01_chunk_126.sol', '-t', '120', '-seed', '42']' timed out after 130 seconds"
+XML1000000_2324_01,XML1000000_2324_01_chunk_127.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_128.vrp,93238700.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_129.vrp,118160000.0,120.33,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_13.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_130.vrp,106395000.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_131.vrp,114929000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_132.vrp,82175900.0,120.32,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_133.vrp,99150100.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_134.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_135.vrp,32042200.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_136.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_137.vrp,162017000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_138.vrp,52572500.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_139.vrp,118222000.0,120.49,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_14.vrp,126965000.0,120.26,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_140.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_142.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_143.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_141.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_144.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_145.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_146.vrp,85542000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_147.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_148.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_149.vrp,56569400.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_15.vrp,109065000.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_150.vrp,65611700.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_151.vrp,99404100.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_152.vrp,68113600.0,120.33,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_153.vrp,109243000.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_154.vrp,52775900.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_155.vrp,110926000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_156.vrp,77804200.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_157.vrp,112673000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_158.vrp,108646000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_159.vrp,101093000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_160.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_161.vrp,91006300.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_16.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_162.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_163.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_164.vrp,129992000.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_165.vrp,59213200.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_166.vrp,130623000.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_167.vrp,125547000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_168.vrp,137678000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_169.vrp,116642000.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_17.vrp,114232000.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_170.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_171.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_172.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_173.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_174.vrp,25705700.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_175.vrp,27714200.0,120.34,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_176.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_177.vrp,117913000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_178.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_179.vrp,106625000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_18.vrp,74302400.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_180.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_181.vrp,75990700.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_182.vrp,39410100.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_183.vrp,21573000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_184.vrp,83987600.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_185.vrp,70726200.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_186.vrp,81220000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_187.vrp,109302000.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_188.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_189.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_19.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_190.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_191.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_192.vrp,85465400.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_193.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_194.vrp,56039200.0,120.32,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_195.vrp,127021000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_196.vrp,65593500.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_198.vrp,42914900.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_199.vrp,122095000.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_197.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_2.vrp,89120400.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_20.vrp,139313000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_200.vrp,46285700.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_201.vrp,149671000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_202.vrp,86427000.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_203.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_204.vrp,151822000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_205.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_206.vrp,81336100.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_207.vrp,99508800.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_208.vrp,26008300.0,120.79,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_209.vrp,46417700.0,120.31,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_21.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_210.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_211.vrp,122343000.0,120.29,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_212.vrp,153349000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_213.vrp,119669000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_214.vrp,104748000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_215.vrp,103276000.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_216.vrp,106024000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_217.vrp,94098100.0,120.05,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_218.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_219.vrp,99007600.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_22.vrp,101571000.0,120.04,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_220.vrp,87488600.0,120.26,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_221.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_222.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_223.vrp,38229000.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_224.vrp,103903000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_225.vrp,84245200.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_226.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_227.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_228.vrp,110368000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_229.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_23.vrp,30439700.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_230.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_231.vrp,114358000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_232.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_233.vrp,20559800.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_234.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_235.vrp,105936000.0,120.3,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_236.vrp,70420800.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_237.vrp,74483600.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_238.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_239.vrp,91685900.0,120.03,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_24.vrp,127707000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_240.vrp,62956600.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_241.vrp,124582000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_242.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_243.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_244.vrp,105400000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_245.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_246.vrp,111286000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_247.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_248.vrp,57664100.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_249.vrp,99285900.0,120.31,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_25.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_251.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_250.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_252.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_253.vrp,69314900.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_254.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_255.vrp,42936600.0,120.3,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_256.vrp,50943700.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_257.vrp,34449000.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_258.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_259.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_26.vrp,79050900.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_260.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_261.vrp,21242100.0,120.35,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_262.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_263.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_264.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_265.vrp,116636000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_266.vrp,138808000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_267.vrp,87593000.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_268.vrp,46219500.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_269.vrp,123725000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_27.vrp,90483100.0,120.46,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_270.vrp,45982400.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_271.vrp,23628000.0,120.34,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_272.vrp,81691400.0,120.06,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_273.vrp,74500100.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_274.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_275.vrp,109088000.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_276.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_277.vrp,9484140.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_278.vrp,62157000.0,120.36,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_279.vrp,94598400.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_28.vrp,156431000.0,120.38,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_280.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_281.vrp,70887400.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_282.vrp,34763800.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_283.vrp,45583300.0,120.41,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_284.vrp,82658700.0,120.32,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_285.vrp,46627200.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_286.vrp,106031000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_287.vrp,120116000.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_288.vrp,127822000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_289.vrp,104119000.0,120.36,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_29.vrp,116193000.0,120.36,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_290.vrp,61126300.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_291.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_292.vrp,86689100.0,120.39,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_293.vrp,87832600.0,120.06,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_294.vrp,44948800.0,120.29,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_295.vrp,46890100.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_296.vrp,87821600.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_297.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_298.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_299.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_3.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_30.vrp,73265700.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_300.vrp,84979000.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_301.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_302.vrp,19398200.0,120.72,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_303.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_304.vrp,81373300.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_305.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_306.vrp,52828100.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_307.vrp,46735000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_308.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_309.vrp,80696500.0,120.38,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_31.vrp,19553800.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_310.vrp,50657200.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_311.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_312.vrp,68339000.0,120.29,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_313.vrp,64904700.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_314.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_315.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_316.vrp,137125000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_317.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_318.vrp,158361000.0,120.33,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_319.vrp,134376000.0,120.27,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_32.vrp,67796900.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_320.vrp,90984800.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_321.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_322.vrp,107508000.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_323.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_324.vrp,61347700.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_325.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_326.vrp,91413800.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_327.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_328.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_329.vrp,94884700.0,120.31,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_33.vrp,112834000.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_330.vrp,86292200.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_331.vrp,110259000.0,120.27,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_332.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_333.vrp,28738100.0,120.27,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_334.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_335.vrp,103120000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_336.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_337.vrp,116614000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_338.vrp,153300000.0,120.59,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_339.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_34.vrp,98704100.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_340.vrp,109786000.0,120.32,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_341.vrp,50079300.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_342.vrp,83929200.0,120.47,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_343.vrp,95576500.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_344.vrp,100817000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_345.vrp,78323800.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_346.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_347.vrp,50111300.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_348.vrp,102483000.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_349.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_35.vrp,100750000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_350.vrp,113293000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_351.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_352.vrp,82398400.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_353.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_354.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_355.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_356.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_357.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_358.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_359.vrp,105238000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_36.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_360.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_361.vrp,72357200.0,120.08,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_362.vrp,105373000.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_363.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_364.vrp,109480000.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_365.vrp,61870200.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_366.vrp,100988000.0,120.32,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_367.vrp,71813000.0,120.37,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_368.vrp,47710800.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_369.vrp,52934400.0,120.27,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_37.vrp,79592900.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_370.vrp,82585600.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_371.vrp,9970870.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_372.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_373.vrp,79906400.0,120.29,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_374.vrp,91772500.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_375.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_376.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_377.vrp,140810000.0,120.34,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_378.vrp,79277300.0,120.3,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_379.vrp,89830300.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_38.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_380.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_381.vrp,51437100.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_382.vrp,102218000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_383.vrp,107292000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_384.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_385.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_386.vrp,115453000.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_387.vrp,88239600.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_388.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_389.vrp,113543000.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_39.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_390.vrp,88524300.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_391.vrp,90223500.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_392.vrp,139624000.0,120.3,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_393.vrp,36060400.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_394.vrp,90326800.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_395.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_396.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_397.vrp,38069700.0,120.33,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_398.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_399.vrp,111416000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_4.vrp,78660400.0,120.08,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_40.vrp,78326700.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_400.vrp,33996400.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_401.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_402.vrp,117662000.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_403.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_404.vrp,100477000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_405.vrp,92237900.0,120.27,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_406.vrp,22278400.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_407.vrp,123682000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_408.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_409.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_41.vrp,119375000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_410.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_411.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_412.vrp,87759000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_413.vrp,97607100.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_414.vrp,151420000.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_415.vrp,68658400.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_416.vrp,62422700.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_417.vrp,108480000.0,120.4,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_418.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_419.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_42.vrp,41177600.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_420.vrp,39221400.0,120.87,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_421.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_422.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_423.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_424.vrp,25759700.0,120.26,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_425.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_426.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_427.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_428.vrp,99061900.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_429.vrp,110699000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_43.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_430.vrp,105171000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_431.vrp,133040000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_432.vrp,98133800.0,120.01,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_433.vrp,31061600.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_434.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_435.vrp,68871000.0,120.33,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_436.vrp,81066100.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_437.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_438.vrp,91531400.0,120.03,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_439.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_44.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_440.vrp,117280000.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_441.vrp,99699100.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_442.vrp,84794400.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_443.vrp,46552100.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_444.vrp,90858500.0,120.03,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_445.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_446.vrp,102520000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_447.vrp,88610900.0,120.02,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_448.vrp,91516600.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_449.vrp,90544500.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_45.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_450.vrp,62359900.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_451.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_452.vrp,13421300.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_453.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_454.vrp,83539900.0,120.29,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_455.vrp,101678000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_456.vrp,65042100.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_457.vrp,64132700.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_458.vrp,95314500.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_459.vrp,123387000.0,120.0,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_46.vrp,27190000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_460.vrp,62624300.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_461.vrp,85168000.0,120.05,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_462.vrp,93943200.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_463.vrp,123869000.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_464.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_465.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_466.vrp,92256000.0,120.3,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_467.vrp,78437400.0,120.05,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_468.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_469.vrp,123896000.0,120.2,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_47.vrp,114945000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_470.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_471.vrp,44143200.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_472.vrp,97669100.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_473.vrp,57079600.0,120.05,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_474.vrp,108560000.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_475.vrp,90634600.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_476.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_477.vrp,139629000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_478.vrp,103408000.0,120.01,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_479.vrp,57553700.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_48.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_480.vrp,102473000.0,120.24,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_481.vrp,71065100.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_482.vrp,36114600.0,120.05,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_483.vrp,74876800.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_484.vrp,43410300.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_485.vrp,43067300.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_486.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_487.vrp,97181400.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_488.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_489.vrp,86897300.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_49.vrp,125613000.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_490.vrp,60018300.0,120.06,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_491.vrp,94247900.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_492.vrp,139835000.0,120.05,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_493.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_494.vrp,115396000.0,120.39,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_495.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_496.vrp,103109000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_497.vrp,105578000.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_498.vrp,85158000.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_499.vrp,74650900.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_5.vrp,99890900.0,120.22,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_50.vrp,57476900.0,120.08,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_51.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_52.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_53.vrp,137522000.0,120.01,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_54.vrp,10765800.0,120.35,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_55.vrp,114407000.0,120.23,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_56.vrp,171944000.0,120.14,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_57.vrp,98132200.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_58.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_59.vrp,74250600.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_6.vrp,91978900.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_60.vrp,84175500.0,120.11,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_61.vrp,93740000.0,120.04,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_62.vrp,41201800.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_63.vrp,75809100.0,120.01,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_64.vrp,98294200.0,120.21,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_65.vrp,159490000.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_66.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_67.vrp,61638600.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_68.vrp,133902000.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_69.vrp,135339000.0,120.28,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_7.vrp,41961400.0,120.13,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_70.vrp,126638000.0,120.25,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_71.vrp,99521300.0,120.08,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_72.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_73.vrp,140481000.0,120.18,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_74.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_75.vrp,73293900.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_76.vrp,100006000.0,120.04,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_77.vrp,100606000.0,120.1,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_78.vrp,107455000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_79.vrp,102312000.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_8.vrp,75765000.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_80.vrp,116158000.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_81.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_82.vrp,35593800.0,120.85,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_83.vrp,167147000.0,120.31,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_84.vrp,93768000.0,120.16,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_85.vrp,125078000.0,120.19,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_86.vrp,83808200.0,120.08,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_87.vrp,49004000.0,120.03,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_88.vrp,96994200.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_89.vrp,111348000.0,120.04,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_9.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_90.vrp,132233000.0,120.17,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_91.vrp,63946800.0,120.12,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_92.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_93.vrp,22393000.0,120.07,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_94.vrp,74258600.0,120.38,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_95.vrp,ERROR,0,No feasible route found in 60s.
+XML1000000_2324_01,XML1000000_2324_01_chunk_96.vrp,113602000.0,120.08,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_97.vrp,58638200.0,120.15,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_98.vrp,69357700.0,120.09,OK
+XML1000000_2324_01,XML1000000_2324_01_chunk_99.vrp,38987300.0,120.17,OK
+XML1000000_2324_01,[TOTAL AGGREGATE],INCOMPLETE,29261888610.0,Only 335/500 succeeded
+XML1000000_3163_02,XML1000000_3163_02_chunk_0.vrp,245586000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_1.vrp,758476000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_100.vrp,176364000.0,120.37,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_10.vrp,247167000.0,120.57,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_102.vrp,610436000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_101.vrp,256413000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_103.vrp,759941000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_104.vrp,248096000.0,120.01,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_105.vrp,181954000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_106.vrp,719450000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_107.vrp,137688000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_108.vrp,644471000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_109.vrp,166849000.0,120.36,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_11.vrp,293257000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_111.vrp,849852000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_110.vrp,815419000.0,120.43,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_112.vrp,117057000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_114.vrp,146904000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_113.vrp,144371000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_115.vrp,537779000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_116.vrp,206688000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_117.vrp,96410300.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_118.vrp,190697000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_119.vrp,272494000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_12.vrp,167209000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_120.vrp,150653000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_121.vrp,200567000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_122.vrp,242895000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_123.vrp,601384000.0,120.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_124.vrp,163457000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_126.vrp,187683000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_125.vrp,233522000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_127.vrp,206506000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_128.vrp,148136000.0,120.06,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_13.vrp,224357000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_129.vrp,320672000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_130.vrp,690462000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_131.vrp,252226000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_132.vrp,658902000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_133.vrp,814762000.0,120.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_134.vrp,179602000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_136.vrp,160135000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_135.vrp,324205000.0,120.37,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_137.vrp,217736000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_138.vrp,377516000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_139.vrp,301527000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_14.vrp,234011000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_140.vrp,138696000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_141.vrp,183792000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_142.vrp,662668000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_143.vrp,172767000.0,120.04,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_144.vrp,199173000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_145.vrp,274930000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_146.vrp,328237000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_148.vrp,127506000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_147.vrp,268330000.0,120.53,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_149.vrp,322268000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_15.vrp,283326000.0,120.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_150.vrp,174398000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_151.vrp,161231000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_152.vrp,288992000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_154.vrp,144600000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_153.vrp,289501000.0,120.58,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_155.vrp,202709000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_156.vrp,796543000.0,120.5,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_157.vrp,251620000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_158.vrp,233880000.0,120.37,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_159.vrp,226497000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_16.vrp,186699000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_160.vrp,240731000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_161.vrp,588714000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_162.vrp,171179000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_163.vrp,849889000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_164.vrp,54492600.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_165.vrp,227329000.0,120.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_166.vrp,734433000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_167.vrp,722860000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_168.vrp,226603000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_169.vrp,185390000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_17.vrp,775781000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_170.vrp,301648000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_171.vrp,118767000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_172.vrp,181408000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_173.vrp,280446000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_175.vrp,210588000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_174.vrp,192598000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_176.vrp,184764000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_177.vrp,565935000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_178.vrp,216815000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_179.vrp,238704000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_18.vrp,191051000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_180.vrp,203604000.0,120.06,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_182.vrp,797533000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_181.vrp,212044000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_183.vrp,157454000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_184.vrp,144790000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_185.vrp,715117000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_186.vrp,657765000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_187.vrp,163062000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_188.vrp,304797000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_189.vrp,578872000.0,120.04,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_19.vrp,436732000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_190.vrp,237116000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_191.vrp,233353000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_192.vrp,165836000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_193.vrp,171488000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_194.vrp,227593000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_195.vrp,733564000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_196.vrp,208348000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_197.vrp,620821000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_198.vrp,141695000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_199.vrp,695166000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_2.vrp,278907000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_20.vrp,673133000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_200.vrp,162643000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_201.vrp,712143000.0,120.29,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_202.vrp,168742000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_203.vrp,198451000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_204.vrp,279520000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_205.vrp,429773000.0,120.01,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_206.vrp,658716000.0,120.37,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_207.vrp,183787000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_208.vrp,193079000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_209.vrp,202613000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_21.vrp,143742000.0,120.25,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_210.vrp,709633000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_212.vrp,708477000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_211.vrp,137066000.0,120.55,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_214.vrp,674196000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_213.vrp,234238000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_215.vrp,731224000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_216.vrp,336564000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_217.vrp,115005000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_218.vrp,213798000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_219.vrp,189992000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_22.vrp,116648000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_220.vrp,126249000.0,120.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_221.vrp,234188000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_222.vrp,666211000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_223.vrp,204916000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_225.vrp,152060000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_224.vrp,148539000.0,120.34,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_226.vrp,155814000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_227.vrp,88329000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_228.vrp,819548000.0,120.58,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_229.vrp,772748000.0,120.69,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_23.vrp,219255000.0,120.62,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_230.vrp,188921000.0,120.63,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_231.vrp,719826000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_232.vrp,665611000.0,120.34,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_234.vrp,250170000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_233.vrp,701222000.0,120.39,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_235.vrp,274926000.0,120.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_236.vrp,252161000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_238.vrp,218749000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_237.vrp,194157000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_239.vrp,163540000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_240.vrp,164166000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_24.vrp,541795000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_241.vrp,325518000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_242.vrp,135209000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_243.vrp,186279000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_244.vrp,157762000.0,120.25,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_245.vrp,261514000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_246.vrp,194667000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_247.vrp,159287000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_248.vrp,176972000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_249.vrp,248052000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_25.vrp,282488000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_250.vrp,129888000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_251.vrp,633231000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_252.vrp,170221000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_253.vrp,336943000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_254.vrp,30543600.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_256.vrp,118992000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_255.vrp,254230000.0,120.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_257.vrp,246831000.0,120.38,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_258.vrp,241972000.0,120.34,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_26.vrp,144360000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_259.vrp,251668000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_260.vrp,261327000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_261.vrp,748996000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_262.vrp,699349000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_263.vrp,98722500.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_264.vrp,222754000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_265.vrp,124514000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_267.vrp,307159000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_266.vrp,755556000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_268.vrp,753869000.0,120.25,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_269.vrp,276002000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_27.vrp,222044000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_270.vrp,775723000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_271.vrp,299066000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_272.vrp,180138000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_273.vrp,715442000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_274.vrp,709712000.0,120.39,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_275.vrp,389905000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_276.vrp,233219000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_277.vrp,772498000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_278.vrp,502772000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_279.vrp,588357000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_28.vrp,623529000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_280.vrp,211518000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_281.vrp,195688000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_282.vrp,328650000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_284.vrp,681822000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_283.vrp,813377000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_285.vrp,319492000.0,120.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_286.vrp,940491000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_287.vrp,297971000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_288.vrp,137901000.0,120.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_289.vrp,303045000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_29.vrp,265067000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_290.vrp,169108000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_291.vrp,264515000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_292.vrp,725844000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_293.vrp,192068000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_294.vrp,191825000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_295.vrp,659909000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_296.vrp,610412000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_297.vrp,134109000.0,120.36,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_298.vrp,177316000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_3.vrp,193474000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_299.vrp,238619000.0,120.43,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_30.vrp,167690000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_300.vrp,653565000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_302.vrp,827217000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_301.vrp,173341000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_303.vrp,163683000.0,120.04,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_304.vrp,802801000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_306.vrp,467782000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_305.vrp,270640000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_307.vrp,221524000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_308.vrp,128081000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_309.vrp,894970000.0,120.25,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_31.vrp,121587000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_310.vrp,244863000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_311.vrp,224422000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_312.vrp,186223000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_313.vrp,374295000.0,120.34,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_314.vrp,818668000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_315.vrp,701724000.0,120.03,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_316.vrp,57671400.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_317.vrp,223703000.0,120.06,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_318.vrp,231434000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_319.vrp,209573000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_32.vrp,224048000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_320.vrp,214601000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_321.vrp,225753000.0,120.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_322.vrp,144735000.0,120.36,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_323.vrp,719044000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_324.vrp,547347000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_325.vrp,295325000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_326.vrp,217089000.0,120.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_327.vrp,197041000.0,120.35,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_328.vrp,718734000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_329.vrp,148352000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_33.vrp,224244000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_330.vrp,176610000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_331.vrp,454200000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_332.vrp,178384000.0,120.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_333.vrp,512599000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_335.vrp,287001000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_334.vrp,744577000.0,120.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_338.vrp,524936000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_336.vrp,259997000.0,120.6,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_337.vrp,135749000.0,120.48,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_339.vrp,220321000.0,120.54,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_34.vrp,800817000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_340.vrp,275189000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_341.vrp,264538000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_342.vrp,247176000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_344.vrp,113569000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_343.vrp,721767000.0,120.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_345.vrp,161342000.0,120.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_346.vrp,693400000.0,120.06,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_347.vrp,243595000.0,120.81,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_348.vrp,213353000.0,120.79,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_349.vrp,139631000.0,120.87,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_35.vrp,710101000.0,120.79,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_350.vrp,268054000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_351.vrp,170465000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_352.vrp,650102000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_353.vrp,594581000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_354.vrp,175559000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_355.vrp,195636000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_356.vrp,834790000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_357.vrp,188934000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_358.vrp,232445000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_359.vrp,115383000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_36.vrp,245125000.0,120.29,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_360.vrp,147656000.0,120.34,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_361.vrp,163546000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_362.vrp,216937000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_363.vrp,274722000.0,120.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_364.vrp,614764000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_365.vrp,246478000.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_367.vrp,552560000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_368.vrp,162441000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_366.vrp,145848000.0,120.44,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_369.vrp,266201000.0,120.58,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_37.vrp,224407000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_370.vrp,161497000.0,120.57,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_371.vrp,154960000.0,120.64,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_372.vrp,274763000.0,120.29,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_373.vrp,304146000.0,120.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_374.vrp,230065000.0,120.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_375.vrp,202094000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_376.vrp,188665000.0,120.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_377.vrp,624175000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_378.vrp,130538000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_379.vrp,238017000.0,120.06,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_38.vrp,566188000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_380.vrp,189788000.0,120.06,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_381.vrp,132974000.0,120.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_382.vrp,289240000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_384.vrp,709444000.0,120.34,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_383.vrp,154371000.0,120.51,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_385.vrp,146935000.0,120.41,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_386.vrp,161936000.0,120.4,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_387.vrp,708045000.0,120.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_388.vrp,158298000.0,120.08,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_389.vrp,645870000.0,120.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_39.vrp,144906000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_391.vrp,616094000.0,120.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_390.vrp,427636000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_392.vrp,416133000.0,120.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_393.vrp,197488000.0,120.0,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_394.vrp,213046000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_395.vrp,328961000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_396.vrp,148848000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_397.vrp,328344000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_398.vrp,168665000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_399.vrp,198817000.0,120.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_4.vrp,502438000.0,120.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_40.vrp,336622000.0,120.44,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_400.vrp,610997000.0,120.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_401.vrp,152365000.0,120.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_402.vrp,259606000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_403.vrp,192578000.0,120.03,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_404.vrp,211348000.0,120.55,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_405.vrp,188244000.0,120.51,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_406.vrp,218456000.0,120.51,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_407.vrp,223070000.0,120.46,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_408.vrp,111118000.0,120.19,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_409.vrp,448936000.0,120.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_41.vrp,256476000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_410.vrp,215705000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_412.vrp,220234000.0,120.97,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_411.vrp,229049000.0,121.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_413.vrp,126158000.0,121.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_414.vrp,145450000.0,121.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_415.vrp,574303000.0,120.69,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_417.vrp,143535000.0,120.56,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_416.vrp,185900000.0,120.7,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_418.vrp,312605000.0,120.56,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_419.vrp,239166000.0,120.76,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_420.vrp,183362000.0,120.72,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_42.vrp,275616000.0,120.78,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_421.vrp,198330000.0,120.8,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_423.vrp,208185000.0,120.61,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_424.vrp,239914000.0,120.81,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_422.vrp,624662000.0,120.91,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_425.vrp,133061000.0,120.68,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_426.vrp,732044000.0,120.25,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_428.vrp,350268000.0,120.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_429.vrp,118681000.0,120.12,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_427.vrp,281967000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_43.vrp,137802000.0,120.49,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_430.vrp,256011000.0,120.48,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_431.vrp,224955000.0,120.46,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_432.vrp,227131000.0,120.42,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_433.vrp,132786000.0,120.65,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_435.vrp,129161000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_434.vrp,653151000.0,120.65,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_436.vrp,123866000.0,120.46,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_438.vrp,117920000.0,120.29,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_437.vrp,236379000.0,120.48,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_44.vrp,169139000.0,120.31,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_439.vrp,704792000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_440.vrp,185605000.0,120.67,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_441.vrp,275049000.0,120.67,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_442.vrp,662933000.0,120.78,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_443.vrp,202171000.0,120.69,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_444.vrp,119626000.0,122.0,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_446.vrp,255263000.0,122.0,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_447.vrp,200878000.0,121.97,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_445.vrp,165910000.0,122.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_448.vrp,364932000.0,121.72,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_449.vrp,149714000.0,121.61,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_450.vrp,626030000.0,121.58,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_45.vrp,600648000.0,121.65,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_451.vrp,182607000.0,122.03,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_452.vrp,187563000.0,121.96,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_453.vrp,383762000.0,122.03,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_454.vrp,712697000.0,122.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_456.vrp,194145000.0,121.92,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_455.vrp,232130000.0,122.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_457.vrp,158249000.0,121.99,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_458.vrp,706769000.0,122.0,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_459.vrp,629236000.0,121.55,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_460.vrp,511493000.0,121.57,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_46.vrp,231027000.0,121.72,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_461.vrp,150736000.0,121.63,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_462.vrp,679854000.0,121.74,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_463.vrp,110557000.0,121.81,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_465.vrp,298000000.0,121.75,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_464.vrp,338445000.0,121.85,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_466.vrp,152863000.0,121.83,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_467.vrp,554661000.0,121.89,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_468.vrp,267174000.0,121.81,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_469.vrp,130846000.0,122.37,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_47.vrp,574528000.0,121.99,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_470.vrp,360273000.0,121.83,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_471.vrp,624355000.0,121.82,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_472.vrp,285808000.0,121.77,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_473.vrp,718915000.0,120.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_474.vrp,256760000.0,120.03,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_475.vrp,206215000.0,120.09,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_476.vrp,231378000.0,120.05,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_477.vrp,167915000.0,120.27,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_478.vrp,294613000.0,120.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_479.vrp,98755400.0,120.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_48.vrp,656364000.0,120.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_480.vrp,207091000.0,120.45,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_481.vrp,351873000.0,120.41,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_482.vrp,130250000.0,120.5,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_483.vrp,261236000.0,120.42,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_484.vrp,147114000.0,120.59,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_485.vrp,868210000.0,120.57,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_486.vrp,139157000.0,120.63,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_487.vrp,193207000.0,120.63,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_488.vrp,705560000.0,120.61,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_489.vrp,322943000.0,120.58,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_49.vrp,257727000.0,120.86,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_490.vrp,150998000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_491.vrp,177804000.0,120.77,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_492.vrp,539171000.0,120.76,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_493.vrp,617551000.0,120.73,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_494.vrp,258815000.0,120.77,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_495.vrp,272176000.0,120.51,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_496.vrp,719841000.0,120.52,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_497.vrp,270609000.0,120.48,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_498.vrp,171605000.0,120.66,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_499.vrp,183502000.0,120.98,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_5.vrp,156856000.0,121.07,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_50.vrp,782381000.0,120.96,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_51.vrp,59235100.0,120.98,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_52.vrp,189976000.0,120.47,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_53.vrp,359878000.0,120.55,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_54.vrp,268520000.0,120.45,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_55.vrp,685839000.0,120.4,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_56.vrp,222386000.0,120.53,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_57.vrp,155842000.0,120.57,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_58.vrp,700965000.0,120.49,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_59.vrp,152213000.0,120.5,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_6.vrp,148400000.0,120.56,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_60.vrp,189566000.0,120.54,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_61.vrp,128553000.0,120.87,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_62.vrp,147762000.0,120.73,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_63.vrp,276836000.0,122.11,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_64.vrp,839022000.0,122.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_66.vrp,160064000.0,122.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_65.vrp,660552000.0,122.3,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_67.vrp,164428000.0,122.02,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_68.vrp,715325000.0,122.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_7.vrp,632652000.0,122.01,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_69.vrp,759977000.0,122.13,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_70.vrp,251297000.0,122.48,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_71.vrp,138548000.0,122.28,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_73.vrp,234046000.0,122.17,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_72.vrp,195879000.0,122.24,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_74.vrp,221945000.0,122.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_75.vrp,173711000.0,122.22,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_76.vrp,164546000.0,122.2,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_77.vrp,273785000.0,122.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_78.vrp,159986000.0,122.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_79.vrp,209285000.0,122.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_8.vrp,89096800.0,122.18,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_80.vrp,125546000.0,122.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_81.vrp,195584000.0,122.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_84.vrp,243543000.0,122.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_82.vrp,185461000.0,122.6,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_83.vrp,273202000.0,122.39,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_85.vrp,178327000.0,122.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_88.vrp,173417000.0,122.14,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_86.vrp,760565000.0,122.29,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_87.vrp,157915000.0,122.46,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_89.vrp,557408000.0,122.16,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_90.vrp,329331000.0,122.15,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_9.vrp,819723000.0,122.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_91.vrp,229387000.0,122.21,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_92.vrp,203268000.0,122.29,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_93.vrp,125078000.0,122.36,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_94.vrp,264729000.0,122.32,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_95.vrp,719556000.0,122.33,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_96.vrp,288150000.0,122.26,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_98.vrp,134027000.0,122.1,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_97.vrp,221238000.0,122.23,OK
+XML1000000_3163_02,XML1000000_3163_02_chunk_99.vrp,265318000.0,122.21,OK
+XML1000000_3163_02,[TOTAL AGGREGATE],164537639700.0,60274.06,ALL CHUNKS SUCCESSFUL
