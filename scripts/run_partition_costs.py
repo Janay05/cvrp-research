@@ -83,11 +83,29 @@ def main():
         return
 
     # Initialize CSV
-    file_exists = os.path.isfile(args.out_csv)
-    with open(args.out_csv, mode='a', newline='') as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(["Original Instance", "Chunk File", "Cost", "Exec Time (s)", "Status/Notes"])
+    header = ["Original Instance", "Chunk File", "Cost", "Exec Time (s)", "Status/Notes"]
+    results_map = {}
+    if os.path.isfile(args.out_csv):
+        with open(args.out_csv, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            for i, row in enumerate(reader):
+                if i == 0 and row == header:
+                    continue
+                if len(row) >= 2:
+                    results_map[(row[0], row[1])] = row
+
+    def write_csv():
+        with open(args.out_csv, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            def sort_key(k):
+                inst, chk = k
+                return (inst, 1 if chk == "[TOTAL AGGREGATE]" else 0, chk)
+            for k in sorted(results_map.keys(), key=sort_key):
+                writer.writerow(results_map[k])
+
+    # Initial write to ensure file exists and is clean
+    write_csv()
 
     partition_folders = [f for f in base_dir.iterdir() if f.is_dir()]
     print(f"Found {len(partition_folders)} partitioned instances to process.")
@@ -96,53 +114,75 @@ def main():
         original_instance = folder.name.replace("_partitions", "")
         print(f"\n--- Processing {original_instance} ---")
         
-        chunks = list(folder.glob("*.vrp"))
-        # Look at the CSV and find out which chunks we already attempted (successfully or with error)
-        completed_chunks = set()
-        if os.path.exists(args.out_csv):
-            with open(args.out_csv, 'r') as f:
-                reader = csv.reader(f)
-                for row in reader:
-                    # If the row has at least 2 columns, add the chunk name to our finished list
-                    if len(row) >= 2:
-                        completed_chunks.add(row[1])
-        
-        # Filter the chunks list to ONLY include chunks we haven't done yet
-        chunks = [c for c in chunks if c.name not in completed_chunks]
-        print(f"Found {len(chunks)} chunks. Running {args.workers} workers in parallel...")
+        all_chunk_files = list(folder.glob("*.vrp"))
+        chunks_to_run = []
         
         total_folder_cost = 0.0
         total_folder_time = 0.0
         successful_chunks = 0
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
-            future_to_chunk = {executor.submit(run_hgs_on_chunk, exe_path, chunk, args.time_limit): chunk for chunk in chunks}
+        for c in all_chunk_files:
+            key = (original_instance, c.name)
+            row = results_map.get(key)
+            if row and len(row) >= 3 and str(row[2]) not in ("ERROR", "INCOMPLETE"):
+                # Already completed successfully
+                try:
+                    total_folder_cost += float(row[2])
+                    total_folder_time += float(row[3])
+                except ValueError:
+                    pass
+                successful_chunks += 1
+            else:
+                chunks_to_run.append(c)
+
+        if not chunks_to_run:
+            print(f"All {len(all_chunk_files)} chunks already completed.")
+            if successful_chunks == len(all_chunk_files) and len(all_chunk_files) > 0:
+                results_map[(original_instance, "[TOTAL AGGREGATE]")] = [
+                    original_instance, "[TOTAL AGGREGATE]", round(total_folder_cost, 2), round(total_folder_time, 2), "ALL CHUNKS SUCCESSFUL"
+                ]
+                write_csv()
+            continue
             
-            with open(args.out_csv, mode='a', newline='') as f:
-                writer = csv.writer(f)
+        print(f"Found {len(chunks_to_run)} chunks to run (out of {len(all_chunk_files)}). Running {args.workers} workers in parallel...")
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+            future_to_chunk = {executor.submit(run_hgs_on_chunk, exe_path, chunk, args.time_limit): chunk for chunk in chunks_to_run}
+            
+            for future in concurrent.futures.as_completed(future_to_chunk):
+                chunk_path = future_to_chunk[future]
+                result = future.result()
                 
-                for future in concurrent.futures.as_completed(future_to_chunk):
-                    chunk_path = future_to_chunk[future]
-                    result = future.result()
-                    
-                    if result["status"] == "success":
-                        cost = result["cost"]
-                        exec_time = result["time"]
-                        writer.writerow([original_instance, chunk_path.name, round(cost, 2), round(exec_time, 2), "OK"])
-                        total_folder_cost += cost
-                        total_folder_time += exec_time
-                        successful_chunks += 1
-                        print(f"  [OK] {chunk_path.name}: Cost {cost:.2f} ({exec_time:.1f}s)")
-                    else:
-                        writer.writerow([original_instance, chunk_path.name, "ERROR", 0, result["error"]])
-                        print(f"  [FAIL] {chunk_path.name}: {result['error']}")
-                
-                if successful_chunks == len(chunks) and len(chunks) > 0:
-                    writer.writerow([original_instance, "[TOTAL AGGREGATE]", round(total_folder_cost, 2), round(total_folder_time, 2), "ALL CHUNKS SUCCESSFUL"])
-                    print(f"\n>> {original_instance} COMPLETED: Total Cost = {total_folder_cost:.2f}")
+                if result["status"] == "success":
+                    cost = result["cost"]
+                    exec_time = result["time"]
+                    results_map[(original_instance, chunk_path.name)] = [
+                        original_instance, chunk_path.name, round(cost, 2), round(exec_time, 2), "OK"
+                    ]
+                    total_folder_cost += cost
+                    total_folder_time += exec_time
+                    successful_chunks += 1
+                    print(f"  [OK] {chunk_path.name}: Cost {cost:.2f} ({exec_time:.1f}s)")
                 else:
-                    writer.writerow([original_instance, "[TOTAL AGGREGATE]", "INCOMPLETE", round(total_folder_cost, 2), f"Only {successful_chunks}/{len(chunks)} succeeded"])
-                    print(f"\n>> {original_instance} INCOMPLETE: Errors occurred in some chunks.")
+                    results_map[(original_instance, chunk_path.name)] = [
+                        original_instance, chunk_path.name, "ERROR", 0, result["error"]
+                    ]
+                    print(f"  [FAIL] {chunk_path.name}: {result['error']}")
+                
+                write_csv()
+            
+            if successful_chunks == len(all_chunk_files) and len(all_chunk_files) > 0:
+                results_map[(original_instance, "[TOTAL AGGREGATE]")] = [
+                    original_instance, "[TOTAL AGGREGATE]", round(total_folder_cost, 2), round(total_folder_time, 2), "ALL CHUNKS SUCCESSFUL"
+                ]
+                print(f"\n>> {original_instance} COMPLETED: Total Cost = {total_folder_cost:.2f}")
+            else:
+                results_map[(original_instance, "[TOTAL AGGREGATE]")] = [
+                    original_instance, "[TOTAL AGGREGATE]", "INCOMPLETE", round(total_folder_cost, 2), f"Only {successful_chunks}/{len(all_chunk_files)} succeeded"
+                ]
+                print(f"\n>> {original_instance} INCOMPLETE: Errors occurred in some chunks.")
+            
+            write_csv()
 
 if __name__ == "__main__":
     main()
