@@ -43,8 +43,10 @@ namespace cobra {
         if (fscanf(file, "DEMAND_SECTION\n") != 0) return std::nullopt;
 
         data.demands.resize(matrix_size);
+        double demand_val;
         for (int i = 0; i < matrix_size; i++) {
-            if (fscanf(file, "%d %d", &vertex_index, &data.demands[i]) != 2) return std::nullopt;
+            if (fscanf(file, "%d %lf", &vertex_index, &demand_val) != 2) return std::nullopt;
+            data.demands[i] = static_cast<int>(demand_val);
         }
 
         fclose(file);
