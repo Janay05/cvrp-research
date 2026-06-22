@@ -57,3 +57,6 @@ baselines/filo2/results/
 baselines/filo2/build_wsl/
 build/
 *.sol
+
+#AWS key
+*.pem
