@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import sys
+
 try:
     from scipy.spatial import ConvexHull
     HAS_SCIPY = True
@@ -9,7 +11,9 @@ except ImportError:
     HAS_SCIPY = False
 
 def main():
-    csv_file = "clusters_output.csv"
+    csv_file = sys.argv[1] if len(sys.argv) > 1 else "clusters_output.csv"
+    out_file = sys.argv[2] if len(sys.argv) > 2 else "clusters_plot_professional.png"
+    
     if not os.path.exists(csv_file):
         print(f"Error: {csv_file} not found. Please run test_visual.exe first.")
         return
@@ -24,7 +28,8 @@ def main():
     ax = plt.gca()
     ax.set_facecolor('whitesmoke')
     
-    macros = sorted(df['macro_id'].unique())
+    # Exclude depot from macros list
+    macros = sorted(df[df['macro_id'] != -1]['macro_id'].unique())
     
     print("Plotting points and boundaries...")
     for m_idx, macro in enumerate(macros):
@@ -63,8 +68,15 @@ def main():
                 except Exception:
                     pass # Ignore collinear points or hull errors
 
-    # Plot depot at 0,0
-    plt.scatter([0], [0], color='black', marker='o', s=400, label='Depot (Node 0)', zorder=10, edgecolors='white', linewidths=1.5)
+    # Extract and plot depot
+    depot_df = df[df['macro_id'] == -1]
+    if not depot_df.empty:
+        depot_x = depot_df['x'].iloc[0]
+        depot_y = depot_df['y'].iloc[0]
+        plt.scatter([depot_x], [depot_y], color='black', marker='o', s=400, label='Depot', zorder=10, edgecolors='white', linewidths=1.5)
+
+    # Filter out depot for the rest of the plotting
+    df = df[df['macro_id'] != -1]
 
     plt.title(f"CVRP 3-Stage Partitioning: Micro-Clusters ({len(df)} nodes)", fontsize=24, fontweight='bold', pad=20)
     plt.xlabel("X Coordinate (Euclidean)", fontsize=16)
@@ -77,9 +89,9 @@ def main():
         spine.set_visible(False)
     
     plt.tight_layout()
-    print("Saving plot to clusters_plot_professional.png...")
-    plt.savefig("clusters_plot_professional.png", dpi=400, bbox_inches='tight')
-    print("Done! You can open clusters_plot_professional.png.")
+    print(f"Saving plot to {out_file}...")
+    plt.savefig(out_file, dpi=400, bbox_inches='tight')
+    print(f"Done! You can open {out_file}.")
     if not HAS_SCIPY:
         print("Note: Install 'scipy' (pip install scipy) to draw black boundaries around the petals.")
 
