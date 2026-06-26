@@ -53,10 +53,10 @@ namespace cvrp::partitioning {
         ) override;
     };
 
-    // 3. Clarke Wright Clusterer
-    // Runs the classic Clarke & Wright Savings algorithm (S_ij = d_i0 + d_0j - d_ij) 
-    // to group nodes into routes, stopping when capacity/size is reached.
-    class ClarkeWrightClusterer : public MicroClusterer {
+    // 3. Hilbert Curve Clusterer (Route-First, Cluster-Second)
+    // Uses a Space-Filling Curve (Hilbert) to map 2D coordinates to a 1D sequence, 
+    // sorting the nodes geographically, and slicing them into capacity-feasible clusters.
+    class HilbertCurveClusterer : public MicroClusterer {
     public:
         std::vector<SubProblem> cluster(
             const Node& depot,
