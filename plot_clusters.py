@@ -78,7 +78,6 @@ def main():
     # Filter out depot for the rest of the plotting
     df = df[df['macro_id'] != -1]
 
-    plt.title(f"CVRP 3-Stage Partitioning: Micro-Clusters ({len(df)} nodes)", fontsize=24, fontweight='bold', pad=20)
     plt.xlabel("X Coordinate (Euclidean)", fontsize=16)
     plt.ylabel("Y Coordinate (Euclidean)", fontsize=16)
     plt.axis('equal')
