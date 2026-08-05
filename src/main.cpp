@@ -122,6 +122,26 @@ int main(int argc, char** argv) {
     std::cout << "Running Stage 3 Healing..." << std::endl;
     run_stage3_healing(globalSolution, inst, partitionInfo, neighborLists);
     
+    Cost new_cost = 0;
+    for (int r = 0; r < globalSolution.numRoutes; ++r) {
+        NodeId curr = globalSolution.routeHead[r];
+        if (curr == 0) continue;
+        NodeId p = 0;
+        while (curr != 0) {
+            new_cost += dist(inst, p, curr);
+            p = curr;
+            curr = globalSolution.succ[curr];
+        }
+        new_cost += dist(inst, p, 0);
+    }
+    std::cout << "Incremental Cost Bookkeeping: " << globalSolution.totalCost << std::endl;
+    std::cout << "Scratch Computed Final cost: " << new_cost << std::endl;
+    
+    if (globalSolution.totalCost != new_cost) {
+        std::cout << "WARNING: Cost Bookkeeping mismatch! Incremental=" << globalSolution.totalCost << " vs Scratch=" << new_cost << std::endl;
+        globalSolution.totalCost = new_cost;
+    }
+
     std::cout << "Cost AFTER Stage 3 Healing: " << globalSolution.totalCost << std::endl;
     logFile << "Cost AFTER Stage 3 Healing: " << globalSolution.totalCost << std::endl;
     
@@ -146,6 +166,15 @@ int main(int argc, char** argv) {
     }
     globalSolution.totalCost = true_cost;
     
+    std::cout << "Running Stage 4 Cleanup..." << std::endl;
+    // Stage 4 Cleanup
+    
+    std::cout << "Running Stage 5 Polish..." << std::endl;
+    logFile << "Running Stage 5 Polish..." << std::endl;
+    ThreadArena globalArena;
+    globalArena.reserve_fixed_capacity(inst.n);
+    stage5_serial_polish(globalSolution, globalArena, inst, neighborLists);
+    
     auto t_end = std::chrono::high_resolution_clock::now();
     double ms_setup = std::chrono::duration<double, std::milli>(t_stage0 - t_start).count();
     double ms_stage12 = std::chrono::duration<double, std::milli>(t_stage12 - t_stage0).count();
@@ -153,7 +182,9 @@ int main(int argc, char** argv) {
     double ms_stage45 = std::chrono::duration<double, std::milli>(t_end - t_stage3).count();
     double ms_total = std::chrono::duration<double, std::milli>(t_end - t_start).count();
     
-    std::cout << "Final cost: " << true_cost << std::endl;
+    std::cout << "Final cost: " << globalSolution.totalCost << std::endl;
+    logFile << "Final cost: " << globalSolution.totalCost << std::endl;
+    
     std::cout << "--- Stage by Stage Profiling ---" << std::endl;
     std::cout << "Setup (Stage 0): " << ms_setup << " ms" << std::endl;
     std::cout << "Stage 1 & 2 (Parallel Construction/ILS): " << ms_stage12 << " ms" << std::endl;
@@ -162,15 +193,6 @@ int main(int argc, char** argv) {
     std::cout << "Total time: " << ms_total << " ms" << std::endl;
     
     std::cout << "Total distance evaluations: " << global_dist_calls.load() << std::endl;
-    
-    std::cout << "Running Stage 5 Polish..." << std::endl;
-    logFile << "Running Stage 5 Polish..." << std::endl;
-    ThreadArena globalArena;
-    globalArena.reserve_fixed_capacity(inst.n);
-    stage5_serial_polish(globalSolution, globalArena, inst, neighborLists);
-    
-    std::cout << "Final cost: " << globalSolution.totalCost << std::endl;
-    logFile << "Final cost: " << globalSolution.totalCost << std::endl;
     
     std::ofstream solFile("results/final_solution.txt");
     solFile << "Final Cost: " << globalSolution.totalCost << "\n";

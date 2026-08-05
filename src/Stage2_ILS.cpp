@@ -11,8 +11,6 @@ namespace {
     void update_route_info(Solution& sol, int route, const Instance& inst) {
         if (route == -1 || route >= sol.numRoutes) return;
         
-        std::cout << "update_route_info route " << route << std::endl;
-        
         NodeId curr = sol.routeHead[route];
         int pos = 1;
         Cost current_load = 0;
@@ -113,14 +111,16 @@ namespace {
                 if (s == 0) sol.routeTail[route] = c;
                 route_changed = route;
             } else {
-                // Undoing a REMOVE means we must INSERT it back
-                NodeId c = entry.customer; NodeId p = entry.prevPred; NodeId s = entry.prevSucc; int route = entry.prevRoute;
-                sol.succ[p] = c; sol.pred[s] = c;
-                sol.pred[c] = p; sol.succ[c] = s;
-                sol.routeLoad[route] += inst.demand[c];
-                if (p == 0) sol.routeHead[route] = c;
-                if (s == 0) sol.routeTail[route] = c;
-                sol.routeOf[c] = route;
+                // Undoing an INSERT means we must REMOVE it
+                NodeId c = entry.customer; int route = entry.prevRoute;
+                NodeId p = sol.pred[c]; NodeId s = sol.succ[c];
+                if (p != 0) sol.succ[p] = s;
+                if (s != 0) sol.pred[s] = p;
+                sol.pred[c] = 0; sol.succ[c] = 0;
+                sol.routeLoad[route] -= inst.demand[c];
+                if (p == 0) sol.routeHead[route] = s;
+                if (s == 0) sol.routeTail[route] = p;
+                sol.routeOf[c] = -1;
                 route_changed = route;
             }
             
@@ -208,18 +208,15 @@ namespace {
 
     void recreate(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr) {
         if (mtx) mtx->lock();
-        std::cout << "recreate sorting" << std::endl;
         std::sort(arena.removed_customers.begin(), arena.removed_customers.begin() + arena.removed_count,
             [&inst](NodeId a, NodeId b) { return inst.demand[a] > inst.demand[b]; });
             
-        std::cout << "recreate inserting " << arena.removed_count << " nodes" << std::endl;
         for (int i = 0; i < arena.removed_count; ++i) {
             NodeId c = arena.removed_customers[i];
             Cost bestDelta = 999999999;
             NodeId bestPred = 0, bestSucc = 0;
             int bestRoute = -1;
             
-            std::cout << "recreate checking neighbors for c=" << c << std::endl;
             int k = std::min((int)granular_lists.nbr[c].size(), granular_lists.k);
             for (int j_idx = 0; j_idx < k; ++j_idx) {
                 NodeId j = granular_lists.nbr[c][j_idx];
@@ -241,7 +238,6 @@ namespace {
                 if (delta2 < bestDelta) { bestDelta = delta2; bestPred = j; bestSucc = s; bestRoute = r; }
             }
             
-            std::cout << "recreate bestRoute=" << bestRoute << std::endl;
             if (bestRoute != -1) {
                 insert_customer(sol, c, bestPred, bestSucc, bestRoute, arena, inst);
                 cache.insert(c);
@@ -548,7 +544,7 @@ namespace {
         while (cache.count > 0) {
             ls_iter++;
             NodeId i = cache.pop();
-            std::cout << "ls_iter " << ls_iter << " i=" << i << std::endl;
+            
             if (sol.routeOf[i] == -1) continue;
             
             Cost bestDelta = 0;
@@ -634,7 +630,7 @@ namespace {
                 else if (bestOp == 4) verify_delta = eval_swap_star(sol, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j);
                 
                 if (verify_delta < -1e-6) {
-                    std::cout << "bestOp=" << bestOp << std::endl; int old_r_i = sol.routeOf[i];
+                    int old_r_i = sol.routeOf[i];
                     int old_r_j = best_j != 0 ? sol.routeOf[best_j] : -1;
                     
                     if (bestOp == 0) apply_relocate(sol, arena, inst, i, best_j, cache);
@@ -672,12 +668,12 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     // Build local granular list from the global one
     NeighborLists local_granular_lists;
     local_granular_lists.k = neighborLists.k;
-    local_granular_lists.nbr.assign(chunkSize + 1, std::vector<NodeId>());
+    local_granular_lists.nbr.assign(inst.n + 1, std::vector<NodeId>());
     for (int i = 1; i <= chunkSize; ++i) {
         NodeId global_i = partitionInfo.globalId[chunkId][i];
         for (NodeId global_j : neighborLists.nbr[global_i]) {
             if (partitionInfo.chunkOf[global_j] == chunkId) {
-                local_granular_lists.nbr[i].push_back(partitionInfo.localId[global_j]);
+                local_granular_lists.nbr[global_i].push_back(global_j);
             }
         }
     }
@@ -686,7 +682,7 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     double T0 = 0.1 * avg_arc_cost_estimate; 
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
-    int max_iterations = chunkSize * 10; 
+    int max_iterations = chunkSize * 50; 
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
     
@@ -765,12 +761,13 @@ void stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
     double T0 = 0.1 * avg_arc_cost_estimate; 
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
-    int max_iterations = std::min(100, (int)boundaryList.size() * 5); 
+    int max_iterations = std::min(1000, (int)boundaryList.size() * 50); 
     if (max_iterations == 0) return;
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
     
     for (int iter = 0; iter < max_iterations; ++iter) {
+        if (iter >= max_iterations - 50) temperature = 0.0; // Force greedy descent at the end
         auto t_start = std::chrono::high_resolution_clock::now();
         arena.doCount = 0;
         arena.undoCount = 0;
@@ -849,8 +846,8 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     double T0 = 0.1 * avg_arc_cost_estimate; 
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
-    int max_iterations = 2000;
-    int stagnation_limit = 500;
+    int max_iterations = 500;
+    int stagnation_limit = 150;
     int stagnation = 0;
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
@@ -861,6 +858,8 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
         arena.doCount = 0;
         arena.undoCount = 0;
         arena.pendingDelta = 0;
+        
+        int prevNumRoutes = globalSolution.numRoutes;
         
         std::uniform_int_distribution<int> dist_cust(1, inst.n);
         NodeId seed_cust = dist_cust(rng);
@@ -885,6 +884,10 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
             }
         } else {
             apply_undo_list(globalSolution, arena, inst, nullptr);
+            globalSolution.numRoutes = prevNumRoutes;
+            for (int r = 0; r < globalSolution.numRoutes; ++r) {
+                update_route_info(globalSolution, r, inst);
+            }
             stagnation++;
         }
         
