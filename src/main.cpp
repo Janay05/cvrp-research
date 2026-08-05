@@ -103,6 +103,11 @@ int main(int argc, char** argv) {
     
     std::cout << "Threads joined. Merging..." << std::endl;
 
+    for (int i = 0; i < W; ++i) {
+        logFile << contexts[i].log.str();
+    }
+    logFile.flush();
+
     Solution globalSolution;
     std::vector<Solution> allSolutions(partitionInfo.numChunks);
     for (int i = 0; i < W; ++i) {
@@ -194,9 +199,18 @@ int main(int argc, char** argv) {
     
     std::cout << "Total distance evaluations: " << global_dist_calls.load() << std::endl;
     
+    // numRoutes can include "dead" slots left behind by ILS moves that emptied a route
+    // without compacting the routeHead array (only Stage 4's cleanup compacts; Stage 5
+    // polish can re-empty a route afterwards). Count actual non-empty routes so the
+    // "Num Routes:" header always matches the route lines actually written below.
+    int liveRouteCount = 0;
+    for (int r = 0; r < globalSolution.numRoutes; ++r) {
+        if (globalSolution.routeHead[r] != 0) liveRouteCount++;
+    }
+
     std::ofstream solFile("results/final_solution.txt");
     solFile << "Final Cost: " << globalSolution.totalCost << "\n";
-    solFile << "Num Routes: " << globalSolution.numRoutes << "\n";
+    solFile << "Num Routes: " << liveRouteCount << "\n";
     for (int r = 0; r < globalSolution.numRoutes; ++r) {
         if (globalSolution.routeHead[r] == 0) continue;
         solFile << "Route " << r << " (Load: " << globalSolution.routeLoad[r] << "): 0 -> ";

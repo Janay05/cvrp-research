@@ -682,7 +682,7 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     double T0 = 0.1 * avg_arc_cost_estimate; 
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
-    int max_iterations = chunkSize * 50; 
+    int max_iterations = chunkSize * 50;
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
     
@@ -730,13 +730,14 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     return bestSol;
 }
 
-void stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCache& cache, 
-                             const Instance& inst, const NeighborLists& neighborLists, 
+Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCache& cache,
+                             const Instance& inst, const NeighborLists& neighborLists,
                              const Stage0Result& partitionInfo,
-                             const std::vector<int>& boundaryList, 
+                             const std::vector<int>& boundaryList,
                              int t1, int t2, std::mt19937& rng,
                              const std::vector<int>* routeToChunk = nullptr) {
-    if (boundaryList.empty()) return;
+    if (boundaryList.empty()) return 0;
+    Cost acceptedDelta = 0;
     
     cache.init(inst.n);
     cache.clear();
@@ -761,8 +762,8 @@ void stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
     double T0 = 0.1 * avg_arc_cost_estimate; 
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
-    int max_iterations = std::min(1000, (int)boundaryList.size() * 50); 
-    if (max_iterations == 0) return;
+    int max_iterations = std::min(1000, (int)boundaryList.size() * 50);
+    if (max_iterations == 0) return 0;
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
     
@@ -815,7 +816,11 @@ void stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
         
         Cost delta = arena.pendingDelta;
         if (accept_delta(delta, temperature, rng)) {
-            // accepted
+            // Accumulate locally rather than writing globalSolution.totalCost directly:
+            // multiple healing threads run this pass concurrently (on disjoint chunk-pairs
+            // per the graph-coloring schedule), so a shared scalar read-modify-write here
+            // would race even though the routes each thread touches are disjoint.
+            acceptedDelta += delta;
         } else {
             apply_undo_list(globalSolution, arena, inst, &route_creation_mutex);
             globalSolution.numRoutes = prevNumRoutes;
@@ -825,9 +830,10 @@ void stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
                 }
             }
         }
-        
+
         temperature *= cooling_rate;
     }
+    return acceptedDelta;
 }
 
 void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const Instance& inst, const NeighborLists& neighborLists) {
