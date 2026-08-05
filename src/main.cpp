@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
     }
     
     merge_all_chunks_into_global(globalSolution, allSolutions, partitionInfo, inst);
-    
+
     auto t_stage12 = std::chrono::high_resolution_clock::now();
     
     std::cout << "Cost BEFORE Stage 3 Healing: " << globalSolution.totalCost << std::endl;
@@ -149,13 +149,13 @@ int main(int argc, char** argv) {
 
     std::cout << "Cost AFTER Stage 3 Healing: " << globalSolution.totalCost << std::endl;
     logFile << "Cost AFTER Stage 3 Healing: " << globalSolution.totalCost << std::endl;
-    
+
     auto t_stage3 = std::chrono::high_resolution_clock::now();
-    
+
     std::cout << "Running Stage 4 Cleanup..." << std::endl;
     logFile << "Running Stage 4 Cleanup..." << std::endl;
     stage4_route_cleanup(globalSolution, inst, neighborLists);
-    
+
     // Recalculate true global cost after all ILS deltas and modifications
     Cost true_cost = 0;
     for (int r = 0; r < globalSolution.numRoutes; ++r) {
@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
     ThreadArena globalArena;
     globalArena.reserve_fixed_capacity(inst.n);
     stage5_serial_polish(globalSolution, globalArena, inst, neighborLists);
-    
+
     auto t_end = std::chrono::high_resolution_clock::now();
     double ms_setup = std::chrono::duration<double, std::milli>(t_stage0 - t_start).count();
     double ms_stage12 = std::chrono::duration<double, std::milli>(t_stage12 - t_stage0).count();
