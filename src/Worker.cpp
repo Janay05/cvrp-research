@@ -21,8 +21,10 @@ void worker_main(WorkerContext& ctx) {
         for (int chunkId : ctx.assignedChunks) {
             std::cout << "Worker " << ctx.workerId << " constructing chunk " << chunkId << std::endl;
             int chunkSize = (int)ctx.partitionInfo->globalId[chunkId].size() - 1;
+            // max_iterations is inst.n*50 (see Stage2_ILS.cpp), not chunkSize*50 -- every
+            // thread gets the same absolute budget regardless of its chunk size.
             ctx.log << "Worker " << ctx.workerId << " chunk " << chunkId
-                     << " chunkSize=" << chunkSize << " max_iterations=" << (chunkSize * 50) << "\n";
+                     << " chunkSize=" << chunkSize << " max_iterations=" << (ctx.instance->n * 50) << "\n";
             Solution sol = stage1_construct(chunkId, *ctx.instance, *ctx.partitionInfo, *ctx.neighborLists, ctx.rng);
             ctx.chunkSolutions.push_back(std::move(sol));
         }

@@ -682,7 +682,13 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     double T0 = 0.1 * avg_arc_cost_estimate; 
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
-    int max_iterations = chunkSize * 50;
+    // Iteration budget is per-node-of-the-FULL-instance, not per-node-of-this-chunk: giving
+    // each chunk only chunkSize*50 iterations meant P=4 threads did 4x less absolute search
+    // than P=1, which is why the old default was fast but not a fair use of the parallelism
+    // headroom (see docs/reports/001_p1_p4_filo2_baseline.md). Each thread now gets the same
+    // absolute budget P=1 spends on the whole graph, spending the parallelism dividend on
+    // search instead of pure idle time.
+    int max_iterations = inst.n * 50;
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
     
@@ -871,9 +877,18 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
         NodeId seed_cust = dist_cust(rng);
         
         ruin(globalSolution, seed_cust, arena, cache, rng, inst.n, neighborLists, inst, nullptr);
-        
+
         recreate(globalSolution, arena, cache, inst, neighborLists, nullptr);
-        
+
+        // recreate() only calls update_route_info() for its new-empty-route fallback path;
+        // a normal insertion into an existing route leaves that route's cumLoad/routePosition
+        // stale. eval_2opt_star's capacity check reads cumLoad, so without this rescan it can
+        // pass a move against stale (too-low) load data and produce an over-capacity route.
+        // stage2_ils and stage3_healing_ils_pass both already do this; stage5 was missing it.
+        for (int r = 0; r < globalSolution.numRoutes; ++r) {
+            update_route_info(globalSolution, r, inst);
+        }
+
         bool local_search_improved = true;
         while(local_search_improved) {
             local_search_improved = local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, nullptr);
