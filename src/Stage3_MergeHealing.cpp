@@ -6,10 +6,10 @@
 #include <random>
 #include <iostream>
 
-void stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCache& cache, 
-                             const Instance& inst, const NeighborLists& neighborLists, 
+Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCache& cache,
+                             const Instance& inst, const NeighborLists& neighborLists,
                              const Stage0Result& partitionInfo,
-                             const std::vector<int>& boundaryList, 
+                             const std::vector<int>& boundaryList,
                              int t1, int t2, std::mt19937& rng,
                              const std::vector<int>* routeToChunk = nullptr);
 
@@ -137,7 +137,10 @@ void run_stage3_healing(Solution& globalSolution,
     for (int c = 0; c <= max_color; ++c) {
         std::vector<std::thread> threads;
         const auto& class_edges = color_classes[c];
-        
+        // Each thread writes to its own slot (indexed by t_idx), so no two threads ever
+        // touch the same element concurrently -- summed single-threaded after join below.
+        std::vector<Cost> classDeltas(class_edges.size(), 0);
+
         for (size_t t_idx = 0; t_idx < class_edges.size(); ++t_idx) {
             int t1 = class_edges[t_idx].first;
             int t2 = class_edges[t_idx].second;
@@ -163,7 +166,7 @@ void run_stage3_healing(Solution& globalSolution,
             if (pair_boundary.empty()) continue;
             
             // heal boundaries in parallel
-            threads.emplace_back([&, pair_boundary, t1, t2]() mutable {
+            threads.emplace_back([&, pair_boundary, t1, t2, t_idx]() mutable {
                 ThreadArena arena;
                 arena.reserve_fixed_capacity(inst.n);
                 SVCCache cache;
@@ -171,12 +174,18 @@ void run_stage3_healing(Solution& globalSolution,
                 std::mt19937 rng(1337 + t1 * 1000 + t2);
                 std::cout << "Healing chunk pair (" << t1 << "," << t2 << ")" << std::endl;
                 for (int cust : pair_boundary) cache.insert(cust);
-                stage3_healing_ils_pass(globalSolution, arena, cache, inst, neighborLists, partitionInfo, pair_boundary, t1, t2, rng, &routeToChunk);
+                classDeltas[t_idx] = stage3_healing_ils_pass(globalSolution, arena, cache, inst, neighborLists, partitionInfo, pair_boundary, t1, t2, rng, &routeToChunk);
             });
         }
-        
+
         for (auto& th : threads) {
             th.join();
+        }
+
+        // Safe to touch the shared scalar here: all threads in this color class have
+        // joined, so this runs single-threaded before the next class's threads start.
+        for (Cost d : classDeltas) {
+            globalSolution.totalCost += d;
         }
     }
 }

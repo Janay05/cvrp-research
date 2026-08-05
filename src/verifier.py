@@ -44,6 +44,9 @@ def verify_solution(vrp_file, sol_file):
 
     visited = set()
     total_cost = 0
+    reported_cost = None
+    reported_num_routes = None
+    parsed_route_count = 0
 
     if not os.path.exists(sol_file):
         print(f"ERROR: Solution file {sol_file} not found!")
@@ -51,9 +54,13 @@ def verify_solution(vrp_file, sol_file):
 
     with open(sol_file, 'r') as f:
         lines = f.readlines()
-        
+
     for line in lines:
-        if line.startswith("Route"):
+        if line.startswith("Final Cost:"):
+            reported_cost = int(line.split(":")[1].strip())
+        elif line.startswith("Num Routes:"):
+            reported_num_routes = int(line.split(":")[1].strip())
+        elif line.startswith("Route"):
             # Route 0 (Load: 100): 0 -> 1711 -> ... -> 0
             path_str = line.split("): ")[1].strip()
             nodes = [int(x) for x in path_str.split(" -> ")]
@@ -79,9 +86,10 @@ def verify_solution(vrp_file, sol_file):
                 sys.exit(1)
                 
             total_cost += route_cost
+            parsed_route_count += 1
 
     expected_nodes = set(range(1, dimension))
-        
+
     if visited != expected_nodes:
         missing = expected_nodes - visited
         extra = visited - expected_nodes
@@ -90,9 +98,22 @@ def verify_solution(vrp_file, sol_file):
         print(f"Extra: {len(extra)} nodes")
         sys.exit(1)
 
+    if reported_cost is None or reported_num_routes is None:
+        print(f"ERROR: Solution file is missing 'Final Cost:' or 'Num Routes:' header!")
+        sys.exit(1)
+
+    if reported_cost != total_cost:
+        print(f"ERROR: Reported cost {reported_cost} does not match independently computed cost {total_cost}!")
+        sys.exit(1)
+
+    if reported_num_routes != parsed_route_count:
+        print(f"ERROR: Reported Num Routes {reported_num_routes} does not match parsed route count {parsed_route_count}!")
+        sys.exit(1)
+
     print(f"Verification SUCCESS!")
     print(f"Feasibility: Valid")
-    print(f"Total computed cost: {total_cost}")
+    print(f"Total computed cost: {total_cost} (matches reported Final Cost)")
+    print(f"Num Routes: {parsed_route_count} (matches reported Num Routes)")
 
 if __name__ == "__main__":
     verify_solution("test_2000.vrp", "results/final_solution.txt")
