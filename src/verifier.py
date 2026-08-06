@@ -116,4 +116,6 @@ def verify_solution(vrp_file, sol_file):
     print(f"Num Routes: {parsed_route_count} (matches reported Num Routes)")
 
 if __name__ == "__main__":
-    verify_solution("test_2000.vrp", "results/final_solution.txt")
+    vrp_arg = sys.argv[1] if len(sys.argv) > 1 else "test_2000.vrp"
+    sol_arg = sys.argv[2] if len(sys.argv) > 2 else "results/final_solution.txt"
+    verify_solution(vrp_arg, sol_arg)
