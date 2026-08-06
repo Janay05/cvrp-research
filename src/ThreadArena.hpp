@@ -85,9 +85,15 @@ struct alignas(64) ThreadArena {
     std::vector<int> node_visited_iter;
 
     void reserve_fixed_capacity(int max_chunk_size) {
-        // Allocate a very large fixed buffer to accommodate long local search sequences
-        doList.resize(std::max(max_chunk_size * 50, 100000));
-        undoList.resize(std::max(max_chunk_size * 50, 100000));
+        // doList/undoList just log the sequence of edit operations within a single SA
+        // iteration (ruin + recreate + local_search cascade) -- that cascade length isn't
+        // proportional to instance size, so this must be capped independent of
+        // max_chunk_size. Uncapped (max_chunk_size*50) was fine at N=2000 (100,000 entries)
+        // but allocates tens of millions of entries -- gigabytes per thread -- once N grows
+        // into the hundreds of thousands to millions.
+        int64_t doUndoCapacity = std::min((int64_t)std::max(max_chunk_size * 50, 100000), (int64_t)500000);
+        doList.resize(doUndoCapacity);
+        undoList.resize(doUndoCapacity);
         removed_customers.resize(max_chunk_size + 100);
         scratchTop3Pos.reserve(3);
         top3_cache.resize(max_chunk_size + 1);

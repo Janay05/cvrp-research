@@ -5,6 +5,7 @@
 #include "Stage4_5_CleanupPolish.hpp"
 #include "Worker.hpp"
 #include "Barrier.hpp"
+#include "VrpParser.hpp"
 #include <iostream>
 #include <fstream>
 #include <thread>
@@ -17,6 +18,8 @@
 
 std::atomic<long long> global_dist_calls(0);
 thread_local long long thread_dist_calls = 0;
+int g_iters_per_node = 50; // overridable via --iters-per-node, see Stage2_ILS.cpp
+int g_max_iterations_override = -1; // overridable via --max-iterations; -1 = use inst.n*g_iters_per_node
 
 int main(int argc, char** argv) {
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -30,32 +33,55 @@ int main(int argc, char** argv) {
         std::cerr << "Failed to open results/run_log.txt" << std::endl;
         return 1;
     }
-    
+
+    int P = 4; // number of chunks
+    std::string inputFile;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-p" && i + 1 < argc) {
+            P = std::stoi(argv[++i]);
+        } else if (arg == "-f" && i + 1 < argc) {
+            inputFile = argv[++i];
+        } else if (arg == "--iters-per-node" && i + 1 < argc) {
+            g_iters_per_node = std::stoi(argv[++i]);
+        } else if (arg == "--max-iterations" && i + 1 < argc) {
+            g_max_iterations_override = std::stoi(argv[++i]);
+        }
+    }
+
     std::cout << "Starting CVRP Parallel..." << std::endl;
     logFile << "Starting CVRP Parallel..." << std::endl;
     Instance inst;
-    inst.n = 2000;
-    inst.Q = 100;
-    inst.x.assign(inst.n + 1, 0);
-    inst.y.assign(inst.n + 1, 0);
-    inst.demand.assign(inst.n + 1, 1);
-    inst.demand[0] = 0;
-    
-    // Assign random coordinates so kd-tree doesn't choke on zero-distance
-    for(int i=1; i<=inst.n; ++i) {
-        inst.x[i] = rand() % 1000;
-        inst.y[i] = rand() % 1000;
+
+    if (!inputFile.empty()) {
+        if (!load_vrp_file(inputFile, inst)) {
+            std::cerr << "Failed to load instance from " << inputFile << std::endl;
+            return 1;
+        }
+    } else {
+        inst.n = 2000;
+        inst.Q = 100;
+        inst.x.assign(inst.n + 1, 0);
+        inst.y.assign(inst.n + 1, 0);
+        inst.demand.assign(inst.n + 1, 1);
+        inst.demand[0] = 0;
+
+        // Assign random coordinates so kd-tree doesn't choke on zero-distance
+        for(int i=1; i<=inst.n; ++i) {
+            inst.x[i] = rand() % 1000;
+            inst.y[i] = rand() % 1000;
+        }
+
+        // Dump instance to test_2000.vrp for FILO2 comparison
+        std::ofstream vrpFile("test_2000.vrp");
+        vrpFile << "NAME : test_2000\nTYPE : CVRP\nDIMENSION : " << (inst.n + 1) << "\nEDGE_WEIGHT_TYPE : EUC_2D\nCAPACITY : " << inst.Q << "\nNODE_COORD_SECTION\n";
+        vrpFile << "1 0 0\n";
+        for(int i=1; i<=inst.n; ++i) vrpFile << (i + 1) << " " << inst.x[i] << " " << inst.y[i] << "\n";
+        vrpFile << "DEMAND_SECTION\n1 0\n";
+        for(int i=1; i<=inst.n; ++i) vrpFile << (i + 1) << " " << inst.demand[i] << "\n";
+        vrpFile << "DEPOT_SECTION\n1\n-1\n";
+        vrpFile.close();
     }
-    
-    // Dump instance to test_2000.vrp for FILO2 comparison
-    std::ofstream vrpFile("test_2000.vrp");
-    vrpFile << "NAME : test_2000\nTYPE : CVRP\nDIMENSION : " << (inst.n + 1) << "\nEDGE_WEIGHT_TYPE : EUC_2D\nCAPACITY : " << inst.Q << "\nNODE_COORD_SECTION\n";
-    vrpFile << "1 0 0\n";
-    for(int i=1; i<=inst.n; ++i) vrpFile << (i + 1) << " " << inst.x[i] << " " << inst.y[i] << "\n";
-    vrpFile << "DEMAND_SECTION\n1 0\n";
-    for(int i=1; i<=inst.n; ++i) vrpFile << (i + 1) << " " << inst.demand[i] << "\n";
-    vrpFile << "DEPOT_SECTION\n1\n-1\n";
-    vrpFile.close();
 
     auto t_start = std::chrono::high_resolution_clock::now();
 
@@ -63,14 +89,6 @@ int main(int argc, char** argv) {
     NeighborLists neighborLists;
     neighborLists.build(inst, 30); // limit k to 30 for SWAP* pruning constraint
 
-    int P = 4; // number of chunks
-    for (int i = 1; i < argc; ++i) {
-        if (std::string(argv[i]) == "-p" && i + 1 < argc) {
-            P = std::stoi(argv[i+1]);
-            i++;
-        }
-    }
-    
     std::cout << "Running Stage 0 with P=" << P << " chunks..." << std::endl;
     Stage0Result partitionInfo = run_stage0(inst, neighborLists, P);
     

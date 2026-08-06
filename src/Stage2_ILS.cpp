@@ -688,7 +688,9 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     // headroom (see docs/reports/001_p1_p4_filo2_baseline.md). Each thread now gets the same
     // absolute budget P=1 spends on the whole graph, spending the parallelism dividend on
     // search instead of pure idle time.
-    int max_iterations = inst.n * 50;
+    extern int g_iters_per_node; // overridable via --iters-per-node, default 50
+    extern int g_max_iterations_override; // overridable via --max-iterations (absolute, per thread)
+    int max_iterations = g_max_iterations_override > 0 ? g_max_iterations_override : inst.n * g_iters_per_node;
     double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
     
