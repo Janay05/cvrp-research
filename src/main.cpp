@@ -20,6 +20,11 @@ std::atomic<long long> global_dist_calls(0);
 thread_local long long thread_dist_calls = 0;
 int g_iters_per_node = 50; // overridable via --iters-per-node, see Stage2_ILS.cpp
 int g_max_iterations_override = -1; // overridable via --max-iterations; -1 = use inst.n*g_iters_per_node
+// Per-stage wall-clock time budgets (ms), overridable via --stage2/3/5-ms. -1 = use the
+// legacy iteration-count path above instead. See docs/reports/004_time_budget_scheduling.md.
+int g_stage2_time_budget_ms = -1;
+int g_stage3_time_budget_ms = -1;
+int g_stage5_time_budget_ms = -1;
 
 int main(int argc, char** argv) {
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -46,6 +51,12 @@ int main(int argc, char** argv) {
             g_iters_per_node = std::stoi(argv[++i]);
         } else if (arg == "--max-iterations" && i + 1 < argc) {
             g_max_iterations_override = std::stoi(argv[++i]);
+        } else if (arg == "--stage2-ms" && i + 1 < argc) {
+            g_stage2_time_budget_ms = std::stoi(argv[++i]);
+        } else if (arg == "--stage3-ms" && i + 1 < argc) {
+            g_stage3_time_budget_ms = std::stoi(argv[++i]);
+        } else if (arg == "--stage5-ms" && i + 1 < argc) {
+            g_stage5_time_budget_ms = std::stoi(argv[++i]);
         }
     }
 
