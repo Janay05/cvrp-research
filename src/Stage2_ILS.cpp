@@ -905,9 +905,14 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
 
     Solution bestSol = globalSolution;
 
-    // stagnation_limit stays active in time-budget mode too: it isn't redundant with the
-    // time budget, it lets an already-converged run stop early instead of idling out the
-    // full budget, while the time budget itself just caps the worst case.
+    // stagnation_limit (150) is disabled in time-budget mode: empirically, at N=2,000 it
+    // triggers within ~150ms regardless of a much larger requested budget (150 consecutive
+    // non-improving iterations happens almost immediately at this scale), silently
+    // defeating the point of asking for more Stage 5 time. With a real time budget already
+    // bounding worst-case runtime, continued ruin/recreate exploration after a stagnant
+    // streak is low-risk (bounded time cost) and can still occasionally escape a local
+    // optimum, so time-budget mode relies on the time cutoff alone. Legacy mode (no time
+    // budget) keeps stagnation_limit as its only safety valve, unchanged.
     auto stageStart = std::chrono::steady_clock::now();
     for (int iter = 0; useTimeBudget || iter < max_iterations; ++iter) {
         if (useTimeBudget) {
@@ -960,7 +965,7 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
             stagnation++;
         }
         
-        if (stagnation >= stagnation_limit) break;
+        if (!useTimeBudget && stagnation >= stagnation_limit) break;
 
         if (!useTimeBudget) {
             temperature *= cooling_rate;
