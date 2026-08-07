@@ -22,11 +22,19 @@ void worker_main(WorkerContext& ctx) {
             std::cout << "Worker " << ctx.workerId << " constructing chunk " << chunkId << std::endl;
             int chunkSize = (int)ctx.partitionInfo->globalId[chunkId].size() - 1;
             extern int g_iters_per_node;
-            // max_iterations is inst.n*g_iters_per_node (see Stage2_ILS.cpp), not
-            // chunkSize*50 -- every thread gets the same absolute budget regardless
-            // of its chunk size.
-            ctx.log << "Worker " << ctx.workerId << " chunk " << chunkId
-                     << " chunkSize=" << chunkSize << " max_iterations=" << (ctx.instance->n * g_iters_per_node) << "\n";
+            extern int g_max_iterations_override;
+            extern int g_stage2_time_budget_ms;
+            // In legacy mode, max_iterations is inst.n*g_iters_per_node (see Stage2_ILS.cpp),
+            // not chunkSize*50 -- every thread gets the same absolute budget regardless of
+            // its chunk size. In time-budget mode that number is unused (see
+            // actual_iterations_completed logged after Stage 2 instead).
+            ctx.log << "Worker " << ctx.workerId << " chunk " << chunkId << " chunkSize=" << chunkSize;
+            if (g_stage2_time_budget_ms > 0) {
+                ctx.log << " stage2_time_budget_ms=" << g_stage2_time_budget_ms << "\n";
+            } else {
+                int legacyMaxIter = g_max_iterations_override > 0 ? g_max_iterations_override : ctx.instance->n * g_iters_per_node;
+                ctx.log << " max_iterations=" << legacyMaxIter << "\n";
+            }
             Solution sol = stage1_construct(chunkId, *ctx.instance, *ctx.partitionInfo, *ctx.neighborLists, ctx.rng);
             ctx.chunkSolutions.push_back(std::move(sol));
         }
@@ -43,8 +51,17 @@ void worker_main(WorkerContext& ctx) {
         for (size_t i = 0; i < ctx.assignedChunks.size(); ++i) {
             std::cout << "Worker " << ctx.workerId << " ILS chunk " << ctx.assignedChunks[i] << std::endl;
             cache.clear();
+            int actualIterations = 0;
             ctx.chunkSolutions[i] = stage2_ils(ctx.chunkSolutions[i], arena, cache, *ctx.instance,
-                                               *ctx.partitionInfo, *ctx.neighborLists, ctx.assignedChunks[i], ctx.rng);
+                                               *ctx.partitionInfo, *ctx.neighborLists, ctx.assignedChunks[i], ctx.rng,
+                                               &actualIterations);
+            // In time-budget mode this is the actual per-thread work done, not a nominal
+            // budget -- compare across workers to check whether the time-budget switch
+            // actually resolved the completion-time imbalance from report 003 (equal wall
+            // time by construction, but iteration counts differing between chunks confirms
+            // it -- see docs/reports/004_time_budget_scheduling.md).
+            ctx.log << "Worker " << ctx.workerId << " chunk " << ctx.assignedChunks[i]
+                     << " actual_iterations_completed=" << actualIterations << "\n";
         }
         std::cout << "Worker " << ctx.workerId << " Stage 2 finished" << std::endl;
         auto t2_end = std::chrono::high_resolution_clock::now();

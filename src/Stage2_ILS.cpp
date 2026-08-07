@@ -658,9 +658,10 @@ namespace {
     }
 }
 
-Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache, 
-                    const Instance& inst, const Stage0Result& partitionInfo, 
-                    const NeighborLists& neighborLists, int chunkId, std::mt19937& rng) {
+Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
+                    const Instance& inst, const Stage0Result& partitionInfo,
+                    const NeighborLists& neighborLists, int chunkId, std::mt19937& rng,
+                    int* out_iterations_completed) {
     int chunkSize = partitionInfo.globalId[chunkId].size() - 1;
     cache.init(inst.n);
     cache.clear();
@@ -690,34 +691,50 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     // search instead of pure idle time.
     extern int g_iters_per_node; // overridable via --iters-per-node, default 50
     extern int g_max_iterations_override; // overridable via --max-iterations (absolute, per thread)
+    extern int g_stage2_time_budget_ms; // overridable via --stage2-ms; >0 switches to time-budget mode
+    // Time-budget mode (see docs/reports/004_time_budget_scheduling.md) drives the cooling
+    // schedule from elapsed-time fraction instead of iteration fraction -- same pattern as
+    // FILO2's TimeBasedSimulatedAnnealing (baselines/filo2/opt/SimulatedAnnealing.hpp). This
+    // is what lets the same -p/config choices behave sensibly whether N is 2,000 or
+    // 1,000,000 without a hand-picked --max-iterations per instance. The legacy
+    // iteration-count path is kept for exact backward compatibility when no time budget is set.
+    bool useTimeBudget = g_stage2_time_budget_ms > 0;
     int max_iterations = g_max_iterations_override > 0 ? g_max_iterations_override : inst.n * g_iters_per_node;
-    double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
+    double cooling_rate = useTimeBudget ? 1.0 : std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
-    
+
     Solution bestSol = sol;
 
-    for (int iter = 0; iter < max_iterations; ++iter) {
+    int iter = 0;
+    auto stageStart = std::chrono::steady_clock::now();
+    for (; useTimeBudget || iter < max_iterations; ++iter) {
+        if (useTimeBudget) {
+            double elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - stageStart).count();
+            if (elapsed_ms >= g_stage2_time_budget_ms) break;
+            temperature = T0 * std::pow(Tf / T0, elapsed_ms / g_stage2_time_budget_ms);
+        }
+
         arena.doCount = 0;
         arena.undoCount = 0;
         arena.pendingDelta = 0;
-        
+
         int prevNumRoutes = sol.numRoutes;
-        
+
         std::uniform_int_distribution<int> dist_cust(1, chunkSize);
         NodeId seed_cust = dist_cust(rng);
         ruin(sol, seed_cust, arena, cache, rng, chunkSize, local_granular_lists, inst);
-        
+
         recreate(sol, arena, cache, inst, local_granular_lists);
-        
+
         for (int r = 0; r < sol.numRoutes; ++r) {
             update_route_info(sol, r, inst);
         }
-        
+
         bool local_search_improved = true;
         while(local_search_improved) {
             local_search_improved = local_search(sol, arena, cache, inst, local_granular_lists, chunkSize);
         }
-        
+
         Cost delta = arena.pendingDelta;
         if (accept_delta(delta, temperature, rng)) {
             sol.totalCost += delta;
@@ -731,10 +748,13 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
                 update_route_info(sol, r, inst);
             }
         }
-        
-        temperature *= cooling_rate;
+
+        if (!useTimeBudget) {
+            temperature *= cooling_rate;
+        }
     }
-    
+
+    if (out_iterations_completed) *out_iterations_completed = iter;
     return bestSol;
 }
 
@@ -767,16 +787,29 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
     }
     
     double avg_arc_cost_estimate = 100.0;
-    double T0 = 0.1 * avg_arc_cost_estimate; 
+    double T0 = 0.1 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
+    extern int g_stage3_time_budget_ms; // overridable via --stage3-ms; >0 switches to time-budget mode
+    bool useTimeBudget = g_stage3_time_budget_ms > 0;
     int max_iterations = std::min(1000, (int)boundaryList.size() * 50);
-    if (max_iterations == 0) return 0;
-    double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
+    if (!useTimeBudget && max_iterations == 0) return 0;
+    double cooling_rate = useTimeBudget ? 1.0 : std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
-    
-    for (int iter = 0; iter < max_iterations; ++iter) {
-        if (iter >= max_iterations - 50) temperature = 0.0; // Force greedy descent at the end
+
+    auto stageStart = std::chrono::steady_clock::now();
+    for (int iter = 0; useTimeBudget || iter < max_iterations; ++iter) {
+        double elapsed_ms = 0.0;
+        if (useTimeBudget) {
+            elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - stageStart).count();
+            if (elapsed_ms >= g_stage3_time_budget_ms) break;
+            temperature = T0 * std::pow(Tf / T0, elapsed_ms / g_stage3_time_budget_ms);
+            // Force greedy descent in the last ~5% of the budget, same intent as the
+            // legacy path's "last 50 iterations" cutoff.
+            if (elapsed_ms >= 0.95 * g_stage3_time_budget_ms) temperature = 0.0;
+        } else if (iter >= max_iterations - 50) {
+            temperature = 0.0; // Force greedy descent at the end
+        }
         auto t_start = std::chrono::high_resolution_clock::now();
         arena.doCount = 0;
         arena.undoCount = 0;
@@ -839,7 +872,9 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
             }
         }
 
-        temperature *= cooling_rate;
+        if (!useTimeBudget) {
+            temperature *= cooling_rate;
+        }
     }
     return acceptedDelta;
 }
@@ -857,18 +892,29 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     std::mt19937 rng(424242);
     
     double avg_arc_cost_estimate = 100.0;
-    double T0 = 0.1 * avg_arc_cost_estimate; 
+    double T0 = 0.1 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
+    extern int g_stage5_time_budget_ms; // overridable via --stage5-ms; >0 switches to time-budget mode
+    bool useTimeBudget = g_stage5_time_budget_ms > 0;
     int max_iterations = 500;
     int stagnation_limit = 150;
     int stagnation = 0;
-    double cooling_rate = std::pow(Tf / T0, 1.0 / max_iterations);
+    double cooling_rate = useTimeBudget ? 1.0 : std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
-    
+
     Solution bestSol = globalSolution;
-    
-    for (int iter = 0; iter < max_iterations; ++iter) {
+
+    // stagnation_limit stays active in time-budget mode too: it isn't redundant with the
+    // time budget, it lets an already-converged run stop early instead of idling out the
+    // full budget, while the time budget itself just caps the worst case.
+    auto stageStart = std::chrono::steady_clock::now();
+    for (int iter = 0; useTimeBudget || iter < max_iterations; ++iter) {
+        if (useTimeBudget) {
+            double elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - stageStart).count();
+            if (elapsed_ms >= g_stage5_time_budget_ms) break;
+            temperature = T0 * std::pow(Tf / T0, elapsed_ms / g_stage5_time_budget_ms);
+        }
         arena.doCount = 0;
         arena.undoCount = 0;
         arena.pendingDelta = 0;
@@ -915,8 +961,10 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
         }
         
         if (stagnation >= stagnation_limit) break;
-        
-        temperature *= cooling_rate;
+
+        if (!useTimeBudget) {
+            temperature *= cooling_rate;
+        }
     }
     globalSolution = bestSol;
 }
