@@ -10,7 +10,7 @@ namespace {
     
     void update_route_info(Solution& sol, int route, const Instance& inst) {
         if (route == -1 || route >= sol.numRoutes) return;
-        
+
         NodeId curr = sol.routeHead[route];
         int pos = 1;
         Cost current_load = 0;
@@ -21,7 +21,64 @@ namespace {
             curr = sol.succ[curr];
         }
     }
-    
+
+    // Copies everything except routePosition/cumLoad, which are pure derived caches (see
+    // update_route_info) fully reconstructible from pred/succ/routeHead. The per-improvement
+    // "new best" snapshot in stage2_ils/stage5_serial_polish used to be a full `bestSol =
+    // sol` (24 bytes/node at scale -- see docs/reports/006_throughput_and_parallelism.md
+    // Phase 2.3), which is one of the most expensive things in the loop since early in the
+    // anneal nearly every iteration is a new best. Dropping the two derived fields here cuts
+    // that to 12 bytes/node; finalize_solution_derived_fields (below) regenerates them once,
+    // authoritatively, after the loop ends -- byte-identical result by construction, since
+    // update_route_info is the same function that would have produced whatever values a full
+    // copy carried along at each snapshot anyway.
+    void snapshot_essential(Solution& dst, const Solution& src) {
+        dst.pred = src.pred;
+        dst.succ = src.succ;
+        dst.routeOf = src.routeOf;
+        dst.routeHead = src.routeHead;
+        dst.routeTail = src.routeTail;
+        dst.routeLoad = src.routeLoad;
+        dst.numRoutes = src.numRoutes;
+        dst.totalCost = src.totalCost;
+    }
+
+    void finalize_solution_derived_fields(Solution& sol, const Instance& inst) {
+        for (int r = 0; r < sol.numRoutes; ++r) update_route_info(sol, r, inst);
+    }
+
+    // Refreshes routePosition/cumLoad for exactly the routes touched by this SA iteration's
+    // do/undo log so far, instead of an unconditional full O(numRoutes) sweep -- a ruin +
+    // recreate + local_search cascade typically touches a handful of routes, not all of
+    // them, and at large N (Lazio: ~1,000,000 nodes) a per-iteration full-graph rescan
+    // dominates actual search time. Uses the same generation-marker scratch buffer as
+    // apply_undo_list's own rescan (Phase 1.2) -- see docs/reports/005_cost_optimization.md
+    // Phase 5. doList and undoList are always pushed in lockstep (remove_customer/
+    // insert_customer each push exactly one of each per call), so either list identifies the
+    // same touched-route set; this reads doList since it's meaningful even mid-iteration,
+    // before any rollback decision has been made.
+    void rescan_touched_routes(Solution& sol, ThreadArena& arena, const Instance& inst) {
+        arena.modified_routes_gen++;
+        int gen = arena.modified_routes_gen;
+        int num_mod = 0;
+        int gen_cap = (int)arena.route_modified_gen.size();
+
+        for (int i = 0; i < arena.doCount; ++i) {
+            const auto& entry = arena.doList[i];
+            int route_changed = (entry.type == DoUndoEntry::REMOVE) ? entry.prevRoute : entry.newRoute;
+            if (route_changed != -1 && route_changed < gen_cap &&
+                arena.route_modified_gen[route_changed] != gen) {
+                arena.route_modified_gen[route_changed] = gen;
+                if (num_mod < (int)arena.modified_routes_list.size()) {
+                    arena.modified_routes_list[num_mod++] = route_changed;
+                }
+            }
+        }
+        for (int j = 0; j < num_mod; ++j) {
+            update_route_info(sol, arena.modified_routes_list[j], inst);
+        }
+    }
+
     void remove_customer(Solution& sol, NodeId c, ThreadArena& arena, const Instance& inst) {
         NodeId p = sol.pred[c];
         NodeId s = sol.succ[c];
@@ -34,8 +91,21 @@ namespace {
         undo_entry.prevRoute = sol.routeOf[c]; undo_entry.newRoute = sol.routeOf[c];
         
         Cost delta = dist(inst, p, s) - dist(inst, p, c) - dist(inst, c, s);
-        undo_entry.costDelta = -delta; 
-        arena.undoList[arena.undoCount++] = undo_entry;
+        undo_entry.costDelta = -delta;
+        // Bounds-checked: doList/undoList are sized generously (up to 500,000 entries,
+        // ThreadArena.hpp) but not unboundedly, and a corrupted/cyclic route (e.g. via the
+        // stale-routePosition failure mode Phase 1.2 fixes) could otherwise drive an
+        // out-of-bounds write here -- confirmed as a real access-violation crash during
+        // Tier-1 stress testing (docs/reports/005_cost_optimization.md Phase 1.5). Dropping
+        // the log entry when full still lets the actual move proceed (the arena being full
+        // at all indicates something else is already badly wrong), but a crash is strictly
+        // worse than a warning, so this fails loud instead of silent.
+        if (arena.undoCount < (int)arena.undoList.size()) {
+            arena.undoList[arena.undoCount++] = undo_entry;
+        } else {
+            static thread_local bool warned = false;
+            if (!warned) { std::cout << "[WARNING] undoList arena exhausted -- rollback will be incomplete" << std::endl; warned = true; }
+        }
 
         DoUndoEntry do_entry;
         do_entry.type = DoUndoEntry::REMOVE;
@@ -44,8 +114,10 @@ namespace {
         do_entry.newPred = p; do_entry.newSucc = s;
         do_entry.prevRoute = sol.routeOf[c]; do_entry.newRoute = -1;
         do_entry.costDelta = delta;
-        
-        arena.doList[arena.doCount++] = do_entry;
+
+        if (arena.doCount < (int)arena.doList.size()) {
+            arena.doList[arena.doCount++] = do_entry;
+        }
         arena.pendingDelta += delta;
 
         sol.succ[p] = s;
@@ -68,8 +140,13 @@ namespace {
         undo_entry.prevRoute = route; undo_entry.newRoute = -1;
         
         Cost delta = dist(inst, p, c) + dist(inst, c, s) - dist(inst, p, s);
-        undo_entry.costDelta = -delta; 
-        arena.undoList[arena.undoCount++] = undo_entry;
+        undo_entry.costDelta = -delta;
+        if (arena.undoCount < (int)arena.undoList.size()) {
+            arena.undoList[arena.undoCount++] = undo_entry;
+        } else {
+            static thread_local bool warned = false;
+            if (!warned) { std::cout << "[WARNING] undoList arena exhausted -- rollback will be incomplete" << std::endl; warned = true; }
+        }
 
         DoUndoEntry do_entry;
         do_entry.type = DoUndoEntry::INSERT;
@@ -78,8 +155,10 @@ namespace {
         do_entry.newPred = p; do_entry.newSucc = s;
         do_entry.prevRoute = -1; do_entry.newRoute = route;
         do_entry.costDelta = delta;
-        
-        arena.doList[arena.doCount++] = do_entry;
+
+        if (arena.doCount < (int)arena.doList.size()) {
+            arena.doList[arena.doCount++] = do_entry;
+        }
         arena.pendingDelta += delta;
 
         sol.succ[p] = c;
@@ -95,21 +174,15 @@ namespace {
 
     void apply_undo_list(Solution& sol, ThreadArena& arena, const Instance& inst, std::mutex* mtx = nullptr) {
         if (mtx) mtx->lock();
-        
-        // Track unique routes modified
-        int modified_routes[10];
-        int num_mod = 0;
-        
+
         for (int i = arena.undoCount - 1; i >= 0; --i) {
             const auto& entry = arena.undoList[i];
-            int route_changed = -1;
             if (entry.type == DoUndoEntry::INSERT) {
                 NodeId c = entry.customer; NodeId p = entry.newPred; NodeId s = entry.newSucc; int route = entry.newRoute;
                 sol.succ[p] = c; sol.pred[c] = p; sol.succ[c] = s; sol.pred[s] = c;
                 sol.routeOf[c] = route; sol.routeLoad[route] += inst.demand[c];
                 if (p == 0) sol.routeHead[route] = c;
                 if (s == 0) sol.routeTail[route] = c;
-                route_changed = route;
             } else {
                 // Undoing an INSERT means we must REMOVE it
                 NodeId c = entry.customer; int route = entry.prevRoute;
@@ -121,18 +194,13 @@ namespace {
                 if (p == 0) sol.routeHead[route] = s;
                 if (s == 0) sol.routeTail[route] = p;
                 sol.routeOf[c] = -1;
-                route_changed = route;
             }
-            
-            bool found = false;
-            for (int j = 0; j < num_mod; ++j) if (modified_routes[j] == route_changed) found = true;
-            if (!found && num_mod < 10) modified_routes[num_mod++] = route_changed;
         }
-        
-        for (int j = 0; j < num_mod; ++j) {
-            update_route_info(sol, modified_routes[j], inst);
-        }
-        
+
+        // doList is still intact here (cleared below) and identifies exactly the same
+        // touched-route set undoList does -- see rescan_touched_routes's comment.
+        rescan_touched_routes(sol, arena, inst);
+
         arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
         if (mtx) mtx->unlock();
     }
@@ -352,29 +420,36 @@ namespace {
         return -dist(inst, i, s_i) - dist(inst, j, s_j) + dist(inst, i, s_j) + dist(inst, j, s_i);
     }
 
+    // Was a std::vector<PosDelta> + push_back over the entire route + std::sort, just to
+    // keep the best 3 -- called up to 60x per local_search node pop, the innermost loop of
+    // the whole solver (docs/reports/006_throughput_and_parallelism.md Phase 2.2). This is a
+    // zero-allocation, no-sort running top-3 (insertion into a length<=3 sorted array) that
+    // visits every candidate exactly once. Uses strict '<' throughout so an earlier-visited
+    // position wins any exact delta tie -- matching what a *stable* sort would have done,
+    // which std::sort itself never actually guaranteed.
     void get_top3_insertions(const Solution& sol, const Instance& inst, NodeId v, int target_route, Top3Insertions& top3) {
         top3.count = 0;
         NodeId p = 0;
         NodeId s = sol.routeHead[target_route];
-        
-        struct PosDelta { Cost delta; NodeId p; NodeId s; };
-        std::vector<PosDelta> cands;
-        
+
         while (true) {
             Cost delta = dist(inst, p, v) + dist(inst, v, s) - dist(inst, p, s);
-            cands.push_back({delta, p, s});
+            if (top3.count < 3 || delta < top3.delta[2]) {
+                int pos = std::min(top3.count, 2);
+                while (pos > 0 && top3.delta[pos - 1] > delta) {
+                    top3.delta[pos] = top3.delta[pos - 1];
+                    top3.pos_pred[pos] = top3.pos_pred[pos - 1];
+                    top3.pos_succ[pos] = top3.pos_succ[pos - 1];
+                    --pos;
+                }
+                top3.delta[pos] = delta;
+                top3.pos_pred[pos] = p;
+                top3.pos_succ[pos] = s;
+                if (top3.count < 3) top3.count++;
+            }
             if (s == 0) break;
             p = s;
             s = sol.succ[s];
-        }
-        
-        std::sort(cands.begin(), cands.end(), [](const PosDelta& a, const PosDelta& b) { return a.delta < b.delta; });
-        
-        top3.count = std::min((int)cands.size(), 3);
-        for (int k = 0; k < top3.count; ++k) {
-            top3.delta[k] = cands[k].delta;
-            top3.pos_pred[k] = cands[k].p;
-            top3.pos_succ[k] = cands[k].s;
         }
     }
 
@@ -565,6 +640,12 @@ namespace {
                 NodeId j = granular_lists.nbr[i][j_idx];
                 int r_j = sol.routeOf[j];
                 if (r_j == -1 || r_i == r_j) continue;
+                // route_visited_iter/top3_i_to_V are route-indexed (ThreadArena.hpp); the
+                // routeToChunk size check below already implies this bound when routeToChunk
+                // is set (Stage 3, both sized to the same 2*inst.n+10000), but Stage 5 has no
+                // routeToChunk at all -- guard unconditionally rather than rely on the sizes
+                // happening to line up (docs/reports/006_throughput_and_parallelism.md Phase 4.1).
+                if (r_j >= (int)arena.route_visited_iter.size()) continue;
                 if (routeToChunk && t1 != -1) {
                     if (r_j >= (int)routeToChunk->size()) continue;
                     int c_r_j = (*routeToChunk)[r_j];
@@ -605,7 +686,9 @@ namespace {
                 
                 NodeId p_i, s_i, p_j, s_j;
                 Cost delta_swap_star = 0;
-                if (r_i != r_j) {
+                // top3_i_to_V is route-indexed (ThreadArena.hpp) -- see the identical guard
+                // and comment on the precompute loop above (Phase 4.1).
+                if (r_i != r_j && r_j < (int)arena.top3_i_to_V.size()) {
                     // Capacity short-circuit BEFORE distance lookups
                     if (sol.routeLoad[r_i] - inst.demand[i] + inst.demand[j] <= inst.Q &&
                         sol.routeLoad[r_j] - inst.demand[j] + inst.demand[i] <= inst.Q) {
@@ -651,6 +734,53 @@ namespace {
         return improved;
     }
 
+    // SVCCache is a fixed-size (CAPACITY=50) ring buffer that evicts oldest-on-overflow
+    // (ThreadArena.hpp), so a loop that inserts every node in a large instance and then
+    // starts searching only actually queues the last 50 ids inserted -- the earlier ones are
+    // silently evicted before local_search ever pops them. stage5_serial_polish and
+    // stage3_healing_ils_pass both used to do exactly this trying to seed a full sweep over
+    // (respectively) every customer or every boundary customer. This runs the same
+    // local-search-to-convergence loop used elsewhere, but in batches of CAPACITY nodes at a
+    // time, so every node in `nodes` genuinely gets a turn instead of only the last 50 --
+    // see docs/reports/005_cost_optimization.md Phase 1.4.
+    //
+    // Returns the total accumulated cost delta (always <= 0, since local_search only ever
+    // applies strictly-improving moves) via arena.pendingDelta, which -- unlike the main SA
+    // loops -- nothing else resets or applies here: local_search's apply_* path mutates
+    // pred/succ/routeOf/etc immediately and unconditionally, but leaves sol.totalCost itself
+    // untouched, so the caller MUST fold this return value into sol.totalCost (directly for
+    // single-threaded Stage 5, or via the same acceptedDelta-summed-after-join pattern
+    // Stage 3 already uses for every other cost change, to avoid a shared-scalar race) --
+    // omitting that step desyncs totalCost from the real route costs, caught by verifier.py
+    // as a "reported cost doesn't match recomputed cost" failure.
+    //
+    // `deadline`: checked once per batch (every CAPACITY=50 nodes), not per node -- this was
+    // completely unbounded until docs/reports/006_throughput_and_parallelism.md Phase 1.1.
+    // Both call sites used to run this BEFORE their stage's stageStart was even captured, so
+    // it sat entirely outside --stage3-ms/--stage5-ms; report 005 measured this directly as
+    // "Stage 4+5 took 56s against a nominal 20s budget". Default (time_point::max()) keeps
+    // legacy/iteration-count mode's existing unbounded behavior unchanged.
+    Cost full_sweep_local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst,
+                                  const NeighborLists& granular_lists, int chunkSize,
+                                  const std::vector<int>& nodes, std::mutex* mtx = nullptr,
+                                  int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr,
+                                  std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max()) {
+        arena.pendingDelta = 0;
+        size_t idx = 0;
+        while (idx < nodes.size()) {
+            if (std::chrono::steady_clock::now() >= deadline) break;
+            size_t batch_end = std::min(idx + (size_t)SVCCache::CAPACITY, nodes.size());
+            cache.clear();
+            for (size_t k = idx; k < batch_end; ++k) cache.insert(nodes[k]);
+            bool improved = true;
+            while (improved) {
+                improved = local_search(sol, arena, cache, inst, granular_lists, chunkSize, mtx, t1, t2, routeToChunk);
+            }
+            idx = batch_end;
+        }
+        return arena.pendingDelta;
+    }
+
     bool accept_delta(Cost delta, double temperature, std::mt19937& rng) {
         if (delta <= 0) return true;
         std::uniform_real_distribution<double> dist(0.0, 1.0);
@@ -679,8 +809,14 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
         }
     }
 
-    double avg_arc_cost_estimate = 100.0;
-    double T0 = 0.1 * avg_arc_cost_estimate; 
+    // Instance-scaled T0 (was a hardcoded 100.0 regardless of instance -- fine at N=2,000's
+    // small coordinate range but ~11x too cold at Valle-D-Aosta and ~32x too cold at Lazio,
+    // where exp(-delta/T) collapses to ~0 for any typical worsening move, degenerating the
+    // SA into pure hill-climbing exactly at the scales report 004 measured the cost gap on.
+    // See docs/reports/005_cost_optimization.md Phase 1.3; mirrors FILO2's own
+    // T0 = factor * mean-arc-cost rule (baselines/filo2/main.cpp).
+    double avg_arc_cost_estimate = partitionInfo.medianKnnEdgeLen;
+    double T0 = 0.1 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
     // Iteration budget is per-node-of-the-FULL-instance, not per-node-of-this-chunk: giving
@@ -720,15 +856,25 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
 
         int prevNumRoutes = sol.numRoutes;
 
+        // seed_cust must be a global NodeId (routeOf/pred/succ are all global-indexed --
+        // see Stage1_Construction.cpp), not a local 1..chunkSize count. Drawing the local
+        // count directly and using it as if it were global (the previous behavior) means
+        // routeOf[seed_cust] almost always misses this chunk's nodes -- ruin() no-ops
+        // immediately (docs/reports/005_cost_optimization.md Phase 1.1) for roughly
+        // (P-1)/P of all Stage 2 iterations, and even on a hit only ever seeds from global
+        // ids 1..chunkSize, so most of a chunk's actual customers were never reachable as a
+        // seed at all. partitionInfo.globalId[chunkId] is exactly the local->global map
+        // Stage 1 used to build this chunk's solution in the first place.
         std::uniform_int_distribution<int> dist_cust(1, chunkSize);
-        NodeId seed_cust = dist_cust(rng);
+        NodeId seed_cust = partitionInfo.globalId[chunkId][dist_cust(rng)];
         ruin(sol, seed_cust, arena, cache, rng, chunkSize, local_granular_lists, inst);
 
         recreate(sol, arena, cache, inst, local_granular_lists);
 
-        for (int r = 0; r < sol.numRoutes; ++r) {
-            update_route_info(sol, r, inst);
-        }
+        // Only rescan routes ruin/recreate actually touched (see rescan_touched_routes,
+        // docs/reports/005_cost_optimization.md Phase 5) -- chunkSize-bounded here, so less
+        // urgent than Stage 5's full-N version, but cheap and keeps the pattern consistent.
+        rescan_touched_routes(sol, arena, inst);
 
         bool local_search_improved = true;
         while(local_search_improved) {
@@ -739,20 +885,20 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
         if (accept_delta(delta, temperature, rng)) {
             sol.totalCost += delta;
             if (sol.totalCost < bestSol.totalCost) {
-                bestSol = sol;
+                snapshot_essential(bestSol, sol);
             }
         } else {
+            // apply_undo_list already rescans every route it touched (Phase 1.2/5) -- no
+            // separate full-route rescan needed here anymore.
             apply_undo_list(sol, arena, inst);
             sol.numRoutes = prevNumRoutes;
-            for (int r = 0; r < sol.numRoutes; ++r) {
-                update_route_info(sol, r, inst);
-            }
         }
 
         if (!useTimeBudget) {
             temperature *= cooling_rate;
         }
     }
+    finalize_solution_derived_fields(bestSol, inst);
 
     if (out_iterations_completed) *out_iterations_completed = iter;
     return bestSol;
@@ -769,11 +915,7 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
     
     cache.init(inst.n);
     cache.clear();
-    
-    for (int c : boundaryList) {
-        cache.insert(c);
-    }
-    
+
     NeighborLists local_granular_lists;
     local_granular_lists.k = neighborLists.k;
     local_granular_lists.nbr.assign(inst.n + 1, std::vector<NodeId>());
@@ -785,8 +927,23 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
             }
         }
     }
-    
-    double avg_arc_cost_estimate = 100.0;
+
+    // Refresh routePosition/cumLoad for this pair's routes before the full sweep below --
+    // full_sweep_local_search is the first thing in this pass to call local_search (which
+    // depends on both being current, e.g. eval_2opt_star's capacity check reads cumLoad),
+    // and unlike the per-iteration refreshes further down this function, nothing has
+    // necessarily just rebuilt them fresh yet. Matches the existing (lock-free -- routes
+    // labeled t1/t2 are this thread's exclusively within this color class, per the
+    // graph-coloring disjointness guarantee) refresh convention used later in this function.
+    for (int r = 0; r < globalSolution.numRoutes; ++r) {
+        if (!routeToChunk || t1 == -1 || ((*routeToChunk)[r] == t1 || (*routeToChunk)[r] == t2)) {
+            update_route_info(globalSolution, r, inst);
+        }
+    }
+
+    // See the identical comment in stage2_ils above (docs/reports/005_cost_optimization.md
+    // Phase 1.3) -- same instance-scaling fix, same rationale.
+    double avg_arc_cost_estimate = partitionInfo.medianKnnEdgeLen;
     double T0 = 0.1 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
@@ -797,7 +954,25 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
     double cooling_rate = useTimeBudget ? 1.0 : std::pow(Tf / T0, 1.0 / max_iterations);
     double temperature = T0;
 
+    // stageStart captured here, before the full sweep, so the sweep's deadline (Phase 1.1)
+    // and the main loop's own elapsed-time check below share one clock and one budget --
+    // time the sweep spends is time the main loop below has less of, not extra on top.
     auto stageStart = std::chrono::steady_clock::now();
+    auto sweepDeadline = useTimeBudget
+        ? stageStart + std::chrono::milliseconds(g_stage3_time_budget_ms)
+        : std::chrono::steady_clock::time_point::max();
+
+    // Real full-sweep local-search descent over every boundary customer before the ILS loop
+    // starts (see full_sweep_local_search's comment) -- the previous "insert every boundary
+    // customer" loop here silently only queued the last 50 ids (SVCCache's ring-buffer
+    // capacity) once local_granular_lists existed, this runs the descent for real.
+    // Folded into acceptedDelta (not globalSolution.totalCost directly): this runs
+    // concurrently with other chunk-pair threads sharing globalSolution, and acceptedDelta
+    // is already the established race-free mechanism -- summed into totalCost once,
+    // single-threaded, after this color class's threads all join (Stage3_MergeHealing.cpp).
+    acceptedDelta += full_sweep_local_search(globalSolution, arena, cache, inst, local_granular_lists, inst.n,
+                                              boundaryList, &route_creation_mutex, t1, t2, routeToChunk, sweepDeadline);
+
     for (int iter = 0; useTimeBudget || iter < max_iterations; ++iter) {
         double elapsed_ms = 0.0;
         if (useTimeBudget) {
@@ -814,8 +989,19 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
         arena.doCount = 0;
         arena.undoCount = 0;
         arena.pendingDelta = 0;
-        int prevNumRoutes = globalSolution.numRoutes;
-        
+        // No prevNumRoutes snapshot here (unlike stage2_ils/stage5_serial_polish): this pass
+        // shares one globalSolution across multiple concurrently-running chunk-pair threads
+        // (disjoint routes, same object), so a snapshot-then-unconditional-restore of a
+        // process-wide numRoutes counter races with any other thread's concurrent route
+        // creation -- one thread's rejection could silently roll numRoutes back below a
+        // route another thread just legitimately created, making its customers vanish from
+        // every later scan/output (see docs/reports/005_cost_optimization.md Phase 1). On
+        // reject, apply_undo_list below already fully unwinds this iteration's own
+        // pred/succ/routeOf/routeLoad/routeHead/routeTail changes -- a route it created ends
+        // up merely empty (routeHead[r]==0), which is the same harmless dead-slot state
+        // recreate()'s empty-route reuse scan and Stage 4's cleanup already handle elsewhere
+        // in this codebase, so simply not touching numRoutes here is both race-free and safe.
+
         std::uniform_int_distribution<int> dist_cust(0, boundaryList.size() - 1);
         NodeId seed_cust = boundaryList[dist_cust(rng)];
         int virtual_chunk_size = boundaryList.size(); // for log-scaled ruin walk
@@ -824,13 +1010,13 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
         auto t_ruin = std::chrono::high_resolution_clock::now();
         
         recreate(globalSolution, arena, cache, inst, local_granular_lists, &route_creation_mutex, t1, t2, routeToChunk);
-        
-        for (int r = 0; r < globalSolution.numRoutes; ++r) {
-            if (!routeToChunk || t1 == -1 || ((*routeToChunk)[r] == t1 || (*routeToChunk)[r] == t2)) {
-                update_route_info(globalSolution, r, inst);
-            }
-        }
-        
+
+        // Only rescan routes ruin/recreate actually touched (docs/reports/005_cost_optimization.md
+        // Phase 5) -- these are already guaranteed to be within t1/t2 since ruin/recreate
+        // refuse to touch any route outside that filter, so no separate routeToChunk check
+        // is needed here (unlike the old unconditional full-numRoutes loop this replaces).
+        rescan_touched_routes(globalSolution, arena, inst);
+
         auto t_recr = std::chrono::high_resolution_clock::now();
         bool local_search_improved = true;
         int ls_loops = 0;
@@ -863,13 +1049,9 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
             // would race even though the routes each thread touches are disjoint.
             acceptedDelta += delta;
         } else {
+            // apply_undo_list already rescans every route it touched (Phase 1.2/5) -- no
+            // separate rescan needed here anymore.
             apply_undo_list(globalSolution, arena, inst, &route_creation_mutex);
-            globalSolution.numRoutes = prevNumRoutes;
-            for (int r = 0; r < globalSolution.numRoutes; ++r) {
-                if (!routeToChunk || t1 == -1 || ((*routeToChunk)[r] == t1 || (*routeToChunk)[r] == t2)) {
-                    update_route_info(globalSolution, r, inst);
-                }
-            }
         }
 
         if (!useTimeBudget) {
@@ -879,19 +1061,31 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
     return acceptedDelta;
 }
 
-void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const Instance& inst, const NeighborLists& neighborLists) {
+void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const Instance& inst, const NeighborLists& neighborLists, double avgArcCostEstimate) {
     if (globalSolution.numRoutes == 0) return;
     
     SVCCache cache;
     cache.init(inst.n);
     cache.clear();
-    for (int i = 1; i <= inst.n; ++i) {
-        cache.insert(i);
+
+    // Refresh routePosition/cumLoad for every route before the full sweep below.
+    // stage4_route_cleanup (main.cpp, runs immediately before this) relocates customers but
+    // never calls update_route_info, so routes it touched can still be stale here; the old
+    // code never noticed because Stage 5's own ILS loop always refreshed everything itself
+    // after its first recreate() call. full_sweep_local_search now runs before that and
+    // depends on both being current (e.g. eval_2opt_star's capacity check reads cumLoad) --
+    // confirmed as a real cause of capacity violations during Tier-1 stress testing.
+    for (int r = 0; r < globalSolution.numRoutes; ++r) {
+        update_route_info(globalSolution, r, inst);
     }
-    
-    std::mt19937 rng(424242);
-    
-    double avg_arc_cost_estimate = 100.0;
+
+    extern int g_seed; // overridable via --seed; offset chosen so default (1337) reproduces the
+                        // prior hardcoded 424242 exactly (424242 - 1337 = 422905)
+    std::mt19937 rng(g_seed + 422905);
+
+    // See the identical comment in stage2_ils above (docs/reports/005_cost_optimization.md
+    // Phase 1.3) -- same instance-scaling fix, same rationale.
+    double avg_arc_cost_estimate = avgArcCostEstimate;
     double T0 = 0.1 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
@@ -901,6 +1095,26 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     int stagnation_limit = 150;
     int stagnation = 0;
     double cooling_rate = useTimeBudget ? 1.0 : std::pow(Tf / T0, 1.0 / max_iterations);
+
+    // stageStart captured here, before the full sweep, so the sweep's deadline (Phase 1.1)
+    // and the main loop's own elapsed-time check share one clock and one budget -- time the
+    // sweep spends is time the main loop below has less of, not extra on top of --stage5-ms.
+    auto sweepStart = std::chrono::steady_clock::now();
+    auto sweepDeadline = useTimeBudget
+        ? sweepStart + std::chrono::milliseconds(g_stage5_time_budget_ms)
+        : std::chrono::steady_clock::time_point::max();
+
+    // A real full-graph local-search descent before the ILS loop starts (see
+    // full_sweep_local_search's comment) -- the previous "insert every customer" loop here
+    // silently only queued the last 50 ids (SVCCache's ring-buffer capacity), so Stage 5 was
+    // never actually polishing anything but a handful of highest-numbered nodes before this.
+    {
+        std::vector<int> all_customers(inst.n);
+        for (int i = 1; i <= inst.n; ++i) all_customers[i - 1] = i;
+        // Single-threaded here, so folding the delta straight into totalCost is safe (no
+        // shared-scalar race to worry about, unlike the Stage 3 call site above).
+        globalSolution.totalCost += full_sweep_local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, all_customers, nullptr, -1, -1, nullptr, sweepDeadline);
+    }
     double temperature = T0;
 
     Solution bestSol = globalSolution;
@@ -937,31 +1151,31 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
         // a normal insertion into an existing route leaves that route's cumLoad/routePosition
         // stale. eval_2opt_star's capacity check reads cumLoad, so without this rescan it can
         // pass a move against stale (too-low) load data and produce an over-capacity route.
-        // stage2_ils and stage3_healing_ils_pass both already do this; stage5 was missing it.
-        for (int r = 0; r < globalSolution.numRoutes; ++r) {
-            update_route_info(globalSolution, r, inst);
-        }
+        // Only rescans routes ruin/recreate actually touched (docs/reports/005_cost_optimization.md
+        // Phase 5) instead of the previous unconditional full O(N) sweep -- at Lazio's
+        // ~1,000,000-node scale, a per-iteration full-graph rescan to service a ruin that
+        // touches ~14 nodes dominated actual search time.
+        rescan_touched_routes(globalSolution, arena, inst);
 
         bool local_search_improved = true;
         while(local_search_improved) {
             local_search_improved = local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, nullptr);
         }
-        
+
         Cost delta = arena.pendingDelta;
         if (accept_delta(delta, temperature, rng)) {
             globalSolution.totalCost += delta;
             if (globalSolution.totalCost < bestSol.totalCost - 1e-6) {
-                bestSol = globalSolution;
+                snapshot_essential(bestSol, globalSolution);
                 stagnation = 0;
             } else {
                 stagnation++;
             }
         } else {
+            // apply_undo_list already rescans every route it touched (Phase 1.2/5) -- no
+            // separate full-route rescan needed here anymore.
             apply_undo_list(globalSolution, arena, inst, nullptr);
             globalSolution.numRoutes = prevNumRoutes;
-            for (int r = 0; r < globalSolution.numRoutes; ++r) {
-                update_route_info(globalSolution, r, inst);
-            }
             stagnation++;
         }
         
@@ -971,5 +1185,6 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
             temperature *= cooling_rate;
         }
     }
+    finalize_solution_derived_fields(bestSol, inst);
     globalSolution = bestSol;
 }

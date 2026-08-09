@@ -15,6 +15,11 @@ struct Stage0Result {
     
     int numChunks;
     std::vector<int> chunkSize; // chunk index -> size
+
+    // Median of each node's mean-kNN-edge-length, i.e. a robust instance-scaled estimate of
+    // a "typical" arc cost. Used to set the simulated annealing T0/Tf in Stage2_ILS.cpp
+    // instead of a hardcoded constant -- see docs/reports/005_cost_optimization.md Phase 1.3.
+    double medianKnnEdgeLen = 100.0;
 };
 
 Stage0Result run_stage0(const Instance& inst, const NeighborLists& neighborLists, int num_chunks);

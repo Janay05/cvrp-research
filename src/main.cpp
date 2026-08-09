@@ -25,6 +25,13 @@ int g_max_iterations_override = -1; // overridable via --max-iterations; -1 = us
 int g_stage2_time_budget_ms = -1;
 int g_stage3_time_budget_ms = -1;
 int g_stage5_time_budget_ms = -1;
+// RNG seed base, overridable via --seed. Default 1337 matches the previously-hardcoded
+// per-worker base (1337+i) and the Stage 3/5 offsets are chosen so the default reproduces
+// every prior report's numbers byte-for-byte (see uses in Stage3_MergeHealing.cpp and
+// Stage2_ILS.cpp's stage5_serial_polish). This is the only entropy source in the whole
+// pipeline -- the solver is otherwise fully deterministic, so repeat runs at a fixed seed
+// carry zero variance information (see docs/reports/005_cost_optimization.md, Phase 0).
+int g_seed = 1337;
 
 int main(int argc, char** argv) {
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -57,6 +64,8 @@ int main(int argc, char** argv) {
             g_stage3_time_budget_ms = std::stoi(argv[++i]);
         } else if (arg == "--stage5-ms" && i + 1 < argc) {
             g_stage5_time_budget_ms = std::stoi(argv[++i]);
+        } else if (arg == "--seed" && i + 1 < argc) {
+            g_seed = std::stoi(argv[++i]);
         }
     }
 
@@ -98,7 +107,7 @@ int main(int argc, char** argv) {
 
     std::cout << "Building neighbor lists..." << std::endl;
     NeighborLists neighborLists;
-    neighborLists.build(inst, 30); // limit k to 30 for SWAP* pruning constraint
+    neighborLists.build(inst, 30, P); // limit k to 30 for SWAP* pruning constraint; P threads (same as Stage 1/2)
 
     std::cout << "Running Stage 0 with P=" << P << " chunks..." << std::endl;
     Stage0Result partitionInfo = run_stage0(inst, neighborLists, P);
@@ -117,7 +126,7 @@ int main(int argc, char** argv) {
         contexts[i].instance = &inst;
         contexts[i].neighborLists = &neighborLists;
         contexts[i].partitionInfo = &partitionInfo;
-        contexts[i].rng.seed(1337 + i); // Isolated deterministic seed per thread
+        contexts[i].rng.seed(g_seed + i); // Isolated deterministic seed per thread
     }
 
     std::cout << "Launching threads..." << std::endl;
@@ -206,8 +215,17 @@ int main(int argc, char** argv) {
     std::cout << "Running Stage 5 Polish..." << std::endl;
     logFile << "Running Stage 5 Polish..." << std::endl;
     ThreadArena globalArena;
-    globalArena.reserve_fixed_capacity(inst.n);
-    stage5_serial_polish(globalSolution, globalArena, inst, neighborLists);
+    // NOT globalSolution.routeHead.size() here: stage4_route_cleanup (just above) compacts
+    // routeHead down to only the live routes, but stage5_serial_polish's own recreate() can
+    // grow numRoutes further as it runs (routeHead.resize(r+100) on demand, uncapped) -- a
+    // snapshot taken before Stage 5 starts has zero headroom for that growth. This was a
+    // real regression: it replaced the previous single-arg call's inst.n+100 default (which
+    // happened to have plenty of slack) with a much SMALLER bound, causing out-of-bounds
+    // arena access once Stage 5 created even a few new routes -- confirmed via Tier-1
+    // capacity-violation and heap-corruption crashes (docs/reports/006_throughput_and_parallelism.md
+    // Phase 4.1). Use the same generous, forward-looking bound Stage 3 commits to instead.
+    globalArena.reserve_fixed_capacity(inst.n, 2 * inst.n + 10000);
+    stage5_serial_polish(globalSolution, globalArena, inst, neighborLists, partitionInfo.medianKnnEdgeLen);
 
     auto t_end = std::chrono::high_resolution_clock::now();
     double ms_setup = std::chrono::duration<double, std::milli>(t_stage0 - t_start).count();

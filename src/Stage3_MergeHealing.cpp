@@ -72,8 +72,24 @@ void run_stage3_healing(Solution& globalSolution,
                         const Stage0Result& partitionInfo,
                         const NeighborLists& neighborLists) {
     
-    // Pre-allocate extra routes to prevent reallocation data races in concurrent healing
-    int max_possible_routes = inst.n + 100;
+    // Pre-allocate extra routes to prevent reallocation data races in concurrent healing.
+    // This must be a genuinely provable bound, not a cushion: local_search's evaluation
+    // phase (get_top3_insertions, eval_2opt_star, etc.) reads globalSolution.routeHead/
+    // Tail/Load WITHOUT the mutex (see the comment at that call site), so if recreate()'s
+    // own route-creation path (mutex-protected) ever needs to actually reallocate one of
+    // these vectors while another thread holds a bare, unlocked pointer/reference into it,
+    // that's a real use-after-free / access violation, not just stale data -- confirmed via
+    // crashes during Tier-1 stress testing (see docs/reports/005_cost_optimization.md Phase
+    // 1). `inst.n + 100` is not that bound: a route can never hold more than inst.n
+    // customers total (so live routes alone can't exceed inst.n), but every route CREATED
+    // during a rejected iteration leaks its slot permanently (see routeToChunk's -1 label
+    // for healing-created routes, below) -- and since removing the racy numRoutes
+    // snapshot/restore (Phase 1 fix), numRoutes is monotonically non-decreasing for the rest
+    // of this function, so those leaked slots keep accumulating instead of resetting each
+    // rejected iteration. 2x + a large flat slack comfortably covers even every iteration of
+    // every chunk-pair thread leaking a route (each pass removes only a handful of customers
+    // per iteration, capped at 1000 iterations/pair), while costing a few tens of MB at most.
+    int max_possible_routes = 2 * inst.n + 10000;
     if ((int)globalSolution.routeHead.size() < max_possible_routes) {
         globalSolution.routeHead.resize(max_possible_routes, 0);
         globalSolution.routeTail.resize(max_possible_routes, 0);
@@ -133,7 +149,22 @@ void run_stage3_healing(Solution& globalSolution,
     for (int e = 0; e < num_edges; ++e) {
         color_classes[edge_color[e]].push_back(edge_list[e]);
     }
-    
+
+    // Pool of arenas, one per thread SLOT within a color class (indexed by t_idx, which
+    // ranges 0..class_edges.size()-1 and restarts each class) -- reused across every color
+    // class instead of a fresh ThreadArena constructed inside the lambda per pair. A fresh
+    // arena at n=1,000,000 is ~110-230 MB to allocate and zero-fill (see
+    // docs/reports/006_throughput_and_parallelism.md Phase 2.6); this repeated for every
+    // chunk pair in every color class was a large, pure-overhead cost. Safe to reuse: color
+    // classes run strictly sequentially (all of class c's threads are joined below before
+    // class c+1's threads are spawned), so slot t_idx is never touched by two threads at
+    // once, and each pair's own SA loop already resets doCount/undoCount/pendingDelta at the
+    // top of its first iteration regardless of what a previous pair left behind.
+    size_t max_class_size = 0;
+    for (const auto& cc : color_classes) max_class_size = std::max(max_class_size, cc.size());
+    std::vector<ThreadArena> arena_pool(max_class_size);
+    for (auto& a : arena_pool) a.reserve_fixed_capacity(inst.n, max_possible_routes);
+
     for (int c = 0; c <= max_color; ++c) {
         std::vector<std::thread> threads;
         const auto& class_edges = color_classes[c];
@@ -167,11 +198,11 @@ void run_stage3_healing(Solution& globalSolution,
             
             // heal boundaries in parallel
             threads.emplace_back([&, pair_boundary, t1, t2, t_idx]() mutable {
-                ThreadArena arena;
-                arena.reserve_fixed_capacity(inst.n);
+                ThreadArena& arena = arena_pool[t_idx];
                 SVCCache cache;
                 cache.init(inst.n);
-                std::mt19937 rng(1337 + t1 * 1000 + t2);
+                extern int g_seed; // overridable via --seed; default 1337 preserves prior behavior exactly
+                std::mt19937 rng(g_seed + t1 * 1000 + t2);
                 std::cout << "Healing chunk pair (" << t1 << "," << t2 << ")" << std::endl;
                 for (int cust : pair_boundary) cache.insert(cust);
                 classDeltas[t_idx] = stage3_healing_ils_pass(globalSolution, arena, cache, inst, neighborLists, partitionInfo, pair_boundary, t1, t2, rng, &routeToChunk);

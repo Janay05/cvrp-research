@@ -77,6 +77,7 @@ Stage0Result run_stage0(const Instance& inst, const NeighborLists& neighborLists
     std::vector<double> sortedLens = avgKnnEdgeLen;
     std::sort(sortedLens.begin() + 1, sortedLens.end());
     double median_len = sortedLens[1 + n / 2];
+    res.medianKnnEdgeLen = median_len > 1e-9 ? median_len : 100.0;
     double multiplier = 2.0;
     double R = median_len * multiplier;
     

@@ -1,0 +1,36 @@
+# Tier-1 A/B benchmark set: ~30 X-set instances (Uchoa et al. 2013), spread n=101-1001.
+# See docs/reports/005_cost_optimization.md Phase 0 / Testing strategy.
+data/instances/X/X-n101-k25.vrp
+data/instances/X/X-n115-k10.vrp
+data/instances/X/X-n129-k18.vrp
+data/instances/X/X-n143-k7.vrp
+data/instances/X/X-n157-k13.vrp
+data/instances/X/X-n172-k51.vrp
+data/instances/X/X-n186-k15.vrp
+data/instances/X/X-n200-k36.vrp
+data/instances/X/X-n214-k11.vrp
+data/instances/X/X-n228-k23.vrp
+data/instances/X/X-n242-k48.vrp
+data/instances/X/X-n256-k16.vrp
+data/instances/X/X-n270-k35.vrp
+data/instances/X/X-n284-k15.vrp
+data/instances/X/X-n298-k31.vrp
+data/instances/X/X-n313-k71.vrp
+data/instances/X/X-n327-k20.vrp
+data/instances/X/X-n344-k43.vrp
+data/instances/X/X-n367-k17.vrp
+data/instances/X/X-n393-k38.vrp
+data/instances/X/X-n420-k130.vrp
+data/instances/X/X-n449-k29.vrp
+data/instances/X/X-n480-k70.vrp
+data/instances/X/X-n513-k21.vrp
+data/instances/X/X-n548-k50.vrp
+data/instances/X/X-n586-k159.vrp
+data/instances/X/X-n627-k43.vrp
+data/instances/X/X-n670-k130.vrp
+data/instances/X/X-n716-k35.vrp
+data/instances/X/X-n766-k71.vrp
+data/instances/X/X-n819-k171.vrp
+data/instances/X/X-n876-k59.vrp
+data/instances/X/X-n936-k151.vrp
+data/instances/X/X-n1001-k43.vrp
