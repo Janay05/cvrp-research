@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <queue>
 #include <cmath>
+#include <thread>
+#include <vector>
 
 namespace {
     int build_recursive(std::vector<KDNode>& nodes, std::vector<NodeId>& ids, int start, int end, int depth, const Instance& inst) {
@@ -44,53 +46,78 @@ void KDTree::build(const Instance& inst) {
     root = build_recursive(nodes, ids, 0, ids.size(), 0, inst);
 }
 
-void NeighborLists::build(const Instance& inst, int k_neighbors) {
+namespace {
+    // Queries nodes [lo, hi) against the (already-built, read-only) tree. Independent per
+    // node: own priority_queue, writes only nbr[i] for i in this thread's own range -- no
+    // shared mutable state, so this is safe to call from multiple threads concurrently over
+    // disjoint ranges with no locking.
+    void knn_query_range(const Instance& inst, const KDTree& tree, int k, int lo, int hi,
+                          std::vector<std::vector<NodeId>>& nbr) {
+        for (int i = lo; i < hi; ++i) {
+            std::priority_queue<std::pair<Cost, NodeId>> pq;
+
+            auto search = [&](auto& self, int node_idx, int depth) -> void {
+                if (node_idx == -1) return;
+                const auto& node = tree.nodes[node_idx];
+
+                if (node.id != i) {
+                    Cost d = dist(inst, i, node.id);
+                    if (pq.size() < k || d < pq.top().first) {
+                        pq.push({d, node.id});
+                        if (pq.size() > k) pq.pop();
+                    }
+                }
+
+                double dist_to_plane = 0;
+                if (node.axis == 0) {
+                    dist_to_plane = (double)inst.x[i] - (double)inst.x[node.id];
+                } else {
+                    dist_to_plane = (double)inst.y[i] - (double)inst.y[node.id];
+                }
+
+                int near_child = dist_to_plane < 0 ? node.left : node.right;
+                int far_child = dist_to_plane < 0 ? node.right : node.left;
+
+                self(self, near_child, depth + 1);
+
+                if (pq.size() < k || std::abs(dist_to_plane) < pq.top().first) {
+                    self(self, far_child, depth + 1);
+                }
+            };
+
+            search(search, tree.root, 0);
+
+            std::vector<NodeId>& curr_nbr = nbr[i];
+            curr_nbr.reserve(pq.size());
+            while (!pq.empty()) {
+                curr_nbr.push_back(pq.top().second);
+                pq.pop();
+            }
+            std::reverse(curr_nbr.begin(), curr_nbr.end()); // sorted by distance ascending
+        }
+    }
+}
+
+void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads) {
     k = k_neighbors;
     nbr.assign(inst.n + 1, std::vector<NodeId>());
 
     KDTree tree;
     tree.build(inst);
 
-    for (int i = 1; i <= inst.n; ++i) {
-        std::priority_queue<std::pair<Cost, NodeId>> pq;
-
-        auto search = [&](auto& self, int node_idx, int depth) -> void {
-            if (node_idx == -1) return;
-            const auto& node = tree.nodes[node_idx];
-            
-            if (node.id != i) {
-                Cost d = dist(inst, i, node.id);
-                if (pq.size() < k || d < pq.top().first) {
-                    pq.push({d, node.id});
-                    if (pq.size() > k) pq.pop();
-                }
-            }
-
-            double dist_to_plane = 0;
-            if (node.axis == 0) {
-                dist_to_plane = (double)inst.x[i] - (double)inst.x[node.id];
-            } else {
-                dist_to_plane = (double)inst.y[i] - (double)inst.y[node.id];
-            }
-
-            int near_child = dist_to_plane < 0 ? node.left : node.right;
-            int far_child = dist_to_plane < 0 ? node.right : node.left;
-
-            self(self, near_child, depth + 1);
-
-            if (pq.size() < k || std::abs(dist_to_plane) < pq.top().first) {
-                self(self, far_child, depth + 1);
-            }
-        };
-
-        search(search, tree.root, 0);
-
-        std::vector<NodeId>& curr_nbr = nbr[i];
-        curr_nbr.reserve(pq.size());
-        while (!pq.empty()) {
-            curr_nbr.push_back(pq.top().second);
-            pq.pop();
-        }
-        std::reverse(curr_nbr.begin(), curr_nbr.end()); // sorted by distance ascending
+    if (num_threads <= 1 || inst.n < 1000) {
+        // Small instances: thread setup overhead isn't worth it.
+        knn_query_range(inst, tree, k, 1, inst.n + 1, nbr);
+        return;
     }
+
+    std::vector<std::thread> threads;
+    int chunk = (inst.n + num_threads - 1) / num_threads;
+    for (int t = 0; t < num_threads; ++t) {
+        int lo = 1 + t * chunk;
+        int hi = std::min(inst.n + 1, lo + chunk);
+        if (lo >= hi) break;
+        threads.emplace_back(knn_query_range, std::cref(inst), std::cref(tree), k, lo, hi, std::ref(nbr));
+    }
+    for (auto& th : threads) th.join();
 }
