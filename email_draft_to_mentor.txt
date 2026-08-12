@@ -1,0 +1,17 @@
+Subject: Updated Runtime Analysis and Apology Regarding Benchmarking Discrepancy
+
+Hi [Mentor's Name],
+
+I hope this email finds you well.
+
+Please find attached the updated report (007) detailing the algorithms and design decisions behind our solver's runtime results. You can go through the attached report to see exactly where we are getting our benefits in runtime from, such as the parallel partitioning, constant-time search steps, and boundary healing.
+
+I also wanted to sincerely apologize for a mistake in our earlier benchmarking. In previous reports, I didn't account for a compiler difference: our solver was built with MSVC while FILO2 was built using a different configuration that affected the comparisons. We have now fixed this compiler-parity validity gap by building both solvers under the same verified WSL/g++ environment (as detailed in report 008). While our solver remains faster (about 1.30x-1.36x faster), the previously claimed 2.3x-3.9x speedup was inflated due to this discrepancy. 
+
+I've updated the runtime numbers in the attached report to reflect the corrected, verified benchmarks. Moving forward, I will ensure stricter parity in all our performance tests.
+
+Please let me know if you have any questions or feedback.
+
+Best regards,
+
+[Your Name]

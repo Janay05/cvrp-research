@@ -14,7 +14,9 @@
 #include <chrono>
 #include <string>
 
+#if defined(_MSC_VER)
 #include <crtdbg.h>
+#endif
 
 std::atomic<long long> global_dist_calls(0);
 thread_local long long thread_dist_calls = 0;
