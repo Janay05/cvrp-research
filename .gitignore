@@ -55,6 +55,7 @@ baselines/filo2/results/
 
 # Ignore WSL and other build directories
 baselines/filo2/build_wsl/
+src/build_wsl/
 build/
 *.sol
 
