@@ -111,6 +111,9 @@ int main(int argc, char** argv) {
     NeighborLists neighborLists;
     neighborLists.build(inst, 30, P); // limit k to 30 for SWAP* pruning constraint; P threads (same as Stage 1/2)
 
+    NeighborLists stage5_neighborLists;
+    stage5_neighborLists.build(inst, 100, P);
+
     std::cout << "Running Stage 0 with P=" << P << " chunks..." << std::endl;
     Stage0Result partitionInfo = run_stage0(inst, neighborLists, P);
     
@@ -127,6 +130,7 @@ int main(int argc, char** argv) {
         contexts[i].stage_barrier = &worker_barrier;
         contexts[i].instance = &inst;
         contexts[i].neighborLists = &neighborLists;
+        contexts[i].stage5_neighborLists = &stage5_neighborLists;
         contexts[i].partitionInfo = &partitionInfo;
         contexts[i].rng.seed(g_seed + i); // Isolated deterministic seed per thread
     }
@@ -227,7 +231,18 @@ int main(int argc, char** argv) {
     // capacity-violation and heap-corruption crashes (docs/reports/006_throughput_and_parallelism.md
     // Phase 4.1). Use the same generous, forward-looking bound Stage 3 commits to instead.
     globalArena.reserve_fixed_capacity(inst.n, 2 * inst.n + 10000);
-    stage5_serial_polish(globalSolution, globalArena, inst, neighborLists, partitionInfo.medianKnnEdgeLen);
+    try {
+        // std::cout << "Running Stage 5 Fleet Minimization..." << std::endl;
+        // stage5_fleet_minimization(globalSolution, globalArena, inst, stage5_neighborLists, partitionInfo.medianKnnEdgeLen);
+        std::cout << "Running Stage 5 Serial Polish..." << std::endl;
+        stage5_serial_polish(globalSolution, globalArena, inst, stage5_neighborLists, partitionInfo.medianKnnEdgeLen);
+    } catch (const std::exception& e) {
+        std::cerr << "STAGE 5 CRASHED: " << e.what() << std::endl;
+        std::exit(1);
+    } catch (...) {
+        std::cerr << "STAGE 5 CRASHED: Unknown exception" << std::endl;
+        std::exit(1);
+    }
 
     auto t_end = std::chrono::high_resolution_clock::now();
     double ms_setup = std::chrono::duration<double, std::milli>(t_stage0 - t_start).count();

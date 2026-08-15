@@ -11,7 +11,7 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
                              const Stage0Result& partitionInfo,
                              const std::vector<int>& boundaryList,
                              int t1, int t2, std::mt19937& rng,
-                             const std::vector<int>* routeToChunk = nullptr);
+                             std::vector<int>* routeToChunk = nullptr);
 
 void merge_all_chunks_into_global(Solution& globalSolution, 
                                   const std::vector<Solution>& chunkSolutions, 
@@ -64,6 +64,7 @@ void merge_all_chunks_into_global(Solution& globalSolution,
             globalSolution.cumLoad[curr] = current_load;
             curr = globalSolution.succ[curr];
         }
+        globalSolution.routeLoad[r] = current_load; // Recompute to be absolutely safe
     }
 }
 

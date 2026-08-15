@@ -10,3 +10,6 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
                     const Instance& inst, const Stage0Result& partitionInfo,
                     const NeighborLists& neighborLists, int chunkId, std::mt19937& rng,
                     int* out_iterations_completed = nullptr);
+
+void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const Instance& inst, const NeighborLists& neighborLists, double avgArcCostEstimate);
+void stage5_fleet_minimization(Solution& sol, ThreadArena& arena, const Instance& inst, const NeighborLists& granular_lists, double avgArcCostEstimate);

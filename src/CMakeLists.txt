@@ -27,8 +27,8 @@ endif()
 
 # Debug Build (ThreadSanitizer)
 add_executable(cvrp_parallel_debug ${SOURCES})
-target_compile_options(cvrp_parallel_debug PRIVATE -g -fsanitize=thread)
-target_link_options(cvrp_parallel_debug PRIVATE -fsanitize=thread)
+
+
 if(NOT WIN32)
     target_link_libraries(cvrp_parallel_debug pthread)
 endif()
