@@ -11,15 +11,23 @@ namespace {
     void update_route_info(Solution& sol, int route, const Instance& inst) {
         if (route == -1 || route >= sol.numRoutes) return;
 
+        Cost load = 0;
         NodeId curr = sol.routeHead[route];
         int pos = 1;
-        Cost current_load = 0;
+        int count = 0;
+        int max_nodes = inst.n + 2;
         while (curr != 0) {
+            count++;
+            if (count > max_nodes) {
+                printf("CYCLE DETECTED IN update_route_info for route %d!\n", route); fflush(stdout);
+                break;
+            }
+            load += inst.demand[curr];
+            sol.cumLoad[curr] = load;
             sol.routePosition[curr] = pos++;
-            current_load += inst.demand[curr];
-            sol.cumLoad[curr] = current_load;
             curr = sol.succ[curr];
         }
+        sol.routeLoad[route] = load;
     }
 
     // Copies everything except routePosition/cumLoad, which are pure derived caches (see
@@ -44,7 +52,28 @@ namespace {
     }
 
     void finalize_solution_derived_fields(Solution& sol, const Instance& inst) {
-        for (int r = 0; r < sol.numRoutes; ++r) update_route_info(sol, r, inst);
+        printf("Entering finalize_solution_derived_fields...\n"); fflush(stdout);
+        for (int r = 0; r < sol.numRoutes; ++r) {
+            if (sol.routeLoad[r] == 0) continue;
+            Cost load = 0;
+            NodeId curr = sol.routeHead[r];
+            int pos = 1;
+            int max_nodes = inst.n + 2;
+            int count = 0;
+            while (curr != 0) {
+                count++;
+                if (count > max_nodes) {
+                    printf("CYCLE DETECTED IN ROUTE %d!\n", r); fflush(stdout);
+                    break;
+                }
+                load += inst.demand[curr];
+                sol.cumLoad[curr] = load;
+                sol.routePosition[curr] = pos++;
+                curr = sol.succ[curr];
+            }
+            sol.routeLoad[r] = load;
+        }
+        printf("Exiting finalize_solution_derived_fields...\n"); fflush(stdout);
     }
 
     // Refreshes routePosition/cumLoad for exactly the routes touched by this SA iteration's
@@ -350,14 +379,17 @@ namespace {
     Cost eval_relocate2(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
         if (i == 0 || j == 0) return 0;
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
-        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+        if (r_i == -1 || r_j == -1) return 0;
         
         NodeId s_i = sol.succ[i];
         if (s_i == 0) return 0; // Cannot relocate depot
+        NodeId s_s_i = sol.succ[s_i];
         
-        if (sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] > inst.Q) return 0;
+        if (j == i || j == sol.pred[i] || j == s_i || j == s_s_i) return 0;
         
-        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
+        if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] > inst.Q) return 0;
+        
+        NodeId p_i = sol.pred[i], s_j = sol.succ[j];
         
         Cost rem = dist(inst, p_i, s_s_i) - dist(inst, p_i, i) - dist(inst, s_i, s_s_i);
         Cost ins = dist(inst, j, i) + dist(inst, s_i, s_j) - dist(inst, j, s_j);
@@ -368,16 +400,19 @@ namespace {
     Cost eval_relocate3(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
         if (i == 0 || j == 0) return 0;
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
-        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+        if (r_i == -1 || r_j == -1) return 0;
         
         NodeId s_i = sol.succ[i];
         if (s_i == 0) return 0;
         NodeId s_s_i = sol.succ[s_i];
         if (s_s_i == 0) return 0;
+        NodeId s_s_s_i = sol.succ[s_s_i];
         
-        if (sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i] > inst.Q) return 0;
+        if (j == i || j == sol.pred[i] || j == s_i || j == s_s_i || j == s_s_s_i) return 0;
         
-        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
+        if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i] > inst.Q) return 0;
+        
+        NodeId p_i = sol.pred[i], s_j = sol.succ[j];
         
         Cost rem = dist(inst, p_i, s_s_s_i) - dist(inst, p_i, i) - dist(inst, s_s_i, s_s_s_i);
         Cost ins = dist(inst, j, i) + dist(inst, s_s_i, s_j) - dist(inst, j, s_j);
@@ -699,6 +734,7 @@ namespace {
         
         while (cache.count > 0) {
             ls_iter++;
+            if (ls_iter > 50000000) break; // Safety net
             NodeId i = cache.pop();
             
             if (sol.routeOf[i] == -1) continue;
@@ -756,6 +792,12 @@ namespace {
                 Cost delta_relocate = eval_relocate(sol, inst, i, j);
                 if (delta_relocate < bestDelta) { bestDelta = delta_relocate; bestOp = 0; best_j = j; }
                 
+                Cost delta_relocate2 = eval_relocate2(sol, inst, i, j);
+                if (delta_relocate2 < bestDelta) { bestDelta = delta_relocate2; bestOp = 5; best_j = j; }
+                
+                Cost delta_relocate3 = eval_relocate3(sol, inst, i, j);
+                if (delta_relocate3 < bestDelta) { bestDelta = delta_relocate3; bestOp = 6; best_j = j; }
+                
                 Cost delta_swap = eval_swap(sol, inst, i, j);
                 if (delta_swap < bestDelta) { bestDelta = delta_swap; bestOp = 1; best_j = j; }
                 
@@ -764,12 +806,6 @@ namespace {
                 
                 Cost delta_2opt_star = eval_2opt_star(sol, inst, i, j);
                 if (delta_2opt_star < bestDelta) { bestDelta = delta_2opt_star; bestOp = 3; best_j = j; }
-                
-                Cost delta_relocate2 = eval_relocate2(sol, inst, i, j);
-                if (delta_relocate2 < bestDelta) { bestDelta = delta_relocate2; bestOp = 5; best_j = j; }
-                
-                Cost delta_relocate3 = eval_relocate3(sol, inst, i, j);
-                if (delta_relocate3 < bestDelta) { bestDelta = delta_relocate3; bestOp = 6; best_j = j; }
                 
                 NodeId p_i, s_i, p_j, s_j;
                 Cost delta_swap_star = 0;
@@ -860,11 +896,12 @@ namespace {
         size_t idx = 0;
         while (idx < nodes.size()) {
             if (std::chrono::steady_clock::now() >= deadline) break;
-            size_t batch_end = std::min(idx + (size_t)SVCCache::CAPACITY, nodes.size());
+        int batch_end = std::min((int)idx + (int)SVCCache::CAPACITY, (int)nodes.size());
             cache.clear();
             for (size_t k = idx; k < batch_end; ++k) cache.insert(nodes[k]);
             bool improved = true;
             while (improved) {
+                if (std::chrono::steady_clock::now() >= deadline) break;
                 improved = local_search(sol, arena, cache, inst, granular_lists, chunkSize, mtx, t1, t2, routeToChunk);
             }
             idx = batch_end;
@@ -883,7 +920,7 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
                     const Instance& inst, const Stage0Result& partitionInfo,
                     const NeighborLists& neighborLists, int chunkId, std::mt19937& rng,
                     int* out_iterations_completed) {
-    int chunkSize = partitionInfo.globalId[chunkId].size() - 1;
+    int chunkSize = (int)partitionInfo.globalId[chunkId].size() - 1;
     cache.init(inst.n);
     cache.clear();
     
@@ -1182,9 +1219,9 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     // See the identical comment in stage2_ils above (docs/reports/005_cost_optimization.md
     // Phase 1.3) -- same instance-scaling fix, same rationale.
     double avg_arc_cost_estimate = avgArcCostEstimate;
-    // Boost T0 massively to allow the solver to accept the large intermediate 
-    // cost spikes caused by 150-node perturbations.
-    double T0 = 5.0 * avg_arc_cost_estimate;
+    // Boost T0 to allow the solver to accept intermediate 
+    // cost spikes caused by perturbations.
+    double T0 = 0.5 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
     extern int g_stage5_time_budget_ms; // overridable via --stage5-ms; >0 switches to time-budget mode
@@ -1229,22 +1266,99 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     for (int iter = 0; useTimeBudget || iter < max_iterations; ++iter) {
         if (useTimeBudget) {
             double elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - stageStart).count();
-            if (elapsed_ms >= g_stage5_time_budget_ms) break;
-            temperature = T0 * std::pow(Tf / T0, elapsed_ms / g_stage5_time_budget_ms);
+            if (iter % 100 == 0) {
+                printf("SA Iter: %d, elapsed: %.1f ms\n", iter, elapsed_ms); fflush(stdout);
+            }
+            if (elapsed_ms >= g_stage5_time_budget_ms) {
+                printf("SA time budget reached! Exiting loop...\n"); fflush(stdout);
+                break;
+            }
+            
+            static int current_cycle = 0;
+            if (iter == 0) current_cycle = 0;
+            double cycle_ms = g_stage5_time_budget_ms / 3.0; // 3 Sawtooth cycles
+            int next_cycle = (int)(elapsed_ms / cycle_ms);
+            if (next_cycle > current_cycle) {
+                globalSolution = bestSol;
+                stagnation = 0;
+                current_cycle = next_cycle;
+            }
+            double ms_in_current_cycle = std::fmod(elapsed_ms, cycle_ms);
+            temperature = T0 * std::pow(Tf / T0, ms_in_current_cycle / cycle_ms);
         }
         arena.doCount = 0;
         arena.undoCount = 0;
         arena.pendingDelta = 0;
+        arena.removed_count = 0;
         
         int prevNumRoutes = globalSolution.numRoutes;
         
-        std::uniform_int_distribution<int> dist_cust(1, inst.n);
-        NodeId seed_cust = dist_cust(rng);
-        
-        int num_strings = 40;
-        for (int s_idx = 0; s_idx < num_strings; ++s_idx) {
-            NodeId s = (s_idx == 0) ? seed_cust : dist_cust(rng);
-            ruin(globalSolution, s, arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, s_idx > 0);
+        if (stagnation > 50) {
+            std::uniform_real_distribution<double> dist_shock(0.0, 1.0);
+            double shock_val = dist_shock(rng);
+            if (shock_val < 0.05) {
+                int smallest_route = -1;
+                int min_nodes = 999999;
+                for (int r = 0; r < globalSolution.numRoutes; ++r) {
+                    if (globalSolution.routeHead[r] == 0) continue;
+                    int nodes = 0;
+                    NodeId curr = globalSolution.routeHead[r];
+                    while (curr != 0) { nodes++; curr = globalSolution.succ[curr]; }
+                    if (nodes < min_nodes) {
+                        min_nodes = nodes;
+                        smallest_route = r;
+                    }
+                }
+                if (smallest_route != -1) {
+                    NodeId curr = globalSolution.routeHead[smallest_route];
+                    while (curr != 0) {
+                        NodeId nxt = globalSolution.succ[curr];
+                        remove_customer(globalSolution, curr, arena, inst);
+                        cache.insert(curr);
+                        arena.removed_customers[arena.removed_count++] = curr;
+                        curr = nxt;
+                    }
+                }
+            } else if (shock_val < 0.15) {
+                std::vector<int> active_routes;
+                for (int r = 0; r < globalSolution.numRoutes; ++r) {
+                    if (globalSolution.routeLoad[r] > 0) active_routes.push_back(r);
+                }
+                if (!active_routes.empty()) {
+                    std::uniform_int_distribution<int> dist_cust(1, inst.n);
+                    for (int s_idx = 0; s_idx < 20; ++s_idx) {
+                        ruin(globalSolution, dist_cust(rng), arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, true);
+                    }
+                }
+            } else {
+                std::uniform_int_distribution<int> dist_cust(1, inst.n);
+                NodeId seed_cust = dist_cust(rng);
+                int num_strings = 40;
+                ruin(globalSolution, seed_cust, arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, false);
+                int strings_ruined = 1;
+                int max_k = std::min((int)neighborLists.nbr[seed_cust].size(), neighborLists.k);
+                for (int j_idx = 0; j_idx < max_k && strings_ruined < num_strings; ++j_idx) {
+                    NodeId s = neighborLists.nbr[seed_cust][j_idx];
+                    if (globalSolution.routeOf[s] != -1) {
+                        ruin(globalSolution, s, arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, true);
+                        strings_ruined++;
+                    }
+                }
+            }
+        } else {
+            std::uniform_int_distribution<int> dist_cust(1, inst.n);
+            NodeId seed_cust = dist_cust(rng);
+            int num_strings = 40;
+            ruin(globalSolution, seed_cust, arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, false);
+            int strings_ruined = 1;
+            int max_k = std::min((int)neighborLists.nbr[seed_cust].size(), neighborLists.k);
+            for (int j_idx = 0; j_idx < max_k && strings_ruined < num_strings; ++j_idx) {
+                NodeId s = neighborLists.nbr[seed_cust][j_idx];
+                if (globalSolution.routeOf[s] != -1) {
+                    ruin(globalSolution, s, arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, true);
+                    strings_ruined++;
+                }
+            }
         }
 
         auto t_ruin = std::chrono::high_resolution_clock::now();
@@ -1262,8 +1376,20 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
         rescan_touched_routes(globalSolution, arena, inst);
 
         bool local_search_improved = true;
+        int local_search_calls = 0;
         while(local_search_improved) {
+            local_search_calls++;
             local_search_improved = local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, nullptr);
+            if (useTimeBudget) {
+                double elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - stageStart).count();
+                if (local_search_calls % 10 == 0) {
+                    printf("  local_search_calls: %d, elapsed: %.1f ms\n", local_search_calls, elapsed_ms); fflush(stdout);
+                }
+                if (elapsed_ms >= g_stage5_time_budget_ms) {
+                    printf("  LS time budget reached! Exiting while loop...\n"); fflush(stdout);
+                    break;
+                }
+            }
         }
 
         Cost delta = arena.pendingDelta;

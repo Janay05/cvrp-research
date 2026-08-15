@@ -16,6 +16,7 @@ struct alignas(64) WorkerContext {
     // shared read-only pointers
     const Instance* instance;
     const NeighborLists* neighborLists;
+    const NeighborLists* stage5_neighborLists;
     const Stage0Result* partitionInfo;
 
     // filled by this worker
