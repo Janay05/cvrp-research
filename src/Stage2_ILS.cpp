@@ -214,9 +214,9 @@ namespace {
         if (s_j != 0) cache.insert(s_j);
     }
 
-    void ruin(Solution& sol, NodeId seed, ThreadArena& arena, SVCCache& cache, std::mt19937& rng, int chunkSize, const NeighborLists& granular_lists, const Instance& inst, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr) {
+    void ruin(Solution& sol, NodeId seed, ThreadArena& arena, SVCCache& cache, std::mt19937& rng, int chunkSize, const NeighborLists& granular_lists, const Instance& inst, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr, bool append = false) {
         if (mtx) mtx->lock();
-        arena.removed_count = 0;
+        if (!append) arena.removed_count = 0;
         if (sol.routeOf[seed] == -1) {
             if (mtx) mtx->unlock();
             return;
@@ -274,7 +274,7 @@ namespace {
         if (mtx) mtx->unlock();
     }
 
-    void recreate(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr) {
+    void recreate(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr) {
         if (mtx) mtx->lock();
         std::sort(arena.removed_customers.begin(), arena.removed_customers.begin() + arena.removed_count,
             [&inst](NodeId a, NodeId b) { return inst.demand[a] > inst.demand[b]; });
@@ -333,15 +333,56 @@ namespace {
                     }
                 }
                 sol.routeLoad[r] = 0;
-                // Important: if we're in stage3, we need to map the new route to the chunk so we can insert into it again!
-                // But we don't mutate routeToChunk here as it's const. However, it's fine since we just added it.
-                // Wait! To be safe, we just allow new routes if they are empty, but here it's empty so it's fine.
+                if (routeToChunk && t1 != -1) {
+                    if (r >= (int)routeToChunk->size()) {
+                        routeToChunk->resize(r + 100, -1);
+                    }
+                    (*routeToChunk)[r] = t1;
+                }
                 insert_customer(sol, c, 0, 0, r, arena, inst);
                 update_route_info(sol, r, inst);
                 cache.insert(c);
             }
         }
         if (mtx) mtx->unlock();
+    }
+
+    Cost eval_relocate2(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+        
+        NodeId s_i = sol.succ[i];
+        if (s_i == 0) return 0; // Cannot relocate depot
+        
+        if (sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] > inst.Q) return 0;
+        
+        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
+        
+        Cost rem = dist(inst, p_i, s_s_i) - dist(inst, p_i, i) - dist(inst, s_i, s_s_i);
+        Cost ins = dist(inst, j, i) + dist(inst, s_i, s_j) - dist(inst, j, s_j);
+        
+        return rem + ins;
+    }
+
+    Cost eval_relocate3(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+        
+        NodeId s_i = sol.succ[i];
+        if (s_i == 0) return 0;
+        NodeId s_s_i = sol.succ[s_i];
+        if (s_s_i == 0) return 0;
+        
+        if (sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i] > inst.Q) return 0;
+        
+        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
+        
+        Cost rem = dist(inst, p_i, s_s_s_i) - dist(inst, p_i, i) - dist(inst, s_s_i, s_s_s_i);
+        Cost ins = dist(inst, j, i) + dist(inst, s_s_i, s_j) - dist(inst, j, s_j);
+        
+        return rem + ins;
     }
 
     Cost eval_relocate(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
@@ -506,6 +547,46 @@ namespace {
         return ins_i + ins_j - rem_i - rem_j;
     }
 
+    void apply_relocate2(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        NodeId s_i = sol.succ[i];
+        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        
+        remove_customer(sol, s_i, arena, inst);
+        remove_customer(sol, i, arena, inst);
+        
+        insert_customer(sol, i, j, s_j, r_j, arena, inst);
+        insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
+        
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+        
+        invalidate_svc(cache, i, j, p_i, s_s_i, j, s_j);
+        cache.insert(s_i);
+    }
+
+    void apply_relocate3(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        NodeId s_i = sol.succ[i];
+        NodeId s_s_i = sol.succ[s_i];
+        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        
+        remove_customer(sol, s_s_i, arena, inst);
+        remove_customer(sol, s_i, arena, inst);
+        remove_customer(sol, i, arena, inst);
+        
+        insert_customer(sol, i, j, s_j, r_j, arena, inst);
+        insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
+        insert_customer(sol, s_s_i, s_i, s_j, r_j, arena, inst);
+        
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+        
+        invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j);
+        cache.insert(s_i);
+        cache.insert(s_s_i);
+    }
+
     void apply_relocate(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
         NodeId p_i = sol.pred[i], s_i = sol.succ[i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i];
@@ -612,7 +693,7 @@ namespace {
         cache.insert(p_j); cache.insert(s_j);
     }
 
-    bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr) {
+    bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr) {
         bool improved = false;
         int ls_iter = 0;
         
@@ -684,6 +765,12 @@ namespace {
                 Cost delta_2opt_star = eval_2opt_star(sol, inst, i, j);
                 if (delta_2opt_star < bestDelta) { bestDelta = delta_2opt_star; bestOp = 3; best_j = j; }
                 
+                Cost delta_relocate2 = eval_relocate2(sol, inst, i, j);
+                if (delta_relocate2 < bestDelta) { bestDelta = delta_relocate2; bestOp = 5; best_j = j; }
+                
+                Cost delta_relocate3 = eval_relocate3(sol, inst, i, j);
+                if (delta_relocate3 < bestDelta) { bestDelta = delta_relocate3; bestOp = 6; best_j = j; }
+                
                 NodeId p_i, s_i, p_j, s_j;
                 Cost delta_swap_star = 0;
                 // top3_i_to_V is route-indexed (ThreadArena.hpp) -- see the identical guard
@@ -711,6 +798,8 @@ namespace {
                 else if (bestOp == 2) verify_delta = eval_2opt(sol, inst, i, best_j);
                 else if (bestOp == 3) verify_delta = eval_2opt_star(sol, inst, i, best_j);
                 else if (bestOp == 4) verify_delta = eval_swap_star(sol, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j);
+                else if (bestOp == 5) verify_delta = eval_relocate2(sol, inst, i, best_j);
+                else if (bestOp == 6) verify_delta = eval_relocate3(sol, inst, i, best_j);
                 
                 if (verify_delta < -1e-6) {
                     int old_r_i = sol.routeOf[i];
@@ -721,6 +810,8 @@ namespace {
                     else if (bestOp == 2) apply_2opt(sol, arena, inst, i, best_j, cache);
                     else if (bestOp == 3) apply_2opt_star(sol, arena, inst, i, best_j, cache);
                     else if (bestOp == 4) apply_swap_star(sol, arena, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j, cache);
+                    else if (bestOp == 5) apply_relocate2(sol, arena, inst, i, best_j, cache);
+                    else if (bestOp == 6) apply_relocate3(sol, arena, inst, i, best_j, cache);
                     
                     if (old_r_i != -1) update_route_info(sol, old_r_i, inst);
                     if (old_r_j != -1 && old_r_j != old_r_i) update_route_info(sol, old_r_j, inst);
@@ -763,7 +854,7 @@ namespace {
     Cost full_sweep_local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst,
                                   const NeighborLists& granular_lists, int chunkSize,
                                   const std::vector<int>& nodes, std::mutex* mtx = nullptr,
-                                  int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr,
+                                  int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr,
                                   std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max()) {
         arena.pendingDelta = 0;
         size_t idx = 0;
@@ -909,7 +1000,7 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
                              const Stage0Result& partitionInfo,
                              const std::vector<int>& boundaryList,
                              int t1, int t2, std::mt19937& rng,
-                             const std::vector<int>* routeToChunk = nullptr) {
+                             std::vector<int>* routeToChunk = nullptr) {
     if (boundaryList.empty()) return 0;
     Cost acceptedDelta = 0;
     
@@ -1005,7 +1096,12 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
         std::uniform_int_distribution<int> dist_cust(0, boundaryList.size() - 1);
         NodeId seed_cust = boundaryList[dist_cust(rng)];
         int virtual_chunk_size = boundaryList.size(); // for log-scaled ruin walk
-        ruin(globalSolution, seed_cust, arena, cache, rng, virtual_chunk_size, local_granular_lists, inst, &route_creation_mutex, t1, t2, routeToChunk);
+        
+        int num_strings = 6;
+        for (int s_idx = 0; s_idx < num_strings; ++s_idx) {
+            NodeId s = (s_idx == 0) ? seed_cust : boundaryList[dist_cust(rng)];
+            ruin(globalSolution, s, arena, cache, rng, virtual_chunk_size, local_granular_lists, inst, &route_creation_mutex, t1, t2, routeToChunk, s_idx > 0);
+        }
         
         auto t_ruin = std::chrono::high_resolution_clock::now();
         
@@ -1086,7 +1182,9 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     // See the identical comment in stage2_ils above (docs/reports/005_cost_optimization.md
     // Phase 1.3) -- same instance-scaling fix, same rationale.
     double avg_arc_cost_estimate = avgArcCostEstimate;
-    double T0 = 0.1 * avg_arc_cost_estimate;
+    // Boost T0 massively to allow the solver to accept the large intermediate 
+    // cost spikes caused by 150-node perturbations.
+    double T0 = 5.0 * avg_arc_cost_estimate;
     if (T0 < 1e-6) T0 = 1.0;
     double Tf = 0.01 * T0;
     extern int g_stage5_time_budget_ms; // overridable via --stage5-ms; >0 switches to time-budget mode
@@ -1143,7 +1241,13 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
         std::uniform_int_distribution<int> dist_cust(1, inst.n);
         NodeId seed_cust = dist_cust(rng);
         
-        ruin(globalSolution, seed_cust, arena, cache, rng, inst.n, neighborLists, inst, nullptr);
+        int num_strings = 40;
+        for (int s_idx = 0; s_idx < num_strings; ++s_idx) {
+            NodeId s = (s_idx == 0) ? seed_cust : dist_cust(rng);
+            ruin(globalSolution, s, arena, cache, rng, inst.n, neighborLists, inst, nullptr, -1, -1, nullptr, s_idx > 0);
+        }
+
+        auto t_ruin = std::chrono::high_resolution_clock::now();
 
         recreate(globalSolution, arena, cache, inst, neighborLists, nullptr);
 
