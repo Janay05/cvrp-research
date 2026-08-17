@@ -110,8 +110,8 @@ struct alignas(64) ThreadArena {
         // max_chunk_size. Uncapped (max_chunk_size*50) was fine at N=2000 (100,000 entries)
         // but allocates tens of millions of entries -- gigabytes per thread -- once N grows
         // into the hundreds of thousands to millions.
-        doList.resize(max_chunk_size * 100);
-        undoList.resize(max_chunk_size * 100);
+        doList.resize(std::min(10000000, max_chunk_size * 100));
+        undoList.resize(std::min(10000000, max_chunk_size * 100));
         removed_customers.resize(max_chunk_size + 100);
         scratchTop3Pos.reserve(3);
 

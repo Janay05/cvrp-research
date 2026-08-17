@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
             g_stage5_time_budget_ms = std::stoi(argv[++i]);
         } else if (arg == "--seed" && i + 1 < argc) {
             g_seed = std::stoi(argv[++i]);
+        } else if (arg[0] != '-') {
+            inputFile = arg;
         }
     }
 
@@ -81,28 +83,8 @@ int main(int argc, char** argv) {
             return 1;
         }
     } else {
-        inst.n = 2000;
-        inst.Q = 100;
-        inst.x.assign(inst.n + 1, 0);
-        inst.y.assign(inst.n + 1, 0);
-        inst.demand.assign(inst.n + 1, 1);
-        inst.demand[0] = 0;
-
-        // Assign random coordinates so kd-tree doesn't choke on zero-distance
-        for(int i=1; i<=inst.n; ++i) {
-            inst.x[i] = rand() % 1000;
-            inst.y[i] = rand() % 1000;
-        }
-
-        // Dump instance to test_2000.vrp for FILO2 comparison
-        std::ofstream vrpFile("test_2000.vrp");
-        vrpFile << "NAME : test_2000\nTYPE : CVRP\nDIMENSION : " << (inst.n + 1) << "\nEDGE_WEIGHT_TYPE : EUC_2D\nCAPACITY : " << inst.Q << "\nNODE_COORD_SECTION\n";
-        vrpFile << "1 0 0\n";
-        for(int i=1; i<=inst.n; ++i) vrpFile << (i + 1) << " " << inst.x[i] << " " << inst.y[i] << "\n";
-        vrpFile << "DEMAND_SECTION\n1 0\n";
-        for(int i=1; i<=inst.n; ++i) vrpFile << (i + 1) << " " << inst.demand[i] << "\n";
-        vrpFile << "DEPOT_SECTION\n1\n-1\n";
-        vrpFile.close();
+        std::cerr << "No input file provided! Usage: cvrp_solver.exe <file.vrp>" << std::endl;
+        return 1;
     }
 
     auto t_start = std::chrono::high_resolution_clock::now();

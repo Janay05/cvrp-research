@@ -1,0 +1,2 @@
+instance,seed,cost,wall_ms,solver_ms,num_routes,feasible,ref_cost,gap_pct,retried
+Lazio,1,3182751192,192149.8,190253.0,40401,False,,,False

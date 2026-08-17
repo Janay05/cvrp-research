@@ -1,18 +1,18 @@
 Starting CVRP Parallel...
-Worker 0 chunk 0 chunkSize=500 max_iterations=100000
-Worker 0 chunk 0 actual_iterations_completed=100000
-Worker 0 Stage 1: 5.833 ms | Stage 2: 11087.9 ms | dist_calls=1237330210
-Worker 1 chunk 1 chunkSize=500 max_iterations=100000
-Worker 1 chunk 1 actual_iterations_completed=100000
-Worker 1 Stage 1: 6.2041 ms | Stage 2: 9689.35 ms | dist_calls=1057944737
-Worker 2 chunk 2 chunkSize=500 max_iterations=100000
-Worker 2 chunk 2 actual_iterations_completed=100000
-Worker 2 Stage 1: 5.8436 ms | Stage 2: 7649.35 ms | dist_calls=841417665
-Worker 3 chunk 3 chunkSize=500 max_iterations=100000
-Worker 3 chunk 3 actual_iterations_completed=100000
-Worker 3 Stage 1: 5.747 ms | Stage 2: 6140.32 ms | dist_calls=666621477
-Cost BEFORE Stage 3 Healing: 56099
-Cost AFTER Stage 3 Healing: 55739
+Worker 0 chunk 0 chunkSize=500 stage2_time_budget_ms=40000
+Worker 0 chunk 0 actual_iterations_completed=56846
+Worker 0 Stage 1: 8.1818 ms | Stage 2: 40001 ms | dist_calls=2759608356
+Worker 1 chunk 1 chunkSize=500 stage2_time_budget_ms=40000
+Worker 1 chunk 1 actual_iterations_completed=66098
+Worker 1 Stage 1: 7.7959 ms | Stage 2: 40001.3 ms | dist_calls=2721034870
+Worker 2 chunk 2 chunkSize=500 stage2_time_budget_ms=40000
+Worker 2 chunk 2 actual_iterations_completed=67888
+Worker 2 Stage 1: 7.9428 ms | Stage 2: 40000.5 ms | dist_calls=2727696702
+Worker 3 chunk 3 chunkSize=500 stage2_time_budget_ms=40000
+Worker 3 chunk 3 actual_iterations_completed=65101
+Worker 3 Stage 1: 7.9442 ms | Stage 2: 40000.7 ms | dist_calls=2715490003
+Cost BEFORE Stage 3 Healing: 55734
+Cost AFTER Stage 3 Healing: 55309
 Running Stage 4 Cleanup...
 Running Stage 5 Polish...
-Final cost: 55715
+Final cost: 54236

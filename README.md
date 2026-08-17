@@ -2,6 +2,8 @@
 
 This repository contains a high-performance, multi-threaded C++ solver for the Capacitated Vehicle Routing Problem (CVRP). It accelerates traditional Iterated Local Search (ILS) and Hybrid Genetic Search (HGS) paradigms by geographically partitioning the routing graph and solving the sub-problems concurrently, followed by a parallel boundary-healing phase.
 
+**Performance vs. FILO2:** Under verified benchmarking with identical compilers, the solver currently runs **1.30x-1.36x faster** than the FILO2 baseline across instance sizes from 20,000 to ~1,000,000 customers, while maintaining highly competitive solution quality (within **0.77-1.51%** of FILO2's cost). See [report 007](docs/reports/007_algorithms_and_speed_analysis.md) for the technical algorithms driving this performance.
+
 ## Current State & Results (August 2026)
 The pipeline is **stable and feasible under its default configuration** (no data races, no dropped/duplicated nodes, independently verified) and now **loads real CVRPLIB `.vrp` files** via `-f <path>` (it previously only ran on its own synthetic 2000-node instance). See [`docs/reports/`](docs/reports/) for the full sequential history (stage-by-stage breakdowns, FILO2 comparisons, bugs found/fixed, and what changed between each report).
 
