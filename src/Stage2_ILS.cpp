@@ -5,10 +5,14 @@
 #include <chrono>
 #include <iostream>
 
+thread_local const char* current_op = "unknown";
+thread_local char debug_info[256] = {0};
+
 namespace {
     static std::mutex route_creation_mutex;
-    
-    void update_route_info(Solution& sol, int route, const Instance& inst) {
+}
+
+void update_route_info(Solution& sol, int route, const Instance& inst) {
         if (route == -1 || route >= sol.numRoutes) return;
 
         Cost load = 0;
@@ -28,6 +32,11 @@ namespace {
             curr = sol.succ[curr];
         }
         sol.routeLoad[route] = load;
+        if (load > inst.Q) {
+            printf("[FATAL] update_route_info load %lld > Q for route %d\n", (long long)load, route);
+            fflush(stdout);
+            std::abort();
+        }
     }
 
     // Copies everything except routePosition/cumLoad, which are pure derived caches (see
@@ -40,6 +49,7 @@ namespace {
     // authoritatively, after the loop ends -- byte-identical result by construction, since
     // update_route_info is the same function that would have produced whatever values a full
     // copy carried along at each snapshot anyway.
+namespace {
     void snapshot_essential(Solution& dst, const Solution& src) {
         dst.pred = src.pred;
         dst.succ = src.succ;
@@ -52,7 +62,6 @@ namespace {
     }
 
     void finalize_solution_derived_fields(Solution& sol, const Instance& inst) {
-        printf("Entering finalize_solution_derived_fields...\n"); fflush(stdout);
         for (int r = 0; r < sol.numRoutes; ++r) {
             if (sol.routeLoad[r] == 0) continue;
             Cost load = 0;
@@ -73,7 +82,6 @@ namespace {
             }
             sol.routeLoad[r] = load;
         }
-        printf("Exiting finalize_solution_derived_fields...\n"); fflush(stdout);
     }
 
     // Refreshes routePosition/cumLoad for exactly the routes touched by this SA iteration's
@@ -196,39 +204,56 @@ namespace {
         sol.pred[s] = c;
         sol.routeOf[c] = route;
         sol.routeLoad[route] += inst.demand[c];
+        if (sol.routeLoad[route] > inst.Q) {
+            printf("[FATAL] insert_customer load %lld > Q for route %d, inserting node %d (OP: %s)\n%s\n", (long long)sol.routeLoad[route], route, c, ::current_op, ::debug_info);
+            fflush(stdout);
+            std::abort();
+        }
         
         if (p == 0) sol.routeHead[route] = c;
         if (s == 0) sol.routeTail[route] = c;
     }
 
     void apply_undo_list(Solution& sol, ThreadArena& arena, const Instance& inst, std::mutex* mtx = nullptr) {
+        current_op = "apply_undo_list";
         if (mtx) mtx->lock();
 
+        std::vector<int> touched_routes;
         for (int i = arena.undoCount - 1; i >= 0; --i) {
             const auto& entry = arena.undoList[i];
             if (entry.type == DoUndoEntry::INSERT) {
                 NodeId c = entry.customer; NodeId p = entry.newPred; NodeId s = entry.newSucc; int route = entry.newRoute;
                 sol.succ[p] = c; sol.pred[c] = p; sol.succ[c] = s; sol.pred[s] = c;
                 sol.routeOf[c] = route; sol.routeLoad[route] += inst.demand[c];
+                
                 if (p == 0) sol.routeHead[route] = c;
                 if (s == 0) sol.routeTail[route] = c;
+                touched_routes.push_back(route);
             } else {
                 // Undoing an INSERT means we must REMOVE it
                 NodeId c = entry.customer; int route = entry.prevRoute;
                 NodeId p = sol.pred[c]; NodeId s = sol.succ[c];
-                if (p != 0) sol.succ[p] = s;
-                if (s != 0) sol.pred[s] = p;
-                sol.pred[c] = 0; sol.succ[c] = 0;
-                sol.routeLoad[route] -= inst.demand[c];
+                
+                sol.succ[p] = s; sol.pred[s] = p;
                 if (p == 0) sol.routeHead[route] = s;
                 if (s == 0) sol.routeTail[route] = p;
-                sol.routeOf[c] = -1;
+                
+                sol.routeOf[c] = -1; sol.routeLoad[route] -= inst.demand[c];
+                touched_routes.push_back(route);
             }
         }
 
         // doList is still intact here (cleared below) and identifies exactly the same
         // touched-route set undoList does -- see rescan_touched_routes's comment.
         rescan_touched_routes(sol, arena, inst);
+        
+        for (int r : touched_routes) {
+            if (sol.routeHead[r] != 0) {
+                update_route_info(sol, r, inst);
+            } else {
+                sol.routeLoad[r] = 0;
+            }
+        }
 
         arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
         if (mtx) mtx->unlock();
@@ -485,15 +510,25 @@ namespace {
         if (r_i == -1 || r_j == -1) return 0;
         if (r_i == r_j) return 0;
         
-        Cost load_tail_i = sol.routeLoad[r_i] - sol.cumLoad[i];
-        Cost load_tail_j = sol.routeLoad[r_j] - sol.cumLoad[j];
+        Cost load_kept_i = sol.cumLoad[i] + inst.demand[i];
+        Cost load_kept_j = sol.cumLoad[j] + inst.demand[j];
+        
+        Cost load_tail_i = 0;
+        NodeId curr_i = sol.succ[i];
+        while (curr_i != 0) { load_tail_i += inst.demand[curr_i]; curr_i = sol.succ[curr_i]; }
+        
+        Cost load_tail_j = 0;
+        NodeId curr_j = sol.succ[j];
+        while (curr_j != 0) { load_tail_j += inst.demand[curr_j]; curr_j = sol.succ[curr_j]; }
         
         // Capacity short-circuit BEFORE distance lookups
-        if (sol.routeLoad[r_i] - load_tail_i + load_tail_j > inst.Q) return 0;
-        if (sol.routeLoad[r_j] - load_tail_j + load_tail_i > inst.Q) return 0;
+        if (load_kept_i + load_tail_j > inst.Q) return 0;
+        if (load_kept_j + load_tail_i > inst.Q) return 0;
         
         NodeId s_i = sol.succ[i], s_j = sol.succ[j];
-        return -dist(inst, i, s_i) - dist(inst, j, s_j) + dist(inst, i, s_j) + dist(inst, j, s_i);
+        Cost delta = -dist(inst, i, s_i) - dist(inst, j, s_j) + dist(inst, i, s_j) + dist(inst, j, s_i);
+        
+        return delta;
     }
 
     // Was a std::vector<PosDelta> + push_back over the entire route + std::sort, just to
@@ -583,6 +618,7 @@ namespace {
     }
 
     void apply_relocate2(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        current_op = "apply_relocate2";
         NodeId s_i = sol.succ[i];
         NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
@@ -601,8 +637,8 @@ namespace {
     }
 
     void apply_relocate3(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
-        NodeId s_i = sol.succ[i];
-        NodeId s_s_i = sol.succ[s_i];
+        current_op = "apply_relocate3";
+        NodeId s_i = sol.succ[i], s_s_i = sol.succ[s_i];
         NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
         
@@ -623,6 +659,7 @@ namespace {
     }
 
     void apply_relocate(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        current_op = "apply_relocate";
         NodeId p_i = sol.pred[i], s_i = sol.succ[i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i];
         int r_j = sol.routeOf[j];
@@ -634,6 +671,7 @@ namespace {
     }
     
     void apply_swap(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        current_op = "apply_swap";
         NodeId p_i = sol.pred[i], s_i = sol.succ[i], p_j = sol.pred[j], s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
         
@@ -678,6 +716,7 @@ namespace {
     }
 
     void apply_2opt_star(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        current_op = "apply_2opt_star";
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
         
         std::vector<NodeId> tail_i, tail_j;
@@ -710,6 +749,7 @@ namespace {
     
     void apply_swap_star(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, 
                          NodeId p_i, NodeId s_i, NodeId p_j, NodeId s_j, SVCCache& cache) {
+        current_op = "apply_swap_star";
         NodeId orig_p_i = sol.pred[i], orig_s_i = sol.succ[i];
         NodeId orig_p_j = sol.pred[j], orig_s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
@@ -1015,6 +1055,7 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
             if (sol.totalCost < bestSol.totalCost) {
                 snapshot_essential(bestSol, sol);
             }
+            arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
         } else {
             // apply_undo_list already rescans every route it touched (Phase 1.2/5) -- no
             // separate full-route rescan needed here anymore.
@@ -1181,6 +1222,7 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
             // per the graph-coloring schedule), so a shared scalar read-modify-write here
             // would race even though the routes each thread touches are disjoint.
             acceptedDelta += delta;
+            arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
         } else {
             // apply_undo_list already rescans every route it touched (Phase 1.2/5) -- no
             // separate rescan needed here anymore.
@@ -1401,6 +1443,7 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
             } else {
                 stagnation++;
             }
+            arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
         } else {
             // apply_undo_list already rescans every route it touched (Phase 1.2/5) -- no
             // separate full-route rescan needed here anymore.

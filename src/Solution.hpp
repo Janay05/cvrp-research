@@ -11,7 +11,7 @@ struct Solution {
     std::vector<NodeId> routeTail; // routeTail[r] = last customer in route r
     std::vector<Cost> routeLoad; // current total demand of route r
     std::vector<int> routePosition; // dense-integer position of customer in its route
-    std::vector<Cost> cumLoad; // cumulative load up to and including customer
+    std::vector<Cost> cumLoad; // cumulative load strictly before the customer
     int numRoutes = 0;
     Cost totalCost = 0; // maintained incrementally
 };

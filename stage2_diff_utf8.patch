@@ -1,0 +1,747 @@
+﻿diff --git a/src/Stage2_ILS.cpp b/src/Stage2_ILS.cpp
+index 6edb0e2..99a3b85 100644
+--- a/src/Stage2_ILS.cpp
++++ b/src/Stage2_ILS.cpp
+@@ -120,8 +120,8 @@ namespace {
+         }
+         arena.pendingDelta += delta;
+ 
+-        sol.succ[p] = s;
+-        sol.pred[s] = p;
++        if (p != 0) sol.succ[p] = s;
++        if (s != 0) sol.pred[s] = p;
+         sol.routeLoad[sol.routeOf[c]] -= inst.demand[c];
+         
+         if (p == 0) sol.routeHead[sol.routeOf[c]] = s;
+@@ -161,10 +161,10 @@ namespace {
+         }
+         arena.pendingDelta += delta;
+ 
+-        sol.succ[p] = c;
++        if (p != 0) sol.succ[p] = c;
+         sol.pred[c] = p;
+         sol.succ[c] = s;
+-        sol.pred[s] = c;
++        if (s != 0) sol.pred[s] = c;
+         sol.routeOf[c] = route;
+         sol.routeLoad[route] += inst.demand[c];
+         
+@@ -179,7 +179,9 @@ namespace {
+             const auto& entry = arena.undoList[i];
+             if (entry.type == DoUndoEntry::INSERT) {
+                 NodeId c = entry.customer; NodeId p = entry.newPred; NodeId s = entry.newSucc; int route = entry.newRoute;
+-                sol.succ[p] = c; sol.pred[c] = p; sol.succ[c] = s; sol.pred[s] = c;
++                if (p != 0) sol.succ[p] = c;
++                sol.pred[c] = p; sol.succ[c] = s;
++                if (s != 0) sol.pred[s] = c;
+                 sol.routeOf[c] = route; sol.routeLoad[route] += inst.demand[c];
+                 if (p == 0) sol.routeHead[route] = c;
+                 if (s == 0) sol.routeTail[route] = c;
+@@ -234,7 +236,7 @@ namespace {
+         cache.insert(current);
+         arena.removed_customers[arena.removed_count++] = current;
+         
+-        int walk_length = (int)std::ceil(std::log(chunkSize));
++        int walk_length = std::max((int)std::ceil(std::log(chunkSize)), (int)(std::sqrt(chunkSize) * 0.5));
+         if (walk_length < 1) walk_length = 1;
+         
+         for (int step = 1; step < walk_length; ++step) {
+@@ -252,11 +254,6 @@ namespace {
+                 }
+             }
+             
+-            int k = std::min((int)granular_lists.nbr[current].size(), granular_lists.k);
+-            for (int i = 0; i < k; ++i) {
+-                NodeId j = granular_lists.nbr[current][i];
+-                if (sol.routeOf[j] != -1) {
+-                    if (!routeToChunk || t1 == -1 || ((*routeToChunk)[sol.routeOf[j]] == t1 || (*routeToChunk)[sol.routeOf[j]] == t2)) {
+                         candidates.push_back(j);
+                     }
+                 }
+@@ -612,7 +609,563 @@ namespace {
+         cache.insert(p_j); cache.insert(s_j);
+     }
+ 
+-    bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr) {
++    Cost eval_2opt_star_rev_j(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == r_j || r_i == -1 || r_j == -1) return 0;
++
++        NodeId s_j = sol.succ[j];
++        if (s_j == 0) return 0; 
++
++        NodeId p_i = sol.pred[i], p_j = sol.pred[j];
++        NodeId tail_j = sol.routeTail[r_j];
++        
++        Cost load_i_part = (p_i == 0) ? 0 : sol.cumLoad[p_i];
++        Cost load_j_part = sol.cumLoad[j];
++        Cost total_i = sol.routeLoad[r_i];
++        Cost total_j = sol.routeLoad[r_j];
++        
++        if (load_i_part + (total_j - load_j_part) > inst.Q) return 0;
++        if (load_j_part + (total_i - load_i_part) > inst.Q) return 0;
++
++        return -dist(inst, p_i, i) - dist(inst, j, s_j) - dist(inst, tail_j, 0)
++               +dist(inst, p_i, tail_j) + dist(inst, s_j, 0) + dist(inst, j, i);
++    }
++
++    void apply_2opt_star_rev_j(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId p_i = sol.pred[i], s_j = sol.succ[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        std::vector<NodeId> tail_i_nodes;
++        NodeId curr = i;
++        while (curr != 0) { tail_i_nodes.push_back(curr); curr = sol.succ[curr]; }
++
++        std::vector<NodeId> tail_j_nodes;
++        curr = s_j;
++        while (curr != 0) { tail_j_nodes.push_back(curr); curr = sol.succ[curr]; }
++        
++        for (NodeId c : tail_i_nodes) remove_customer(sol, c, arena, inst);
++        for (NodeId c : tail_j_nodes) remove_customer(sol, c, arena, inst);
++        
++        NodeId ins_p = p_i;
++        for (auto it = tail_j_nodes.rbegin(); it != tail_j_nodes.rend(); ++it) {
++            insert_customer(sol, *it, ins_p, 0, r_i, arena, inst);
++            ins_p = *it;
++        }
++        
++        ins_p = j;
++        for (NodeId c : tail_i_nodes) {
++            insert_customer(sol, c, ins_p, 0, r_j, arena, inst);
++            ins_p = c;
++        }
++
++        update_route_info(sol, r_i, inst);
++        update_route_info(sol, r_j, inst);
++        
++        for (NodeId c : tail_i_nodes) cache.insert(c);
++        for (NodeId c : tail_j_nodes) cache.insert(c);
++        cache.insert(p_i);
++        cache.insert(j);
++    }
++
++    Cost eval_2opt_star_rev_i(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == r_j || r_i == -1 || r_j == -1) return 0;
++
++        NodeId s_i = sol.succ[i];
++        if (s_i == 0) return 0; 
++
++        NodeId p_i = sol.pred[i], p_j = sol.pred[j];
++        NodeId tail_i = sol.routeTail[r_i];
++        
++        Cost load_i_part = (p_i == 0) ? 0 : sol.cumLoad[p_i];
++        Cost load_j_part = (p_j == 0) ? 0 : sol.cumLoad[p_j];
++        Cost total_i = sol.routeLoad[r_i];
++        Cost total_j = sol.routeLoad[r_j];
++        
++        if (load_i_part + (total_j - load_j_part) > inst.Q) return 0;
++        if (load_j_part + (total_i - load_i_part) > inst.Q) return 0;
++
++        return -dist(inst, p_i, i) - dist(inst, p_j, j) - dist(inst, tail_i, 0)
++               +dist(inst, p_i, j) + dist(inst, p_j, tail_i) + dist(inst, i, 0);
++    }
++
++    void apply_2opt_star_rev_i(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId p_i = sol.pred[i], p_j = sol.pred[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        std::vector<NodeId> tail_i_nodes;
++        NodeId curr = i;
++        while (curr != 0) { tail_i_nodes.push_back(curr); curr = sol.succ[curr]; }
++
++        std::vector<NodeId> tail_j_nodes;
++        curr = j;
++        while (curr != 0) { tail_j_nodes.push_back(curr); curr = sol.succ[curr]; }
++        
++        for (NodeId c : tail_i_nodes) remove_customer(sol, c, arena, inst);
++        for (NodeId c : tail_j_nodes) remove_customer(sol, c, arena, inst);
++        
++        NodeId ins_p = p_i;
++        for (NodeId c : tail_j_nodes) {
++            insert_customer(sol, c, ins_p, 0, r_i, arena, inst);
++            ins_p = c;
++        }
++        
++        ins_p = p_j;
++        for (auto it = tail_i_nodes.rbegin(); it != tail_i_nodes.rend(); ++it) {
++            insert_customer(sol, *it, ins_p, 0, r_j, arena, inst);
++            ins_p = *it;
++        }
++
++        update_route_info(sol, r_i, inst);
++        update_route_info(sol, r_j, inst);
++        
++        for (NodeId c : tail_i_nodes) cache.insert(c);
++        for (NodeId c : tail_j_nodes) cache.insert(c);
++        cache.insert(p_i);
++        cache.insert(p_j);
++    }
++
++    Cost eval_2opt_star_rev_both(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == r_j || r_i == -1 || r_j == -1) return 0;
++
++        NodeId s_i = sol.succ[i];
++        NodeId s_j = sol.succ[j];
++        if (s_i == 0 || s_j == 0) return 0; 
++
++        NodeId p_i = sol.pred[i], p_j = sol.pred[j];
++        NodeId tail_i = sol.routeTail[r_i], tail_j = sol.routeTail[r_j];
++        
++        Cost load_i_part = (p_i == 0) ? 0 : sol.cumLoad[p_i];
++        Cost load_j_part = (p_j == 0) ? 0 : sol.cumLoad[p_j];
++        Cost total_i = sol.routeLoad[r_i];
++        Cost total_j = sol.routeLoad[r_j];
++        
++        if (load_i_part + (total_j - load_j_part) > inst.Q) return 0;
++        if (load_j_part + (total_i - load_i_part) > inst.Q) return 0;
++
++        return -dist(inst, p_i, i) - dist(inst, p_j, j) - dist(inst, tail_i, 0) - dist(inst, tail_j, 0)
++               +dist(inst, p_i, tail_j) + dist(inst, j, 0) + dist(inst, p_j, tail_i) + dist(inst, i, 0);
++    }
++
++    void apply_2opt_star_rev_both(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId p_i = sol.pred[i], p_j = sol.pred[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        std::vector<NodeId> tail_i_nodes;
++        NodeId curr = i;
++        while (curr != 0) { tail_i_nodes.push_back(curr); curr = sol.succ[curr]; }
++
++        std::vector<NodeId> tail_j_nodes;
++        curr = j;
++        while (curr != 0) { tail_j_nodes.push_back(curr); curr = sol.succ[curr]; }
++        
++        for (NodeId c : tail_i_nodes) remove_customer(sol, c, arena, inst);
++        for (NodeId c : tail_j_nodes) remove_customer(sol, c, arena, inst);
++        
++        NodeId ins_p = p_i;
++        for (auto it = tail_j_nodes.rbegin(); it != tail_j_nodes.rend(); ++it) {
++            insert_customer(sol, *it, ins_p, 0, r_i, arena, inst);
++            ins_p = *it;
++        }
++        
++        ins_p = p_j;
++        for (auto it = tail_i_nodes.rbegin(); it != tail_i_nodes.rend(); ++it) {
++            insert_customer(sol, *it, ins_p, 0, r_j, arena, inst);
++            ins_p = *it;
++        }
++
++        update_route_info(sol, r_i, inst);
++        update_route_info(sol, r_j, inst);
++        
++        for (NodeId c : tail_i_nodes) cache.insert(c);
++        for (NodeId c : tail_j_nodes) cache.insert(c);
++        cache.insert(p_i);
++        cache.insert(p_j);
++    }
++
++    Cost eval_or_opt2(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        NodeId s_i = sol.succ[i];
++        if (s_i == 0) return 0;
++
++        if (j == i || j == s_i || sol.pred[i] == j) return 0;
++
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++
++        Cost load_moved = inst.demand[i] + inst.demand[s_i];
++        if (r_i != r_j && sol.routeLoad[r_j] + load_moved > inst.Q) return 0;
++
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i];
++        NodeId s_j = sol.succ[j];
++
++        return -dist(inst, p_i, i) - dist(inst, s_i, s_s_i) + dist(inst, p_i, s_s_i)
++               -dist(inst, j, s_j) + dist(inst, j, i) + dist(inst, s_i, s_j);
++    }
++
++    Cost eval_or_opt3(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        NodeId s_i = sol.succ[i];
++        if (s_i == 0) return 0;
++        NodeId s_s_i = sol.succ[s_i];
++        if (s_s_i == 0) return 0;
++
++        if (j == i || j == s_i || j == s_s_i || sol.pred[i] == j) return 0;
++
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++
++        Cost load_moved = inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i];
++        if (r_i != r_j && sol.routeLoad[r_j] + load_moved > inst.Q) return 0;
++
++        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i];
++        NodeId s_j = sol.succ[j];
++
++        return -dist(inst, p_i, i) - dist(inst, s_s_i, s_s_s_i) + dist(inst, p_i, s_s_s_i)
++               -dist(inst, j, s_j) + dist(inst, j, i) + dist(inst, s_s_i, s_j);
++    }
++
++    Cost eval_swap21(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        NodeId s_i = sol.succ[i];
++        if (s_i == 0) return 0;
++        
++        if (j == i || j == s_i) return 0;
++        
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++
++        Cost load_i = inst.demand[i] + inst.demand[s_i];
++        Cost load_j = inst.demand[j];
++
++        if (r_i != r_j) {
++            if (sol.routeLoad[r_i] - load_i + load_j > inst.Q) return 0;
++            if (sol.routeLoad[r_j] - load_j + load_i > inst.Q) return 0;
++        }
++
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i];
++        NodeId p_j = sol.pred[j], s_j = sol.succ[j];
++
++        if (s_s_i == j) {
++            return -dist(inst, p_i, i) - dist(inst, s_i, j) - dist(inst, j, s_j)
++                   +dist(inst, p_i, j) + dist(inst, j, i) + dist(inst, s_i, s_j);
++        } else if (s_j == i) {
++            return -dist(inst, p_j, j) - dist(inst, j, i) - dist(inst, s_i, s_s_i)
++                   +dist(inst, p_j, i) + dist(inst, s_i, j) + dist(inst, j, s_s_i);
++        } else {
++            return -dist(inst, p_i, i) - dist(inst, s_i, s_s_i) - dist(inst, p_j, j) - dist(inst, j, s_j)
++                   +dist(inst, p_i, j) + dist(inst, j, s_s_i) + dist(inst, p_j, i) + dist(inst, s_i, s_j);
++        }
++    }
++    Cost eval_swap22(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0 || i == j) return 0;
++        NodeId s_i = sol.succ[i];
++        NodeId s_j = sol.succ[j];
++        if (s_i == 0 || s_j == 0 || s_i == j || s_j == i) return 0;
++
++        NodeId s_s_i = sol.succ[s_i];
++        NodeId s_s_j = sol.succ[s_j];
++
++        if (s_s_i == j || s_s_j == i) return 0;
++        
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++
++        Cost load_i = inst.demand[i] + inst.demand[s_i];
++        Cost load_j = inst.demand[j] + inst.demand[s_j];
++
++        if (r_i != r_j) {
++            if (sol.routeLoad[r_i] - load_i + load_j > inst.Q) return 0;
++            if (sol.routeLoad[r_j] - load_j + load_i > inst.Q) return 0;
++        }
++
++        NodeId p_i = sol.pred[i];
++        NodeId p_j = sol.pred[j];
++
++        if (s_s_i == j) {
++            return -dist(inst, p_i, i) - dist(inst, s_i, j) - dist(inst, s_j, s_s_j)
++                   +dist(inst, p_i, j) + dist(inst, s_j, i) + dist(inst, s_i, s_s_j);
++        } else if (s_s_j == i) {
++            return -dist(inst, p_j, j) - dist(inst, s_j, i) - dist(inst, s_i, s_s_i)
++                   +dist(inst, p_j, i) + dist(inst, s_i, j) + dist(inst, s_j, s_s_i);
++        } else {
++            return -dist(inst, p_i, i) - dist(inst, s_i, s_s_i) - dist(inst, p_j, j) - dist(inst, s_j, s_s_j)
++                   +dist(inst, p_i, j) + dist(inst, s_j, s_s_i) + dist(inst, p_j, i) + dist(inst, s_i, s_s_j);
++        }
++    }
++
++    void apply_or_opt2(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i];
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, s_i, arena, inst);
++        remove_customer(sol, i, arena, inst);
++
++        insert_customer(sol, i, j, s_j, r_j, arena, inst);
++        insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++        
++        invalidate_svc(cache, i, s_i, p_i, s_s_i, j, s_j);
++    }
++
++    void apply_or_opt3(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i];
++        NodeId s_s_i = sol.succ[s_i];
++        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, s_s_i, arena, inst);
++        remove_customer(sol, s_i, arena, inst);
++        remove_customer(sol, i, arena, inst);
++
++        insert_customer(sol, i, j, s_j, r_j, arena, inst);
++        insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
++        insert_customer(sol, s_s_i, s_i, s_j, r_j, arena, inst);
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++        
++        invalidate_svc(cache, i, s_i, p_i, s_s_s_i, j, s_j);
++        cache.insert(s_s_i);
++    }
++
++    void apply_swap21(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i];
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i];
++        NodeId p_j = sol.pred[j], s_j = sol.succ[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, s_i, arena, inst);
++        remove_customer(sol, i, arena, inst);
++        remove_customer(sol, j, arena, inst);
++
++        if (s_s_i == j) {
++            insert_customer(sol, j, p_i, s_j, r_i, arena, inst);
++            insert_customer(sol, i, j, s_j, r_j, arena, inst);
++            insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
++        } else if (s_j == i) {
++            insert_customer(sol, i, p_j, s_s_i, r_j, arena, inst);
++            insert_customer(sol, s_i, i, s_s_i, r_j, arena, inst);
++            insert_customer(sol, j, s_i, s_s_i, r_i, arena, inst);
++        } else {
++            insert_customer(sol, j, p_i, s_s_i, r_i, arena, inst);
++            insert_customer(sol, i, p_j, s_j, r_j, arena, inst);
++            insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
++        }
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++
++        invalidate_svc(cache, i, j, p_i, s_s_i, p_j, s_j);
++        cache.insert(s_i);
++    }
++
++    void apply_swap22(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i];
++        NodeId s_j = sol.succ[j];
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i];
++        NodeId p_j = sol.pred[j], s_s_j = sol.succ[s_j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, s_i, arena, inst);
++        remove_customer(sol, i, arena, inst);
++        remove_customer(sol, s_j, arena, inst);
++        remove_customer(sol, j, arena, inst);
++
++        if (s_s_i == j) {
++            insert_customer(sol, j, p_i, s_s_j, r_i, arena, inst);
++            insert_customer(sol, s_j, j, s_s_j, r_i, arena, inst);
++            insert_customer(sol, i, s_j, s_s_j, r_i, arena, inst);
++            insert_customer(sol, s_i, i, s_s_j, r_i, arena, inst);
++        } else if (s_s_j == i) {
++            insert_customer(sol, i, p_j, s_s_i, r_j, arena, inst);
++            insert_customer(sol, s_i, i, s_s_i, r_j, arena, inst);
++            insert_customer(sol, j, s_i, s_s_i, r_j, arena, inst);
++            insert_customer(sol, s_j, j, s_s_i, r_j, arena, inst);
++        } else {
++            insert_customer(sol, j, p_i, s_s_i, r_i, arena, inst);
++            insert_customer(sol, s_j, j, s_s_i, r_i, arena, inst);
++            insert_customer(sol, i, p_j, s_s_j, r_j, arena, inst);
++            insert_customer(sol, s_i, i, s_s_j, r_j, arena, inst);
++        }
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++
++        invalidate_svc(cache, i, j, p_i, s_s_i, p_j, s_s_j);
++        cache.insert(s_i);
++        cache.insert(s_j);
++    }
++
++    Cost eval_relocate_before(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0 || i == j) return 0;
++        NodeId p_i = sol.pred[i], s_i = sol.succ[i], p_j = sol.pred[j];
++        if (p_j == i || s_i == j) return 0;
++        
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++        if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] > inst.Q) return 0;
++
++        return -dist(inst, p_i, i) - dist(inst, i, s_i) + dist(inst, p_i, s_i)
++               -dist(inst, p_j, j) + dist(inst, p_j, i) + dist(inst, i, j);
++    }
++
++    void apply_relocate_before(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId p_i = sol.pred[i], s_i = sol.succ[i];
++        NodeId p_j = sol.pred[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, i, arena, inst);
++        insert_customer(sol, i, p_j, j, r_j, arena, inst);
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++        
++        invalidate_svc(cache, i, j, p_i, s_i, p_j, 0);
++    }
++
++    Cost eval_2opt_star_before(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0) return 0;
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == r_j || r_i == -1 || r_j == -1) return 0;
++
++        NodeId p_j = sol.pred[j];
++        NodeId s_i = sol.succ[i];
++        
++        Cost load_i_part = sol.cumLoad[i];
++        Cost load_j_part = (p_j == 0) ? 0 : sol.cumLoad[p_j];
++        Cost total_i = sol.routeLoad[r_i];
++        Cost total_j = sol.routeLoad[r_j];
++        
++        Cost new_load_i = load_i_part + (total_j - load_j_part);
++        Cost new_load_j = load_j_part + (total_i - load_i_part);
++        
++        if (new_load_i > inst.Q || new_load_j > inst.Q) return 0;
++
++        return -dist(inst, i, s_i) - dist(inst, p_j, j) + dist(inst, i, j) + dist(inst, p_j, s_i);
++    }
++
++    void apply_2opt_star_before(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i], p_j = sol.pred[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        
++        std::vector<NodeId> route_i_tail;
++        NodeId curr = s_i;
++        while (curr != 0) { route_i_tail.push_back(curr); curr = sol.succ[curr]; }
++        
++        std::vector<NodeId> route_j_tail;
++        curr = j;
++        while (curr != 0) { route_j_tail.push_back(curr); curr = sol.succ[curr]; }
++
++        for (NodeId c : route_i_tail) remove_customer(sol, c, arena, inst);
++        for (NodeId c : route_j_tail) remove_customer(sol, c, arena, inst);
++
++        NodeId ins_p = i;
++        for (NodeId c : route_j_tail) {
++            insert_customer(sol, c, ins_p, 0, r_i, arena, inst);
++            ins_p = c;
++        }
++
++        ins_p = p_j;
++        for (NodeId c : route_i_tail) {
++            insert_customer(sol, c, ins_p, 0, r_j, arena, inst);
++            ins_p = c;
++        }
++
++        update_route_info(sol, r_i, inst);
++        update_route_info(sol, r_j, inst);
++
++        invalidate_svc(cache, i, j, 0, s_i, p_j, 0);
++    }
++
++    Cost eval_or_opt2_before(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0 || i == j) return 0;
++        NodeId s_i = sol.succ[i];
++        if (s_i == 0) return 0;
++        NodeId p_j = sol.pred[j];
++
++        if (j == i || j == s_i || p_j == s_i || p_j == i) return 0;
++
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++
++        Cost load_moved = inst.demand[i] + inst.demand[s_i];
++        if (r_i != r_j && sol.routeLoad[r_j] + load_moved > inst.Q) return 0;
++
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i];
++
++        return -dist(inst, p_i, i) - dist(inst, s_i, s_s_i) + dist(inst, p_i, s_s_i)
++               -dist(inst, p_j, j) + dist(inst, p_j, i) + dist(inst, s_i, j);
++    }
++
++    void apply_or_opt2_before(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i];
++        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], p_j = sol.pred[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, s_i, arena, inst);
++        remove_customer(sol, i, arena, inst);
++
++        insert_customer(sol, i, p_j, j, r_j, arena, inst);
++        insert_customer(sol, s_i, i, j, r_j, arena, inst);
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++        
++        invalidate_svc(cache, i, s_i, p_i, s_s_i, p_j, j);
++    }
++
++    Cost eval_or_opt3_before(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
++        if (i == 0 || j == 0 || i == j) return 0;
++        NodeId s_i = sol.succ[i];
++        if (s_i == 0) return 0;
++        NodeId s_s_i = sol.succ[s_i];
++        if (s_s_i == 0) return 0;
++        NodeId p_j = sol.pred[j];
++
++        if (j == i || j == s_i || j == s_s_i || p_j == s_s_i || p_j == s_i || p_j == i) return 0;
++
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++        if (r_i == -1 || r_j == -1) return 0;
++
++        Cost load_moved = inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i];
++        if (r_i != r_j && sol.routeLoad[r_j] + load_moved > inst.Q) return 0;
++
++        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i];
++
++        return -dist(inst, p_i, i) - dist(inst, s_s_i, s_s_s_i) + dist(inst, p_i, s_s_s_i)
++               -dist(inst, p_j, j) + dist(inst, p_j, i) + dist(inst, s_s_i, j);
++    }
++
++    void apply_or_opt3_before(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
++        NodeId s_i = sol.succ[i];
++        NodeId s_s_i = sol.succ[s_i];
++        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], p_j = sol.pred[j];
++        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
++
++        remove_customer(sol, s_s_i, arena, inst);
++        remove_customer(sol, s_i, arena, inst);
++        remove_customer(sol, i, arena, inst);
++
++        insert_customer(sol, i, p_j, j, r_j, arena, inst);
++        insert_customer(sol, s_i, i, j, r_j, arena, inst);
++        insert_customer(sol, s_s_i, s_i, j, r_j, arena, inst);
++
++        update_route_info(sol, r_i, inst);
++        if (r_i != r_j) update_route_info(sol, r_j, inst);
++        
++        invalidate_svc(cache, i, j, p_i, s_s_s_i, p_j, s_i);
++        cache.insert(s_s_i);
++    }
++
++    bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr, bool enable_expensive_ops = false) {
+         bool improved = false;
+         int ls_iter = 0;
+         
+@@ -623,7 +1176,7 @@ namespace {
+             if (sol.routeOf[i] == -1) continue;
+             
+             Cost bestDelta = 0;
+-            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*
++            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*, 5=Or-Opt2, 6=Or-Opt3, 7=Swap21, 8=Swap22, 9=RelB, 10=2Opt*B, 11=Or2B, 12=Or3B
+             NodeId best_j = 0;
+             NodeId best_p_i = 0, best_s_i = 0, best_p_j = 0, best_s_j = 0;
+             
+@@ -699,6 +1252,39 @@ namespace {
+                         }
+                     }
+                 }
++                if (sol.pred[j] == 0) {
++                    Cost delta_rb = eval_relocate_before(sol, inst, i, j);
++                    if (delta_rb < bestDelta) { bestDelta = delta_rb; bestOp = 9; best_j = j; }
++                    Cost delta_2b = eval_2opt_star_before(sol, inst, i, j);
++                    if (delta_2b < bestDelta) { bestDelta = delta_2b; bestOp = 10; best_j = j; }
++                    Cost delta_o2b = eval_or_opt2_before(sol, inst, i, j);
++                    if (delta_o2b < bestDelta) { bestDelta = delta_o2b; bestOp = 11; best_j = j; }
++                    Cost delta_o3b = eval_or_opt3_before(sol, inst, i, j);
++                    if (delta_o3b < bestDelta) { bestDelta = delta_o3b; bestOp = 12; best_j = j; }
++                }
++
++                if (enable_expensive_ops) {
++                    Cost delta_or_opt2 = eval_or_opt2(sol, inst, i, j);
++                    if (delta_or_opt2 < bestDelta) { bestDelta = delta_or_opt2; bestOp = 5; best_j = j; }
++                    
++                    Cost delta_or_opt3 = eval_or_opt3(sol, inst, i, j);
++                    if (delta_or_opt3 < bestDelta) { bestDelta = delta_or_opt3; bestOp = 6; best_j = j; }
++                    
++                    Cost delta_swap21 = eval_swap21(sol, inst, i, j);
++                    if (delta_swap21 < bestDelta) { bestDelta = delta_swap21; bestOp = 7; best_j = j; }
++                    
++                    Cost delta_swap22 = eval_swap22(sol, inst, i, j);
++                    if (delta_swap22 < bestDelta) { bestDelta = delta_swap22; bestOp = 8; best_j = j; }
++                    
++                    Cost delta_rev_j = eval_2opt_star_rev_j(sol, inst, i, j);
++                    if (delta_rev_j < bestDelta) { bestDelta = delta_rev_j; bestOp = 13; best_j = j; }
++                    
++                    Cost delta_rev_i = eval_2opt_star_rev_i(sol, inst, i, j);
++                    if (delta_rev_i < bestDelta) { bestDelta = delta_rev_i; bestOp = 14; best_j = j; }
++                    
++                    Cost delta_rev_both = eval_2opt_star_rev_both(sol, inst, i, j);
++                    if (delta_rev_both < bestDelta) { bestDelta = delta_rev_both; bestOp = 15; best_j = j; }
++                }
+             }
+             
+             if (bestDelta < -1e-6) {
+@@ -711,6 +1297,17 @@ namespace {
+                 else if (bestOp == 2) verify_delta = eval_2opt(sol, inst, i, best_j);
+                 else if (bestOp == 3) verify_delta = eval_2opt_star(sol, inst, i, best_j);
+                 else if (bestOp == 4) verify_delta = eval_swap_star(sol, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j);
++                else if (bestOp == 5) verify_delta = eval_or_opt2(sol, inst, i, best_j);
++                else if (bestOp == 6) verify_delta = eval_or_opt3(sol, inst, i, best_j);
++                else if (bestOp == 7) verify_delta = eval_swap21(sol, inst, i, best_j);
++                else if (bestOp == 8) verify_delta = eval_swap22(sol, inst, i, best_j);
++                else if (bestOp == 9) verify_delta = eval_relocate_before(sol, inst, i, best_j);
++                else if (bestOp == 10) verify_delta = eval_2opt_star_before(sol, inst, i, best_j);
++                else if (bestOp == 11) verify_delta = eval_or_opt2_before(sol, inst, i, best_j);
++                else if (bestOp == 12) verify_delta = eval_or_opt3_before(sol, inst, i, best_j);
++                else if (bestOp == 13) verify_delta = eval_2opt_star_rev_j(sol, inst, i, best_j);
++                else if (bestOp == 14) verify_delta = eval_2opt_star_rev_i(sol, inst, i, best_j);
++                else if (bestOp == 15) verify_delta = eval_2opt_star_rev_both(sol, inst, i, best_j);
+                 
+                 if (verify_delta < -1e-6) {
+                     int old_r_i = sol.routeOf[i];
+@@ -721,6 +1318,17 @@ namespace {
+                     else if (bestOp == 2) apply_2opt(sol, arena, inst, i, best_j, cache);
+                     else if (bestOp == 3) apply_2opt_star(sol, arena, inst, i, best_j, cache);
+                     else if (bestOp == 4) apply_swap_star(sol, arena, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j, cache);
++                    else if (bestOp == 5) apply_or_opt2(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 6) apply_or_opt3(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 7) apply_swap21(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 8) apply_swap22(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 9) apply_relocate_before(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 10) apply_2opt_star_before(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 11) apply_or_opt2_before(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 12) apply_or_opt3_before(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 13) apply_2opt_star_rev_j(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 14) apply_2opt_star_rev_i(sol, arena, inst, i, best_j, cache);
++                    else if (bestOp == 15) apply_2opt_star_rev_both(sol, arena, inst, i, best_j, cache);
+                     
+                     if (old_r_i != -1) update_route_info(sol, old_r_i, inst);
+                     if (old_r_j != -1 && old_r_j != old_r_i) update_route_info(sol, old_r_j, inst);
+@@ -764,7 +1372,8 @@ namespace {
+                                   const NeighborLists& granular_lists, int chunkSize,
+                                   const std::vector<int>& nodes, std::mutex* mtx = nullptr,
+                                   int t1 = -1, int t2 = -1, const std::vector<int>* routeToChunk = nullptr,
+-                                  std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max()) {
++                                  std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max(),
++                                  bool enable_expensive_ops = false) {
+         arena.pendingDelta = 0;
+         size_t idx = 0;
+         while (idx < nodes.size()) {
+@@ -774,7 +1383,7 @@ namespace {
+             for (size_t k = idx; k < batch_end; ++k) cache.insert(nodes[k]);
+             bool improved = true;
+             while (improved) {
+-                improved = local_search(sol, arena, cache, inst, granular_lists, chunkSize, mtx, t1, t2, routeToChunk);
++                improved = local_search(sol, arena, cache, inst, granular_lists, chunkSize, mtx, t1, t2, routeToChunk, enable_expensive_ops);
+             }
+             idx = batch_end;
+         }
+@@ -1113,7 +1722,7 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
+         for (int i = 1; i <= inst.n; ++i) all_customers[i - 1] = i;
+         // Single-threaded here, so folding the delta straight into totalCost is safe (no
+         // shared-scalar race to worry about, unlike the Stage 3 call site above).
+-        globalSolution.totalCost += full_sweep_local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, all_customers, nullptr, -1, -1, nullptr, sweepDeadline);
++        globalSolution.totalCost += full_sweep_local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, all_customers, nullptr, -1, -1, nullptr, sweepDeadline, true);
+     }
+     double temperature = T0;
+ 
+@@ -1159,7 +1768,7 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
+ 
+         bool local_search_improved = true;
+         while(local_search_improved) {
+-            local_search_improved = local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, nullptr);
++            local_search_improved = local_search(globalSolution, arena, cache, inst, neighborLists, inst.n, nullptr, -1, -1, nullptr, true);
+         }
+ 
+         Cost delta = arena.pendingDelta;

@@ -1,0 +1,4 @@
+C:/internship/iitm/cvrp/build2/CMakeFiles/cvrp_parallel.dir
+C:/internship/iitm/cvrp/build2/CMakeFiles/cvrp_parallel_debug.dir
+C:/internship/iitm/cvrp/build2/CMakeFiles/edit_cache.dir
+C:/internship/iitm/cvrp/build2/CMakeFiles/rebuild_cache.dir

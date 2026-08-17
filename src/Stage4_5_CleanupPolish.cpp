@@ -1,4 +1,9 @@
 #include "Stage4_5_CleanupPolish.hpp"
+#include "Stage2_ILS.hpp"
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <chrono>
 
 void stage4_route_cleanup(Solution& globalSolution, const Instance& inst, const NeighborLists& neighborLists) {
     for (size_t r = 0; r < globalSolution.routeHead.size(); ++r) {
@@ -69,6 +74,7 @@ void stage4_route_cleanup(Solution& globalSolution, const Instance& inst, const 
                     if (best_p == 0) globalSolution.routeHead[best_route] = c;
                     if (best_s == 0) globalSolution.routeTail[best_route] = c;
                     globalSolution.routeLoad[best_route] += inst.demand[c];
+                    
                     globalSolution.routeOf[c] = best_route;
                     globalSolution.totalCost += best_delta;
                 }
@@ -95,9 +101,17 @@ void stage4_route_cleanup(Solution& globalSolution, const Instance& inst, const 
         }
     }
     
-    globalSolution.routeHead = std::move(new_routeHead);
-    globalSolution.routeTail = std::move(new_routeTail);
-    globalSolution.routeLoad = std::move(new_routeLoad);
-    globalSolution.numRoutes = globalSolution.routeHead.size();
+    globalSolution.routeHead = new_routeHead;
+    globalSolution.routeTail = new_routeTail;
+    globalSolution.routeLoad = new_routeLoad;
+    globalSolution.numRoutes = new_routeHead.size();
+    
+    // Stage 4 modifies routes (relocates customers) but leaves cumLoad and routePosition
+    // stale. Stage 5 Polish immediately follows and relies on cumLoad for capacity checks 
+    // (eval_2opt_star). If we don't rescan the routes here, Stage 5 will evaluate moves against 
+    // stale load data and silently construct over-capacity routes, which will then trigger 
+    // fatal assertions in subsequent insert_customer calls.
+    for (int r = 0; r < globalSolution.numRoutes; ++r) {
+        update_route_info(globalSolution, r, inst);
+    }
 }
-

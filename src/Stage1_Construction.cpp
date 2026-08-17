@@ -162,16 +162,16 @@ Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result&
             NodeId local_c = route[i];
             NodeId c = globalIds[local_c];
             sol.routeOf[c] = r;
-            load += demand_local[local_c];
+            
+            sol.routePosition[c] = i + 1;
+            sol.cumLoad[c] = load;
+            load += inst.demand[c];
             
             if (i > 0) sol.pred[c] = globalIds[route[i-1]];
             else sol.pred[c] = 0;
             
             if (i < route.size() - 1) sol.succ[c] = globalIds[route[i+1]];
             else sol.succ[c] = 0;
-            
-            sol.routePosition[c] = i + 1;
-            sol.cumLoad[c] = load;
         }
         sol.routeLoad[r] = load;
     }
