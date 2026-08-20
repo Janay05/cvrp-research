@@ -4,6 +4,7 @@
 #include <mutex>
 #include <chrono>
 #include <iostream>
+#include <atomic>
 
 thread_local const char* current_op = "unknown";
 thread_local char debug_info[256] = {0};
@@ -31,11 +32,16 @@ void update_route_info(Solution& sol, int route, const Instance& inst) {
             sol.routePosition[curr] = pos++;
             curr = sol.succ[curr];
         }
+        if (sol.routeLoad[route] != load) {
+            printf("[FATAL] routeLoad desync for route %d: tracked=%lld, true=%lld\n", route, (long long)sol.routeLoad[route], (long long)load);
+            fflush(stdout);
+            exit(1);
+        }
         sol.routeLoad[route] = load;
         if (load > inst.Q) {
-            printf("[FATAL] update_route_info load %lld > Q for route %d\n", (long long)load, route);
+            printf("[FATAL] update_route_info load %lld > Q for route %d (OP: %s)\n", (long long)load, route, ::current_op);
             fflush(stdout);
-            std::abort();
+            exit(1);
         }
     }
 
@@ -206,8 +212,20 @@ namespace {
         sol.routeLoad[route] += inst.demand[c];
         if (sol.routeLoad[route] > inst.Q) {
             printf("[FATAL] insert_customer load %lld > Q for route %d, inserting node %d (OP: %s)\n%s\n", (long long)sol.routeLoad[route], route, c, ::current_op, ::debug_info);
+            printf("DUMP OF ROUTE %d:\n", route);
+            NodeId curr = sol.routeHead[route];
+            int count = 0;
+            Cost true_load = 0;
+            while (curr != 0) {
+                printf("  Node %d (demand %lld, routeOf %d)\n", curr, (long long)inst.demand[curr], sol.routeOf[curr]);
+                true_load += inst.demand[curr];
+                curr = sol.succ[curr];
+                count++;
+                if (count > inst.n + 2) { printf("  [CYCLE DETECTED]\n"); break; }
+            }
+            printf("True load by traversal: %lld\n", (long long)true_load);
             fflush(stdout);
-            std::abort();
+            exit(1);
         }
         
         if (p == 0) sol.routeHead[route] = c;
@@ -234,12 +252,17 @@ namespace {
                 NodeId c = entry.customer; int route = entry.prevRoute;
                 NodeId p = sol.pred[c]; NodeId s = sol.succ[c];
                 
-                sol.succ[p] = s; sol.pred[s] = p;
-                if (p == 0) sol.routeHead[route] = s;
-                if (s == 0) sol.routeTail[route] = p;
+                if (p != 0) sol.succ[p] = s;
+                if (s != 0) sol.pred[s] = p;
+                sol.pred[c] = 0; sol.succ[c] = 0;
                 
-                sol.routeOf[c] = -1; sol.routeLoad[route] -= inst.demand[c];
-                touched_routes.push_back(route);
+                if (route != -1) {
+                    sol.routeOf[c] = -1;
+                    sol.routeLoad[route] -= inst.demand[c];
+                    if (p == 0) sol.routeHead[route] = s;
+                    if (s == 0) sol.routeTail[route] = p;
+                    touched_routes.push_back(route);
+                }
             }
         }
 
@@ -379,20 +402,29 @@ namespace {
                 }
                 
                 if (r == -1) {
+                    // No inner mtx lock here: recreate() already holds mtx for its entire
+                    // call (locked at function entry, unlocked at function exit -- one
+                    // critical section), and std::mutex is non-recursive, so a second
+                    // lock() by the same thread deadlocks forever instead of blocking on
+                    // another thread. This was the Stage 3 hang (reproducible even at
+                    // N=2000, P=4: any time recreate() needed to create a genuinely new
+                    // route, the thread locked route_creation_mutex against itself and
+                    // never returned) -- confirmed by Stage 2's calls (mtx=nullptr) never
+                    // hitting it, only Stage 3's (mtx=&route_creation_mutex) did.
                     r = sol.numRoutes++;
                     if (r >= (int)sol.routeHead.size()) {
-                        sol.routeHead.resize(r + 100, 0); 
-                        sol.routeTail.resize(r + 100, 0); 
+                        sol.routeHead.resize(r + 100, 0);
+                        sol.routeTail.resize(r + 100, 0);
                         sol.routeLoad.resize(r + 100, 0);
+                    }
+                    if (routeToChunk && t1 != -1) {
+                        if (r >= (int)routeToChunk->size()) {
+                            routeToChunk->resize(r + 100, -1);
+                        }
+                        (*routeToChunk)[r] = t1;
                     }
                 }
                 sol.routeLoad[r] = 0;
-                if (routeToChunk && t1 != -1) {
-                    if (r >= (int)routeToChunk->size()) {
-                        routeToChunk->resize(r + 100, -1);
-                    }
-                    (*routeToChunk)[r] = t1;
-                }
                 insert_customer(sol, c, 0, 0, r, arena, inst);
                 update_route_info(sol, r, inst);
                 cache.insert(c);
@@ -509,25 +541,33 @@ namespace {
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
         if (r_i == -1 || r_j == -1) return 0;
         if (r_i == r_j) return 0;
-        
-        Cost load_kept_i = sol.cumLoad[i] + inst.demand[i];
-        Cost load_kept_j = sol.cumLoad[j] + inst.demand[j];
-        
-        Cost load_tail_i = 0;
-        NodeId curr_i = sol.succ[i];
-        while (curr_i != 0) { load_tail_i += inst.demand[curr_i]; curr_i = sol.succ[curr_i]; }
-        
-        Cost load_tail_j = 0;
-        NodeId curr_j = sol.succ[j];
-        while (curr_j != 0) { load_tail_j += inst.demand[curr_j]; curr_j = sol.succ[curr_j]; }
-        
+
+        // Deriving both "kept" and "tail" loads from routeLoad[r] - cumLoad[node] (rather
+        // than an independent fresh walk for tail, as this used to do) is deliberate:
+        // routeLoad[r] is kept exactly up to date in real time by every remove_customer/
+        // insert_customer call, so kept+tail always sums to the true routeLoad[r] even if
+        // cumLoad[node] itself is somewhat stale (only refreshed by update_route_info,
+        // called once per touched route per SA iteration, not after every single move).
+        // A previous rewrite computed load_tail_i/j via a fresh sol.succ walk while still
+        // reading load_kept_i/j from cumLoad directly (plus an erroneous extra
+        // + inst.demand[i]/[j] on top) -- that decoupling meant a stale cumLoad[j] could
+        // under-report route j's "kept" load with nothing forcing the numbers back toward
+        // the true routeLoad total, letting a genuinely-infeasible move pass this check and
+        // then blow capacity for real in apply_2opt_star's insert_customer. Confirmed via a
+        // reproducible VDA crash: route sitting at exactly Q, one more customer's demand
+        // (2-3 units) let through by this check, then insert_customer's own (always-current)
+        // capacity check correctly caught it and aborted -- i.e. this check was the one that
+        // should have rejected the move earlier but didn't.
+        Cost load_tail_i = sol.routeLoad[r_i] - sol.cumLoad[i];
+        Cost load_tail_j = sol.routeLoad[r_j] - sol.cumLoad[j];
+
         // Capacity short-circuit BEFORE distance lookups
-        if (load_kept_i + load_tail_j > inst.Q) return 0;
-        if (load_kept_j + load_tail_i > inst.Q) return 0;
-        
+        if (sol.routeLoad[r_i] - load_tail_i + load_tail_j > inst.Q) return 0;
+        if (sol.routeLoad[r_j] - load_tail_j + load_tail_i > inst.Q) return 0;
+
         NodeId s_i = sol.succ[i], s_j = sol.succ[j];
         Cost delta = -dist(inst, i, s_i) - dist(inst, j, s_j) + dist(inst, i, s_j) + dist(inst, j, s_i);
-        
+
         return delta;
     }
 
@@ -543,7 +583,14 @@ namespace {
         NodeId p = 0;
         NodeId s = sol.routeHead[target_route];
 
+        int loops = 0;
+        int max_nodes = inst.n + 2;
         while (true) {
+            loops++;
+            if (loops > max_nodes) {
+                printf("[FATAL] HANG IN get_top3_insertions! route=%d\n", target_route); fflush(stdout);
+                exit(1);
+            }
             Cost delta = dist(inst, p, v) + dist(inst, v, s) - dist(inst, p, s);
             if (top3.count < 3 || delta < top3.delta[2]) {
                 int pos = std::min(top3.count, 2);
@@ -698,7 +745,25 @@ namespace {
         
         std::vector<NodeId> seg;
         NodeId curr = sol.succ[i];
-        while (curr != sol.succ[j]) { seg.push_back(curr); curr = sol.succ[curr]; }
+        int loops = 0;
+        while (curr != sol.succ[j]) { 
+            loops++;
+            if (loops > inst.n + 2) {
+                printf("[FATAL] HANG IN apply_2opt! i=%d (routeOf=%d) j=%d (routeOf=%d)\n", i, sol.routeOf[i], j, sol.routeOf[j]);
+                printf("DUMP OF ROUTE %d:\n", sol.routeOf[i]);
+                NodeId dbg_curr = sol.routeHead[sol.routeOf[i]];
+                int dbg_count = 0;
+                while(dbg_curr != 0) {
+                    printf("  Node %d (routeOf %d)\n", dbg_curr, sol.routeOf[dbg_curr]);
+                    dbg_curr = sol.succ[dbg_curr];
+                    if (++dbg_count > inst.n + 2) { printf("  [CYCLE DETECTED]\n"); break; }
+                }
+                fflush(stdout);
+                exit(1);
+            }
+            seg.push_back(curr); 
+            curr = sol.succ[curr]; 
+        }
         
         int route = sol.routeOf[i];
         for (NodeId v : seg) remove_customer(sol, v, arena, inst);
@@ -721,10 +786,28 @@ namespace {
         
         std::vector<NodeId> tail_i, tail_j;
         NodeId curr = sol.succ[i];
-        while (curr != 0) { tail_i.push_back(curr); curr = sol.succ[curr]; }
+        int loops = 0;
+        while (curr != 0) { 
+            loops++;
+            if (loops > inst.n + 2) {
+                printf("[FATAL] HANG IN apply_2opt_star! i=%d\n", i); fflush(stdout);
+                exit(1);
+            }
+            tail_i.push_back(curr); 
+            curr = sol.succ[curr]; 
+        }
         
         curr = sol.succ[j];
-        while (curr != 0) { tail_j.push_back(curr); curr = sol.succ[curr]; }
+        loops = 0;
+        while (curr != 0) { 
+            loops++;
+            if (loops > inst.n + 2) {
+                printf("[FATAL] HANG IN apply_2opt_star! j=%d\n", j); fflush(stdout);
+                exit(1);
+            }
+            tail_j.push_back(curr); 
+            curr = sol.succ[curr]; 
+        }
         
         for (NodeId v : tail_i) remove_customer(sol, v, arena, inst);
         for (NodeId v : tail_j) remove_customer(sol, v, arena, inst);
@@ -963,7 +1046,7 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     int chunkSize = (int)partitionInfo.globalId[chunkId].size() - 1;
     cache.init(inst.n);
     cache.clear();
-    
+
     // Build local granular list from the global one
     NeighborLists local_granular_lists;
     local_granular_lists.k = neighborLists.k;
@@ -1322,6 +1405,21 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
             int next_cycle = (int)(elapsed_ms / cycle_ms);
             if (next_cycle > current_cycle) {
                 globalSolution = bestSol;
+                // bestSol is maintained via snapshot_essential, which deliberately excludes
+                // routePosition/cumLoad (report 006 Phase 2.3 -- they're pure derived caches,
+                // expensive to keep copying every improving iteration). That's fine for
+                // bestSol itself, since finalize_solution_derived_fields() regenerates them
+                // once at the very end of this function. But copying bestSol INTO the live
+                // globalSolution here mid-loop means globalSolution.cumLoad/routePosition are
+                // now whatever bestSol's happened to be -- i.e. stale/unrelated to the
+                // pred/succ/routeHead structure just copied in, not just "a bit behind". Any
+                // route local_search doesn't happen to touch again after this reset keeps
+                // that stale cumLoad forever, letting eval_2opt_star's capacity check pass
+                // genuinely-infeasible moves against it (confirmed via a reproducible VDA
+                // crash, further into Stage 5 than the Stage1_Construction bug). Full
+                // solution is small (a few hundred to a few thousand routes) and this branch
+                // only fires twice per run (3 sawtooth cycles), so an O(N) refresh here is negligible.
+                finalize_solution_derived_fields(globalSolution, inst);
                 stagnation = 0;
                 current_cycle = next_cycle;
             }
@@ -1345,7 +1443,11 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
                     if (globalSolution.routeHead[r] == 0) continue;
                     int nodes = 0;
                     NodeId curr = globalSolution.routeHead[r];
-                    while (curr != 0) { nodes++; curr = globalSolution.succ[curr]; }
+                    int loops = 0;
+                    while (curr != 0) { 
+                        if (++loops > inst.n + 2) { printf("[FATAL] HANG in stage3 smallest route nodes\n"); fflush(stdout); exit(1); }
+                        nodes++; curr = globalSolution.succ[curr]; 
+                    }
                     if (nodes < min_nodes) {
                         min_nodes = nodes;
                         smallest_route = r;
@@ -1353,7 +1455,9 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
                 }
                 if (smallest_route != -1) {
                     NodeId curr = globalSolution.routeHead[smallest_route];
+                    int loops = 0;
                     while (curr != 0) {
+                        if (++loops > inst.n + 2) { printf("[FATAL] HANG in stage3 smallest route remove\n"); fflush(stdout); exit(1); }
                         NodeId nxt = globalSolution.succ[curr];
                         remove_customer(globalSolution, curr, arena, inst);
                         cache.insert(curr);
