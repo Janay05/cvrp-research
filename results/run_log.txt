@@ -1,1 +1,54 @@
 Starting CVRP Parallel...
+Worker 0 chunk 0 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 0 chunk 0 actual_iterations_completed=156114
+Worker 0 Stage 1: 18.5613 ms | Stage 2: 37501.1 ms | dist_calls=4683474088
+Worker 1 chunk 1 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 1 chunk 1 actual_iterations_completed=168269
+Worker 1 Stage 1: 19.5466 ms | Stage 2: 37499.2 ms | dist_calls=4634703657
+Worker 2 chunk 2 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 2 chunk 2 actual_iterations_completed=115480
+Worker 2 Stage 1: 14.1808 ms | Stage 2: 37500.4 ms | dist_calls=4620451605
+Worker 3 chunk 3 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 3 chunk 3 actual_iterations_completed=157708
+Worker 3 Stage 1: 15.8331 ms | Stage 2: 37499.2 ms | dist_calls=4864507994
+Worker 4 chunk 4 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 4 chunk 4 actual_iterations_completed=122580
+Worker 4 Stage 1: 20.8509 ms | Stage 2: 37501.3 ms | dist_calls=4769035210
+Worker 5 chunk 5 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 5 chunk 5 actual_iterations_completed=110094
+Worker 5 Stage 1: 21.445 ms | Stage 2: 37502.4 ms | dist_calls=4625912368
+Worker 6 chunk 6 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 6 chunk 6 actual_iterations_completed=120475
+Worker 6 Stage 1: 12.4437 ms | Stage 2: 37499.9 ms | dist_calls=4650737493
+Worker 7 chunk 7 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 7 chunk 7 actual_iterations_completed=156723
+Worker 7 Stage 1: 15.8117 ms | Stage 2: 37503.3 ms | dist_calls=4748384120
+Worker 8 chunk 8 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 8 chunk 8 actual_iterations_completed=127888
+Worker 8 Stage 1: 20.8544 ms | Stage 2: 37503 ms | dist_calls=4767042051
+Worker 9 chunk 9 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 9 chunk 9 actual_iterations_completed=166811
+Worker 9 Stage 1: 21.6324 ms | Stage 2: 37499.4 ms | dist_calls=4614087767
+Worker 10 chunk 10 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 10 chunk 10 actual_iterations_completed=131241
+Worker 10 Stage 1: 15.6857 ms | Stage 2: 37499.9 ms | dist_calls=4756512530
+Worker 11 chunk 11 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 11 chunk 11 actual_iterations_completed=178439
+Worker 11 Stage 1: 15.0702 ms | Stage 2: 37500.2 ms | dist_calls=4676707492
+Worker 12 chunk 12 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 12 chunk 12 actual_iterations_completed=98697
+Worker 12 Stage 1: 15.7778 ms | Stage 2: 37499.8 ms | dist_calls=4778313083
+Worker 13 chunk 13 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 13 chunk 13 actual_iterations_completed=109509
+Worker 13 Stage 1: 14.9348 ms | Stage 2: 37502.3 ms | dist_calls=4755640073
+Worker 14 chunk 14 chunkSize=1250 stage2_time_budget_ms=40000
+Worker 14 chunk 14 actual_iterations_completed=143851
+Worker 14 Stage 1: 14.6465 ms | Stage 2: 37499.9 ms | dist_calls=4743038259
+Worker 15 chunk 15 chunkSize=1249 stage2_time_budget_ms=40000
+Worker 15 chunk 15 actual_iterations_completed=98799
+Worker 15 Stage 1: 13.4783 ms | Stage 2: 37501.6 ms | dist_calls=4763431706
+Cost BEFORE Stage 3 Healing: 22110581
+Cost AFTER Stage 3 Healing: 22088247
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Final cost: 22063804

@@ -37,12 +37,12 @@ namespace {
 }
 
 void KDTree::build(const Instance& inst) {
-    std::vector<NodeId> ids(inst.n);
-    for (int i = 1; i <= inst.n; ++i) {
-        ids[i - 1] = i;
+    std::vector<NodeId> ids(inst.n + 1);
+    for (int i = 0; i <= inst.n; ++i) {
+        ids[i] = i;
     }
     nodes.clear();
-    nodes.reserve(inst.n);
+    nodes.reserve(inst.n + 1);
     root = build_recursive(nodes, ids, 0, ids.size(), 0, inst);
 }
 
@@ -107,14 +107,14 @@ void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads
 
     if (num_threads <= 1 || inst.n < 1000) {
         // Small instances: thread setup overhead isn't worth it.
-        knn_query_range(inst, tree, k, 1, inst.n + 1, nbr);
+        knn_query_range(inst, tree, k, 0, inst.n + 1, nbr);
         return;
     }
 
     std::vector<std::thread> threads;
-    int chunk = (inst.n + num_threads - 1) / num_threads;
+    int chunk = (inst.n + 1 + num_threads - 1) / num_threads;
     for (int t = 0; t < num_threads; ++t) {
-        int lo = 1 + t * chunk;
+        int lo = t * chunk;
         int hi = std::min(inst.n + 1, lo + chunk);
         if (lo >= hi) break;
         threads.emplace_back(knn_query_range, std::cref(inst), std::cref(tree), k, lo, hi, std::ref(nbr));

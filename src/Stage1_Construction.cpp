@@ -162,11 +162,19 @@ Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result&
             NodeId local_c = route[i];
             NodeId c = globalIds[local_c];
             sol.routeOf[c] = r;
-            
+            load += inst.demand[c];
+
+            // cumLoad[c] must include c's own demand (load incremented BEFORE assignment) --
+            // matching update_route_info's convention (Stage2_ILS.cpp) exactly. This order
+            // was swapped by an earlier commit, understating every node's cumLoad by its own
+            // demand at construction time (worst-visible on route heads: cumLoad=0 instead of
+            // demand[head]). That let eval_2opt_star's capacity check pass genuinely
+            // over-capacity 2-opt* moves on any route local_search hadn't yet touched (nothing
+            // else ever recomputes cumLoad for an untouched route), producing real capacity
+            // violations days into Stage 2/5 -- confirmed via a reproducible VDA crash trail.
             sol.routePosition[c] = i + 1;
             sol.cumLoad[c] = load;
-            load += inst.demand[c];
-            
+
             if (i > 0) sol.pred[c] = globalIds[route[i-1]];
             else sol.pred[c] = 0;
             

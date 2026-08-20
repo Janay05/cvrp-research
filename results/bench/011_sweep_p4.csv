@@ -1,0 +1,4 @@
+instance,seed,cost,wall_ms,solver_ms,num_routes,feasible,ref_cost,gap_pct,retried
+Valle-D-Aosta,1,22069603,104222.0,94196.4,808,True,21679514,1.7993,False
+Valle-D-Aosta,2,22062783,104209.1,96673.3,807,True,21679514,1.7679,False
+Valle-D-Aosta,3,22068247,104321.2,96749.6,809,True,21679514,1.7931,False

@@ -87,6 +87,7 @@ Stage0Result run_stage0(const Instance& inst, const NeighborLists& neighborLists
         
         for (int j : neighborLists.nbr[i]) {
             if (dist(inst, i, j) > R) break; // Sorted ascending
+            if (j == 0) continue; // Depot belongs to all chunks
             int c_j = res.chunkOf[j];
             if (c_i != c_j) {
                 res.isBoundary[i] = true;

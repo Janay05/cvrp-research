@@ -107,11 +107,19 @@ struct alignas(64) ThreadArena {
         // doList/undoList just log the sequence of edit operations within a single SA
         // iteration (ruin + recreate + local_search cascade) -- that cascade length isn't
         // proportional to instance size, so this must be capped independent of
-        // max_chunk_size. Uncapped (max_chunk_size*50) was fine at N=2000 (100,000 entries)
-        // but allocates tens of millions of entries -- gigabytes per thread -- once N grows
-        // into the hundreds of thousands to millions.
-        doList.resize(std::min(10000000, max_chunk_size * 100));
-        undoList.resize(std::min(10000000, max_chunk_size * 100));
+        // max_chunk_size. A later change raised the cap to min(10_000_000, max_chunk_size*100)
+        // to give the new multi-string ruin (up to 40 strings/iteration) more headroom, but
+        // 10,000,000 entries is 400MB per list (800MB/arena) -- at Lazio scale (P=16), Stage
+        // 3's arena_pool pre-allocates one such arena per thread in its largest color class,
+        // easily exceeding this machine's ~7.6GB WSL memory budget and crashing the whole VM
+        // (not a graceful OOM) rather than the process. Even 40 strings x ~15 removals/string
+        // (ln(n) walk length) plus recreate's reinsertions is only ~1,200 entries; local_search's
+        // own cascade adds at most a few thousand more per iteration (route lengths are capacity-
+        // bounded, not instance-size-bounded). 2,000,000 is 4x the original proven-safe 500,000
+        // ceiling -- ample headroom for the new multi-string ruin -- while cutting worst-case
+        // memory by 5x from the 10,000,000 figure.
+        doList.resize(std::min(2000000, std::max(max_chunk_size * 50, 100000)));
+        undoList.resize(std::min(2000000, std::max(max_chunk_size * 50, 100000)));
         removed_customers.resize(max_chunk_size + 100);
         scratchTop3Pos.reserve(3);
 
