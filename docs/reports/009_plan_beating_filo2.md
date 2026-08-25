@@ -331,9 +331,37 @@ essentially where T0.4 found it, and every attempted lever beyond raw
 throughput has run into the same wall — our 9-operator local_search is
 meaningfully weaker than FILO2's ~22-operator one, and cost-side techniques
 (ROUTEMIN, adaptive shaking, pair caching) all depend on search quality/speed
-this architecture doesn't have yet. The remaining honest options are: (a) a
-real Step-1-targeted T2 (large, high-risk), (b) T5.2 (add the missing
-operator types outright, cheaper than a full SMD rewrite and directly
-addresses the "weaker local_search" root cause), or (c) accept the
-throughput-only result as the deliverable and pursue Stage 6's parallel
-architecture options for a time-side win instead.
+this architecture doesn't have yet.
+
+**T5.2 (missing operators): E21 + E22 added, kept — first measurable
+non-throughput win since T1.** Rather than the full missing set (E21/E22/
+E31/E32/E33 + Rev variants), scoped to E21 (swap a 2-customer segment for a
+1-customer segment) and E22 (swap a 2-customer segment for another
+2-customer segment) first — the two extending our existing 1-/2-segment
+relocate operators most directly. Ported from FILO2's `TwoOneExchange.hpp`/
+`TwoTwoExchange.hpp` (`localsearch/`), re-derived in this codebase's
+pred/succ + `costToPred`-cached idiom (`eval_E21`/`apply_E21`,
+`eval_E22`/`apply_E22` in `Stage2_ILS.cpp`, next to `eval_swap`). Deliberately
+scoped to **cross-route only** (`r_i != r_j` required): FILO2 also supports a
+same-route variant, but that needs adjacency exclusions (segments touching or
+overlapping) that are a known real bug source elsewhere in this file when
+gotten wrong — cross-route-only sidesteps the whole class by construction,
+since two customers from different routes can never be adjacent to begin
+with. Wired into `local_search`'s existing Step 2 sweep and both dispatch
+switches as ops 9/10, so every caller (`stage2_ils`, `stage3_healing_ils_pass`,
+`stage5_serial_polish`, `stage1_5_routemin`) picks them up automatically.
+
+Verified: deterministic, feasible and cost-matches-recomputed on
+X-n1001-k43/test_2000/Lazio (`-p 4`, 40,449 routes). VDA 5-seed mean cost
+**22,000,544 vs. 22,003,614 without them (-0.014%)** — small, within the
+seed-noise band, but consistently in the right direction with zero
+regressions anywhere, unlike T3/T4.2/T2-lite. Gap-to-FILO2-at-equal-time
+now **~1.20%**, marginally better than 1.21%.
+
+**Remaining for a fuller T5.2**: E31/E32/E33 (3-segment swaps) and the Rev
+variants (reversed-segment insertion, analogous to our existing
+relocate2_rev/relocate3_rev) — same pattern, same cross-route-only scoping
+recommended, not yet attempted. Given E21/E22's gain was real but modest,
+each additional operator should be expected to add a similarly small,
+diminishing increment (matches the plan's own "0.1-0.2% total, diminishing"
+estimate for the full missing set).
