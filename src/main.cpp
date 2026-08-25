@@ -34,6 +34,15 @@ int g_stage5_time_budget_ms = -1;
 // pipeline -- the solver is otherwise fully deterministic, so repeat runs at a fixed seed
 // carry zero variance information (see docs/reports/005_cost_optimization.md, Phase 0).
 int g_seed = 1337;
+// T3 ROUTEMIN iterations per chunk, overridable via --routemin-iters. Default 0 (disabled):
+// measured net-negative on VDA (mean cost +0.16% worse, route count UP not down toward kmin)
+// -- our 9-operator local_search can't compensate for whole-route destruction the way FILO2's
+// much richer 22-operator move set does, so the cost-primary accept rule tends to keep
+// cost-cheaper-but-more-numerous route configurations. Implementation is verified correct
+// (deterministic, feasible, matches FILO2's algorithm) and left available via this flag --
+// likely worth revisiting once T2 (SMD rewrite, which is also what would bring the fuller
+// move-generator set) exists. See docs/reports/009_plan_beating_filo2.md T3.
+int g_routemin_iterations = 0;
 
 int main(int argc, char** argv) {
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -68,6 +77,8 @@ int main(int argc, char** argv) {
             g_stage5_time_budget_ms = std::stoi(argv[++i]);
         } else if (arg == "--seed" && i + 1 < argc) {
             g_seed = std::stoi(argv[++i]);
+        } else if (arg == "--routemin-iters" && i + 1 < argc) {
+            g_routemin_iterations = std::stoi(argv[++i]);
         } else if (arg[0] != '-') {
             inputFile = arg;
         }

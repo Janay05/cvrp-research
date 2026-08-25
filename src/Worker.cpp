@@ -36,6 +36,18 @@ void worker_main(WorkerContext& ctx) {
                 ctx.log << " max_iterations=" << legacyMaxIter << "\n";
             }
             Solution sol = stage1_construct(chunkId, *ctx.instance, *ctx.partitionInfo, *ctx.neighborLists, ctx.rng);
+
+            // T3 (docs/reports/009_plan_beating_filo2.md): ROUTEMIN runs right after
+            // construction and before this chunk's stage2_ils, matching FILO2's placement.
+            extern int g_routemin_iterations;
+            if (g_routemin_iterations > 0) {
+                int routesBefore = sol.numRoutes;
+                sol = stage1_5_routemin(sol, arena, cache, *ctx.instance, *ctx.partitionInfo,
+                                        *ctx.neighborLists, chunkId, ctx.rng, g_routemin_iterations);
+                ctx.log << "Worker " << ctx.workerId << " chunk " << chunkId
+                         << " routemin: routes " << routesBefore << " -> " << sol.numRoutes << "\n";
+            }
+
             ctx.chunkSolutions.push_back(std::move(sol));
         }
         std::cout << "Worker " << ctx.workerId << " Stage 1 finished" << std::endl;

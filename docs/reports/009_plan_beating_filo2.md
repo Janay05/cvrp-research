@@ -248,6 +248,36 @@ baseline (as expected: T1 is a pure speed lever, not a cost lever by itself).
 The throughput win it bought is what T3 (ROUTEMIN) and T2 (SMD rewrite) are
 meant to spend.
 
-**Next up: T3 (ROUTEMIN done FILO2's way)**, per the staged order in §3 —
-the highest-value remaining item and the one that directly redeems the
-twice-failed "different set of customers" prototype work.
+**T3 (ROUTEMIN done FILO2's way): implemented correctly, disabled — net
+negative given our current local_search.** Ported per-chunk (runs once per
+chunk right after construction, before that chunk's stage2_ils), matching
+FILO2's mechanics exactly: FFD bin-packing `kmin` target, destroy-two-routes
+ruin, annealed-probability partial-solution tolerance, cost-primary accept
+rule with a route-count tiebreak. Found and fixed a real ordering bug during
+implementation: `rescan_touched_routes` (which refreshes `cumLoad`) must run
+*before* `local_search`, not after — calling it after left `local_search`'s
+`eval_2opt_star` reading stale `cumLoad` for just-reinserted routes, which
+produced a genuine capacity-check false-pass (a `[FATAL] insert_customer
+load > Q` crash, caught on X-n1001-k43). Fixed and re-verified: deterministic,
+feasible on X-n1001-k43/test_2000/VDA/Lazio (Lazio at `-p 4`, 40,438 routes,
+cost matches independently-recomputed).
+
+Measured on VDA (5 seeds): mean cost **22,038,711 vs. 22,003,614 without
+T3 (+0.16% worse)**, and route count moved the wrong way (806.4 avg vs. 805
+baseline, target was 800). Root cause is almost certainly architectural, not
+a bug: FILO2's ROUTEMIN leans on its much richer local-search move set (22
+operator types — E30/E31/E32/E33, RE-variants, SPLIT, TAILS, etc., all at
+γ=1.0) to make whole-route destruction pay off; our 9 operators can't
+compensate as well, so the cost-primary accept rule keeps drifting toward
+cheaper-but-more-numerous route configurations instead of consolidating.
+This matches T2's own note that adaptive γ "is meaningless without T2" — T3
+may have the same dependency. Disabled via `g_routemin_iterations = 0`
+default (CLI: `--routemin-iters`), code left in place and verified-safe for
+when T2 exists.
+
+**Net Stage 1-3 result on VDA: unchanged from T1-only (mean cost 22,003,614,
+gap ~1.21%)** — T3 contributed nothing net-positive in this architecture.
+
+**Next up: T2 (SMD rewrite)** is now the load-bearing item — it's the only
+remaining lever that attacks the root cause (103,000 dist() calls/iteration)
+directly, and both T3 and T4.1 are explicitly gated on it existing first.

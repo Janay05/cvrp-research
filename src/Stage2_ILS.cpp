@@ -1386,6 +1386,253 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
     return bestSol;
 }
 
+namespace {
+    // Greedy first-fit-decreasing bin packing lower bound on route count, restricted to this
+    // chunk's own customers (FILO2's opt/bpp.hpp, ported per-chunk to match our architecture).
+    int greedy_ffd_kmin(const Instance& inst, const std::vector<int>& chunkGlobalIds, int chunkSize) {
+        std::vector<NodeId> customers(chunkGlobalIds.begin() + 1, chunkGlobalIds.begin() + 1 + chunkSize);
+        std::sort(customers.begin(), customers.end(), [&inst](NodeId a, NodeId b) { return inst.demand[a] > inst.demand[b]; });
+
+        std::vector<Cost> bins(chunkSize, 0);
+        int used_bins = 0;
+        for (NodeId c : customers) {
+            Cost demand = inst.demand[c];
+            for (int p = 0; p < (int)bins.size(); ++p) {
+                if (bins[p] + demand <= inst.Q) {
+                    bins[p] += demand;
+                    if (p + 1 > used_bins) used_bins = p + 1;
+                    break;
+                }
+            }
+        }
+        return used_bins;
+    }
+
+    // Opens (or reuses) an empty route slot. No mutex: T3 runs per-chunk, single-threaded
+    // within that chunk, same as stage2_ils's own iteration loop.
+    int open_route(Solution& sol) {
+        for (int r = 0; r < sol.numRoutes; ++r) {
+            if (sol.routeHead[r] == 0) return r;
+        }
+        int r = sol.numRoutes++;
+        if (r >= (int)sol.routeHead.size()) {
+            sol.routeHead.resize(r + 100, 0);
+            sol.routeTail.resize(r + 100, 0);
+            sol.routeLoad.resize(r + 100, 0);
+        }
+        return r;
+    }
+}
+
+// T3 (docs/reports/009_plan_beating_filo2.md): FILO2's ROUTEMIN heuristic, ported per-chunk.
+// Runs once per chunk, right after construction and before that chunk's SA/ILS loop -- our
+// earlier "let a vehicle serve a different set of customers" attempts failed because they
+// differed from FILO2 on every axis (see the plan's Stage 3 table): this destroys *two whole
+// routes* per iteration (not one customer's local walk, which can never eliminate a route),
+// tolerates temporarily-unserved customers with annealed probability (a genuine partial
+// solution, not just "any feasible" — routeOf[c]==-1 already means "unserved" throughout this
+// codebase, so no new infrastructure is needed), and targets a bin-packing FFD lower bound
+// instead of "one fewer than we have now". Simplification vs. FILO2: reuses the existing
+// per-chunk granular neighbor list (k=30) rather than building a separate wider "full
+// neighborhood" (FILO2 uses up to 1500) candidate set for this pass specifically -- acceptable
+// since k=30 is already the set used for every other operator throughout the run.
+Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
+                            const Instance& inst, const Stage0Result& partitionInfo,
+                            const NeighborLists& neighborLists, int chunkId, std::mt19937& rng,
+                            int max_iter) {
+    int chunkSize = (int)partitionInfo.globalId[chunkId].size() - 1;
+    if (chunkSize < 3) return sol; // not enough customers for a meaningful FFD/route-pair destroy
+
+    int kmin = greedy_ffd_kmin(inst, partitionInfo.globalId[chunkId], chunkSize);
+    if (kmin >= sol.numRoutes) return sol; // already at (or below) the estimated minimum
+
+    cache.init(inst.n);
+    cache.clear();
+
+    NeighborLists local_granular_lists;
+    local_granular_lists.k = neighborLists.k;
+    local_granular_lists.nbr.assign(inst.n + 1, std::vector<NodeId>());
+    for (int i = 1; i <= chunkSize; ++i) {
+        NodeId global_i = partitionInfo.globalId[chunkId][i];
+        for (NodeId global_j : neighborLists.nbr[global_i]) {
+            if (partitionInfo.chunkOf[global_j] == chunkId) {
+                local_granular_lists.nbr[global_i].push_back(global_j);
+            }
+        }
+    }
+
+    Solution bestSol = sol;
+    Solution current = sol;
+
+    const double t_base = 1.0, t_end = 0.01;
+    double t = t_base;
+    double cool = std::pow(t_end / t_base, 1.0 / max_iter);
+
+    std::vector<NodeId> removed, still_removed;
+    removed.reserve(chunkSize);
+    still_removed.reserve(chunkSize);
+
+    std::uniform_int_distribution<int> dist_cust(1, chunkSize);
+    std::uniform_real_distribution<double> uniform01(0.0, 1.0);
+    std::vector<int> candidate_routes;
+
+    for (int iter = 0; iter < max_iter; ++iter) {
+        cache.clear();
+
+        // Seed customer -> its route, plus (if found) one neighboring route.
+        NodeId seed;
+        int guard = 0;
+        do {
+            seed = partitionInfo.globalId[chunkId][dist_cust(rng)];
+        } while (current.routeOf[seed] == -1 && ++guard < chunkSize * 2);
+        if (current.routeOf[seed] == -1) continue; // chunk fully unserved (shouldn't happen, but don't hang)
+
+        std::vector<int> selected_routes;
+        selected_routes.push_back(current.routeOf[seed]);
+        int sk = std::min((int)local_granular_lists.nbr[seed].size(), local_granular_lists.k);
+        for (int idx = 0; idx < sk; ++idx) {
+            NodeId v = local_granular_lists.nbr[seed][idx];
+            if (current.routeOf[v] == -1) continue;
+            int r = current.routeOf[v];
+            if (r != selected_routes[0]) { selected_routes.push_back(r); break; }
+        }
+
+        removed.clear();
+        removed.insert(removed.end(), still_removed.begin(), still_removed.end());
+        still_removed.clear();
+
+        // Destroy the selected routes entirely.
+        for (int r : selected_routes) {
+            NodeId curr = current.routeHead[r];
+            while (curr != 0) {
+                NodeId next = current.succ[curr];
+                remove_customer(current, curr, arena, inst);
+                removed.push_back(curr);
+                curr = next;
+            }
+        }
+
+        if (std::uniform_int_distribution<int>(0, 1)(rng) == 0) {
+            std::sort(removed.begin(), removed.end(), [&inst](NodeId a, NodeId b) { return inst.demand[a] > inst.demand[b]; });
+        } else {
+            std::shuffle(removed.begin(), removed.end(), rng);
+        }
+
+        for (NodeId c : removed) {
+            candidate_routes.clear();
+            int ck = std::min((int)local_granular_lists.nbr[c].size(), local_granular_lists.k);
+            for (int idx = 0; idx < ck; ++idx) {
+                NodeId v = local_granular_lists.nbr[c][idx];
+                if (current.routeOf[v] == -1) continue;
+                candidate_routes.push_back(current.routeOf[v]);
+            }
+            std::sort(candidate_routes.begin(), candidate_routes.end());
+            candidate_routes.erase(std::unique(candidate_routes.begin(), candidate_routes.end()), candidate_routes.end());
+
+            Cost bestDelta = 999999999;
+            NodeId bestPred = 0, bestSucc = 0;
+            int bestRoute = -1;
+            Top3Insertions top3;
+            for (int r : candidate_routes) {
+                if (current.routeLoad[r] + inst.demand[c] > inst.Q) continue;
+                get_top3_insertions(current, inst, c, r, top3);
+                if (top3.count > 0 && top3.delta[0] < bestDelta) {
+                    bestDelta = top3.delta[0];
+                    bestPred = top3.pos_pred[0];
+                    bestSucc = top3.pos_succ[0];
+                    bestRoute = r;
+                }
+            }
+
+            if (bestRoute != -1) {
+                insert_customer(current, c, bestPred, bestSucc, bestRoute, arena, inst);
+                cache.insert(c);
+            } else {
+                double roll = uniform01(rng);
+                if (roll > t || current.numRoutes < kmin) {
+                    int r = open_route(current);
+                    current.routeLoad[r] = 0;
+                    insert_customer(current, c, 0, 0, r, arena, inst);
+                    update_route_info(current, r, inst);
+                    cache.insert(c);
+                } else {
+                    still_removed.push_back(c);
+                }
+            }
+        }
+
+        // Must run BEFORE local_search, exactly like stage2_ils's ruin+recreate ->
+        // rescan_touched_routes -> local_search ordering: local_search's eval_2opt_star
+        // depends on cumLoad being current (see its own comment on why), and the
+        // destroy-routes + reinsertion loops above only kept routeLoad/costToPred
+        // incrementally correct, not cumLoad/routePosition (those are update_route_info's
+        // job). Calling this after local_search instead (as an earlier version of this
+        // function did) let local_search read stale cumLoad for routes just reinserted into,
+        // producing a real capacity-check false-pass -- caught via a genuine [FATAL]
+        // insert_customer overflow in stage2_ils several iterations later on X-n1001-k43.
+        rescan_touched_routes(current, arena, inst);
+
+        bool improved = true;
+        while (improved) {
+            improved = local_search(current, arena, cache, inst, local_granular_lists, chunkSize);
+        }
+        // remove_customer/insert_customer/local_search only accumulate into
+        // arena.pendingDelta (see local_search's own doc comment above) -- the caller must
+        // fold it into totalCost itself, same as stage2_ils does for its own ruin/recreate/
+        // local_search cascade.
+        current.totalCost += arena.pendingDelta;
+
+        if (still_removed.empty()) {
+            if (current.totalCost < bestSol.totalCost ||
+                (current.totalCost == bestSol.totalCost && current.numRoutes < bestSol.numRoutes)) {
+                bestSol = current;
+                if (bestSol.numRoutes <= kmin) break; // hit the target, stop early
+            }
+        }
+
+        if (current.totalCost > bestSol.totalCost) {
+            // Roll back to the best-known solution wholesale rather than replaying this
+            // iteration's do/undo log -- ROUTEMIN's iteration budget (default ~1000, vs SA's
+            // tens of thousands) makes an O(n) struct copy here cheap, and it sidesteps
+            // having to reason about undo correctness across a variable-length sequence of
+            // whole-route destructions + probabilistic reinsertions + a full local_search
+            // pass, unlike stage2_ils's fixed single-ruin-then-recreate shape.
+            current = bestSol;
+            still_removed.clear();
+        }
+
+        t *= cool;
+        arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
+    }
+
+#ifdef ROUTEMIN_DEBUG_CHECK
+    for (int r = 0; r < bestSol.numRoutes; ++r) {
+        if (bestSol.routeHead[r] == 0) continue;
+        Cost load = 0;
+        NodeId curr = bestSol.routeHead[r];
+        int pos = 1;
+        while (curr != 0) {
+            load += inst.demand[curr];
+            if (bestSol.cumLoad[curr] != load) {
+                printf("[ROUTEMIN_DEBUG] route %d node %d cumLoad desync: tracked=%lld true=%lld\n", r, curr, (long long)bestSol.cumLoad[curr], (long long)load);
+            }
+            if (bestSol.routePosition[curr] != pos) {
+                printf("[ROUTEMIN_DEBUG] route %d node %d routePosition desync: tracked=%d true=%d\n", r, curr, bestSol.routePosition[curr], pos);
+            }
+            if (bestSol.costToPred[curr] != dist(inst, bestSol.pred[curr], curr)) {
+                printf("[ROUTEMIN_DEBUG] route %d node %d costToPred desync: tracked=%lld true=%lld\n", r, curr, (long long)bestSol.costToPred[curr], (long long)dist(inst, bestSol.pred[curr], curr));
+            }
+            pos++;
+            curr = bestSol.succ[curr];
+        }
+        if (load != bestSol.routeLoad[r]) {
+            printf("[ROUTEMIN_DEBUG] route %d routeLoad desync: tracked=%lld true=%lld\n", r, (long long)bestSol.routeLoad[r], (long long)load);
+        }
+    }
+#endif
+    return bestSol;
+}
+
 Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCache& cache,
                              const Instance& inst, const NeighborLists& neighborLists,
                              const Stage0Result& partitionInfo,
