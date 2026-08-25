@@ -76,6 +76,32 @@ struct Top3Insertions {
     int count = 0;
 };
 
+// T2-lite (docs/reports/009_plan_beating_filo2.md): per-(i,j)-candidate-pair
+// best-of-9-operators delta cache for local_search, scoped to a single
+// local_search-to-convergence call (see ThreadArena::pairCacheGen below). gen==0
+// means "never computed"; a real computed entry's gen is set to whatever
+// pairCacheGen was at compute time, so it reads as valid only while that
+// generation is still current, and as invalid (without touching the entry
+// itself) the instant pairCacheGen is bumped for the next call. Explicit
+// invalidation (a touched vertex) sets gen to -1, a sentinel distinct from any
+// real generation value (which starts at 1 and only increments).
+//
+// loadRi/loadRj: routeLoad[routeOf[i]] and routeLoad[routeOf[j]] at compute time.
+// Several operators' capacity feasibility depends on OTHER routes' total load (e.g.
+// eval_relocate rejects if routeLoad[r_j]+demand[i]>Q), which can change because a
+// DIFFERENT customer was inserted into/removed from r_i or r_j elsewhere in the
+// route -- a move that never touches i or j directly, so the vertex-based
+// invalidation in invalidate_pair_cache_one() wouldn't catch it. Re-checking these
+// two integers on every cache hit (no dist() calls, routeLoad is always kept exactly
+// current) closes that gap cheaply instead of requiring a much wider, route-scoped
+// invalidation footprint.
+struct PairCacheEntry {
+    Cost delta = 0;
+    Cost loadRi = 0, loadRj = 0;
+    int8_t op = -1;   // same encoding as bestOp in local_search (0..8); meaningless when invalid
+    int32_t gen = 0;
+};
+
 struct alignas(64) ThreadArena {
     std::vector<DoUndoEntry> doList; 
     std::vector<DoUndoEntry> undoList; 
@@ -102,6 +128,16 @@ struct alignas(64) ThreadArena {
     std::vector<int> modified_routes_list;
     int modified_routes_gen = 0;
 
+    // T2-lite pair cache (see PairCacheEntry above). Flat array indexed
+    // nodeId*pairCacheKMax + j_idx; only stage2_ils's main SA loop populates/reads this
+    // (passed as nullptr everywhere else, which local_search/invalidate_svc/apply_*
+    // treat as "caching disabled", their exact pre-T2 behavior). pairCacheGen is bumped
+    // once per SA iteration by stage2_ils, right before calling local_search -- an O(1)
+    // operation that invalidates every entry from the previous iteration for free.
+    std::vector<PairCacheEntry> pairCache;
+    int32_t pairCacheGen = 0;
+    int pairCacheKMax = 0;
+
     // max_routes: upper bound on route ids this arena will ever be indexed by (for
     // top3_i_to_V/route_visited_iter/route_modified_gen/modified_routes_list, all
     // route-indexed). Defaults to max_chunk_size + 100, correct for Stage 2 (Worker.cpp)
@@ -112,8 +148,14 @@ struct alignas(64) ThreadArena {
     // report 005's fix let numRoutes grow past inst.n+100 during a long Stage 3 run (see
     // docs/reports/006_throughput_and_parallelism.md Phase 4.1). Stage 5 shares
     // globalSolution post-Stage-3 and needs the same bound for the same reason.
-    void reserve_fixed_capacity(int max_chunk_size, int max_routes = -1) {
+    void reserve_fixed_capacity(int max_chunk_size, int max_routes = -1, int k_max = 30) {
         if (max_routes < 0) max_routes = max_chunk_size + 100;
+
+        // k_max=30 matches main.cpp's neighborLists.build(inst, 30, P) call -- the only
+        // caller that actually enables the pair cache (stage2_ils) always has k <= this,
+        // since local_granular_lists.k is derived from the same global neighborLists.
+        pairCacheKMax = k_max;
+        pairCache.assign((size_t)(max_chunk_size + 1) * k_max, PairCacheEntry{});
 
         // doList/undoList just log the sequence of edit operations within a single SA
         // iteration (ruin + recreate + local_search cascade) -- that cascade length isn't

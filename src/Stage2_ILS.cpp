@@ -327,13 +327,41 @@ namespace {
         return (Y != 0) ? sol.costToPred[Y] : dist(inst, X, 0);
     }
 
-    void invalidate_svc(SVCCache& cache, NodeId i, NodeId j, NodeId p_i, NodeId s_i, NodeId p_j, NodeId s_j) {
+    // T2-lite pair cache invalidation (see PairCacheEntry, ThreadArena.hpp): for each touched
+    // vertex v, invalidate v's own row (v's context changed, so every cached (v,*) entry is
+    // stale) and every (u, j_idx) entry in reverseIdx[v] (v is one of u's candidates, so u's
+    // cached delta for that specific pair may be stale too -- other entries in u's row are
+    // untouched and stay valid). No-op when pairCache is null (every caller except
+    // stage2_ils's main SA loop passes null, leaving them at their exact pre-T2 behavior).
+    void invalidate_pair_cache_one(PairCacheEntry* pairCache, int k_max,
+                                    const NeighborLists* reverseIdx_lists, NodeId v) {
+        if (!pairCache || v == 0) return;
+        for (int j_idx = 0; j_idx < k_max; ++j_idx) {
+            pairCache[(size_t)v * k_max + j_idx].gen = -1;
+        }
+        if (!reverseIdx_lists) return;
+        for (const auto& pr : reverseIdx_lists->reverseIdx[v]) {
+            NodeId u = pr.first;
+            int j_idx = pr.second;
+            pairCache[(size_t)u * k_max + j_idx].gen = -1;
+        }
+    }
+
+    void invalidate_svc(SVCCache& cache, NodeId i, NodeId j, NodeId p_i, NodeId s_i, NodeId p_j, NodeId s_j,
+                         PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         if (i != 0) cache.insert(i);
         if (j != 0) cache.insert(j);
         if (p_i != 0) cache.insert(p_i);
         if (s_i != 0) cache.insert(s_i);
         if (p_j != 0) cache.insert(p_j);
         if (s_j != 0) cache.insert(s_j);
+
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_j);
     }
 
     // omega: optional per-vertex adaptive ruin-walk length (T4.2, mirrors FILO2's omega
@@ -784,48 +812,54 @@ namespace {
         return ins_i + ins_j - rem_i - rem_j;
     }
 
-    void apply_relocate2(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_relocate2(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                         PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_relocate2";
         NodeId s_i = sol.succ[i];
         NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
-        
+
         remove_customer(sol, s_i, arena, inst);
         remove_customer(sol, i, arena, inst);
-        
+
         insert_customer(sol, i, j, s_j, r_j, arena, inst);
         insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
-        
+
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
-        
-        invalidate_svc(cache, i, j, p_i, s_s_i, j, s_j);
+
+        invalidate_svc(cache, i, j, p_i, s_s_i, j, s_j, pairCache, k_max, reverseIdx_lists);
         cache.insert(s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_i);
     }
 
-    void apply_relocate3(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_relocate3(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                         PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_relocate3";
         NodeId s_i = sol.succ[i], s_s_i = sol.succ[s_i];
         NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
-        
+
         remove_customer(sol, s_s_i, arena, inst);
         remove_customer(sol, s_i, arena, inst);
         remove_customer(sol, i, arena, inst);
-        
+
         insert_customer(sol, i, j, s_j, r_j, arena, inst);
         insert_customer(sol, s_i, i, s_j, r_j, arena, inst);
         insert_customer(sol, s_s_i, s_i, s_j, r_j, arena, inst);
-        
+
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
-        
-        invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j);
+
+        invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j, pairCache, k_max, reverseIdx_lists);
         cache.insert(s_i);
         cache.insert(s_s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_s_i);
     }
 
-    void apply_relocate2_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_relocate2_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                             PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_relocate2_rev";
         NodeId s_i = sol.succ[i];
         NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
@@ -840,11 +874,13 @@ namespace {
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
 
-        invalidate_svc(cache, i, j, p_i, s_s_i, j, s_j);
+        invalidate_svc(cache, i, j, p_i, s_s_i, j, s_j, pairCache, k_max, reverseIdx_lists);
         cache.insert(s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_i);
     }
 
-    void apply_relocate3_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_relocate3_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                             PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_relocate3_rev";
         NodeId s_i = sol.succ[i], s_s_i = sol.succ[s_i];
         NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
@@ -861,12 +897,15 @@ namespace {
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
 
-        invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j);
+        invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j, pairCache, k_max, reverseIdx_lists);
         cache.insert(s_i);
         cache.insert(s_s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_s_i);
     }
 
-    void apply_relocate(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_relocate(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                        PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_relocate";
         NodeId p_i = sol.pred[i], s_i = sol.succ[i], s_j = sol.succ[j];
         int r_i = sol.routeOf[i];
@@ -875,17 +914,18 @@ namespace {
         insert_customer(sol, i, j, s_j, r_j, arena, inst);
         update_route_info(sol, r_i, inst);
         if (r_i != r_j) update_route_info(sol, r_j, inst);
-        invalidate_svc(cache, i, j, p_i, s_i, j, s_j);
+        invalidate_svc(cache, i, j, p_i, s_i, j, s_j, pairCache, k_max, reverseIdx_lists);
     }
-    
-    void apply_swap(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+
+    void apply_swap(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                    PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_swap";
         NodeId p_i = sol.pred[i], s_i = sol.succ[i], p_j = sol.pred[j], s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
-        
+
         remove_customer(sol, i, arena, inst);
         remove_customer(sol, j, arena, inst);
-        
+
         if (s_i == j) {
             insert_customer(sol, j, p_i, s_j, r_i, arena, inst);
             insert_customer(sol, i, j, s_j, r_j, arena, inst);
@@ -898,12 +938,13 @@ namespace {
         }
         update_route_info(sol, r_i, inst);
         if (r_i != r_j) update_route_info(sol, r_j, inst);
-        invalidate_svc(cache, i, j, p_i, s_i, p_j, s_j);
+        invalidate_svc(cache, i, j, p_i, s_i, p_j, s_j, pairCache, k_max, reverseIdx_lists);
     }
 
-    void apply_2opt(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_2opt(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                    PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         if (!is_before(sol, i, j)) std::swap(i, j);
-        
+
         std::vector<NodeId> seg;
         NodeId curr = sol.succ[i];
         int loops = 0;
@@ -936,12 +977,16 @@ namespace {
             insert_customer(sol, v, insert_after, s, route, arena, inst);
             insert_after = v;
             cache.insert(v);
+            invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, v);
         }
         update_route_info(sol, route, inst);
         cache.insert(i); cache.insert(j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, j);
     }
 
-    void apply_2opt_star(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+    void apply_2opt_star(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                         PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_2opt_star";
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
         
@@ -978,41 +1023,51 @@ namespace {
             NodeId s = sol.succ[insert_after];
             insert_customer(sol, v, insert_after, s, r_j, arena, inst);
             insert_after = v; cache.insert(v);
+            invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, v);
         }
-        
+
         insert_after = i;
         for (NodeId v : tail_j) {
             NodeId s = sol.succ[insert_after];
             insert_customer(sol, v, insert_after, s, r_i, arena, inst);
             insert_after = v; cache.insert(v);
+            invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, v);
         }
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
         cache.insert(i); cache.insert(j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, j);
     }
-    
-    void apply_swap_star(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, 
-                         NodeId p_i, NodeId s_i, NodeId p_j, NodeId s_j, SVCCache& cache) {
+
+    void apply_swap_star(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j,
+                         NodeId p_i, NodeId s_i, NodeId p_j, NodeId s_j, SVCCache& cache,
+                         PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         current_op = "apply_swap_star";
         NodeId orig_p_i = sol.pred[i], orig_s_i = sol.succ[i];
         NodeId orig_p_j = sol.pred[j], orig_s_j = sol.succ[j];
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
-        
+
         remove_customer(sol, i, arena, inst);
         remove_customer(sol, j, arena, inst);
-        
+
         insert_customer(sol, i, p_i, s_i, r_j, arena, inst);
         insert_customer(sol, j, p_j, s_j, r_i, arena, inst);
-        
+
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
-        
-        invalidate_svc(cache, i, j, orig_p_i, orig_s_i, orig_p_j, orig_s_j);
+
+        invalidate_svc(cache, i, j, orig_p_i, orig_s_i, orig_p_j, orig_s_j, pairCache, k_max, reverseIdx_lists);
         cache.insert(p_i); cache.insert(s_i);
         cache.insert(p_j); cache.insert(s_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_j);
     }
 
-    bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr) {
+    bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr,
+                      PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         bool improved = false;
         int ls_iter = 0;
         
@@ -1072,46 +1127,75 @@ namespace {
                     int c_r_j = (*routeToChunk)[r_j];
                     if (c_r_j != t1 && c_r_j != t2) continue;
                 }
-                
-                Cost delta_relocate = eval_relocate(sol, inst, i, j);
-                if (delta_relocate < bestDelta) { bestDelta = delta_relocate; bestOp = 0; best_j = j; }
-                
-                Cost delta_relocate2 = eval_relocate2(sol, inst, i, j);
-                if (delta_relocate2 < bestDelta) { bestDelta = delta_relocate2; bestOp = 5; best_j = j; }
-                
-                Cost delta_relocate3 = eval_relocate3(sol, inst, i, j);
-                if (delta_relocate3 < bestDelta) { bestDelta = delta_relocate3; bestOp = 6; best_j = j; }
 
-                Cost delta_relocate2_rev = eval_relocate2_rev(sol, inst, i, j);
-                if (delta_relocate2_rev < bestDelta) { bestDelta = delta_relocate2_rev; bestOp = 7; best_j = j; }
+                Cost pairDelta;
+                int pairOp;
 
-                Cost delta_relocate3_rev = eval_relocate3_rev(sol, inst, i, j);
-                if (delta_relocate3_rev < bestDelta) { bestDelta = delta_relocate3_rev; bestOp = 8; best_j = j; }
+                // T2-lite (docs/reports/009_plan_beating_filo2.md, ThreadArena.hpp
+                // PairCacheEntry): reuse the cached best-of-9-operators result for this exact
+                // (i,j) pair if it's still valid, instead of redoing all 9 eval_* calls. Only
+                // stage2_ils's main SA loop passes a non-null pairCache; every other caller
+                // (stage3/5/routemin) takes the pairCache==nullptr branch below unconditionally,
+                // i.e. their behavior is byte-for-byte what it was before T2-lite.
+                PairCacheEntry* slot = pairCache ? &pairCache[(size_t)i * k_max + j_idx] : nullptr;
+                if (slot && slot->gen == arena.pairCacheGen &&
+                    slot->loadRi == sol.routeLoad[r_i] && slot->loadRj == sol.routeLoad[r_j]) {
+                    pairDelta = slot->delta;
+                    pairOp = slot->op;
+                } else {
+                    pairDelta = 0;
+                    pairOp = -1;
 
-                Cost delta_swap = eval_swap(sol, inst, i, j);
-                if (delta_swap < bestDelta) { bestDelta = delta_swap; bestOp = 1; best_j = j; }
-                
-                Cost delta_2opt = eval_2opt(sol, inst, i, j);
-                if (delta_2opt < bestDelta) { bestDelta = delta_2opt; bestOp = 2; best_j = j; }
-                
-                Cost delta_2opt_star = eval_2opt_star(sol, inst, i, j);
-                if (delta_2opt_star < bestDelta) { bestDelta = delta_2opt_star; bestOp = 3; best_j = j; }
-                
-                NodeId p_i, s_i, p_j, s_j;
-                Cost delta_swap_star = 0;
-                // top3_i_to_V is route-indexed (ThreadArena.hpp) -- see the identical guard
-                // and comment on the precompute loop above (Phase 4.1).
-                if (r_i != r_j && r_j < (int)arena.top3_i_to_V.size()) {
-                    // Capacity short-circuit BEFORE distance lookups
-                    if (sol.routeLoad[r_i] - inst.demand[i] + inst.demand[j] <= inst.Q &&
-                        sol.routeLoad[r_j] - inst.demand[j] + inst.demand[i] <= inst.Q) {
-                        delta_swap_star = eval_swap_star_fast(sol, inst, i, j, arena.top3_i_to_V[r_j], arena.top3_j_to_U[j], p_i, s_i, p_j, s_j);
-                        if (delta_swap_star < bestDelta) { 
-                            bestDelta = delta_swap_star; bestOp = 4; best_j = j; 
-                            best_p_i = p_i; best_s_i = s_i; best_p_j = p_j; best_s_j = s_j;
+                    Cost delta_relocate = eval_relocate(sol, inst, i, j);
+                    if (delta_relocate < pairDelta) { pairDelta = delta_relocate; pairOp = 0; }
+
+                    Cost delta_relocate2 = eval_relocate2(sol, inst, i, j);
+                    if (delta_relocate2 < pairDelta) { pairDelta = delta_relocate2; pairOp = 5; }
+
+                    Cost delta_relocate3 = eval_relocate3(sol, inst, i, j);
+                    if (delta_relocate3 < pairDelta) { pairDelta = delta_relocate3; pairOp = 6; }
+
+                    Cost delta_relocate2_rev = eval_relocate2_rev(sol, inst, i, j);
+                    if (delta_relocate2_rev < pairDelta) { pairDelta = delta_relocate2_rev; pairOp = 7; }
+
+                    Cost delta_relocate3_rev = eval_relocate3_rev(sol, inst, i, j);
+                    if (delta_relocate3_rev < pairDelta) { pairDelta = delta_relocate3_rev; pairOp = 8; }
+
+                    Cost delta_swap = eval_swap(sol, inst, i, j);
+                    if (delta_swap < pairDelta) { pairDelta = delta_swap; pairOp = 1; }
+
+                    Cost delta_2opt = eval_2opt(sol, inst, i, j);
+                    if (delta_2opt < pairDelta) { pairDelta = delta_2opt; pairOp = 2; }
+
+                    Cost delta_2opt_star = eval_2opt_star(sol, inst, i, j);
+                    if (delta_2opt_star < pairDelta) { pairDelta = delta_2opt_star; pairOp = 3; }
+
+                    // top3_i_to_V is route-indexed (ThreadArena.hpp) -- see the identical guard
+                    // and comment on the precompute loop above (Phase 4.1).
+                    if (r_i != r_j && r_j < (int)arena.top3_i_to_V.size()) {
+                        // Capacity short-circuit BEFORE distance lookups
+                        if (sol.routeLoad[r_i] - inst.demand[i] + inst.demand[j] <= inst.Q &&
+                            sol.routeLoad[r_j] - inst.demand[j] + inst.demand[i] <= inst.Q) {
+                            NodeId p_i, s_i, p_j, s_j;
+                            Cost delta_swap_star = eval_swap_star_fast(sol, inst, i, j, arena.top3_i_to_V[r_j], arena.top3_j_to_U[j], p_i, s_i, p_j, s_j);
+                            if (delta_swap_star < pairDelta) { pairDelta = delta_swap_star; pairOp = 4; }
                         }
                     }
+
+                    if (slot) {
+                        slot->delta = pairDelta;
+                        slot->op = (int8_t)pairOp;
+                        slot->gen = arena.pairCacheGen;
+                        slot->loadRi = sol.routeLoad[r_i];
+                        slot->loadRj = sol.routeLoad[r_j];
+                    }
                 }
+
+                // swap_star's p_i/s_i/p_j/s_j are never cached (see PairCacheEntry comment) --
+                // when pairOp==4 ends up chosen as the overall best move below, the existing
+                // verify-inside-lock step (unchanged) recomputes them fresh via eval_swap_star
+                // before applying, exactly as it already did before T2-lite.
+                if (pairDelta < bestDelta) { bestDelta = pairDelta; bestOp = pairOp; best_j = j; }
             }
             
             if (bestDelta < -1e-6) {
@@ -1133,15 +1217,15 @@ namespace {
                     int old_r_i = sol.routeOf[i];
                     int old_r_j = best_j != 0 ? sol.routeOf[best_j] : -1;
 
-                    if (bestOp == 0) apply_relocate(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 1) apply_swap(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 2) apply_2opt(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 3) apply_2opt_star(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 4) apply_swap_star(sol, arena, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j, cache);
-                    else if (bestOp == 5) apply_relocate2(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 6) apply_relocate3(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 7) apply_relocate2_rev(sol, arena, inst, i, best_j, cache);
-                    else if (bestOp == 8) apply_relocate3_rev(sol, arena, inst, i, best_j, cache);
+                    if (bestOp == 0) apply_relocate(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 1) apply_swap(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 2) apply_2opt(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 3) apply_2opt_star(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 4) apply_swap_star(sol, arena, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 5) apply_relocate2(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 6) apply_relocate3(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 7) apply_relocate2_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 8) apply_relocate3_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
 
                     if (old_r_i != -1) update_route_info(sol, old_r_i, inst);
                     if (old_r_j != -1 && old_r_j != old_r_i) update_route_info(sol, old_r_j, inst);
@@ -1230,6 +1314,21 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
             }
         }
     }
+    // T2-lite (docs/reports/009_plan_beating_filo2.md) -- disabled. Measured net-negative on
+    // VDA: 68837/96331 iterations vs 93928/142751 without it (same 40s budget) -- the pair
+    // cache itself was verified exactly correctness-neutral (byte-identical cost vs. the
+    // uncached path on repeat runs), but a dist()-call-count comparison showed it doesn't
+    // reduce dist() calls/iteration at all (~85k/67k either way), meaning the caching
+    // overhead (generation checks, routeLoad snapshot comparisons, reverse-index invalidation
+    // walks) is pure loss. Root cause: Step 1 above (get_top3_insertions, SWAP*'s route-walk
+    // precompute) is the actual dominant cost, not the Step 2 9-operator evals this cache
+    // targets -- Step 1 is NOT cached by this design at all. A follow-up would need to extend
+    // caching to Step 1 (a differently-shaped, node x route cache, not node x candidate-idx)
+    // to have a chance of paying off. Implementation left in place (verified correct) behind
+    // this flag rather than deleted.
+    constexpr bool kEnablePairCache = false;
+    if (kEnablePairCache) local_granular_lists.build_reverse_index();
+    int pair_cache_k_max = arena.pairCacheKMax;
 
     // Instance-scaled T0 (was a hardcoded 100.0 regardless of instance -- fine at N=2,000's
     // small coordinate range but ~11x too cold at Valle-D-Aosta and ~32x too cold at Lazio,
@@ -1299,6 +1398,10 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
         arena.doCount = 0;
         arena.undoCount = 0;
         arena.pendingDelta = 0;
+        // T2-lite: bumping this (O(1)) invalidates every pair-cache entry left over from the
+        // previous SA iteration's local_search-to-convergence cascade, without touching the
+        // array itself -- see PairCacheEntry's comment in ThreadArena.hpp.
+        arena.pairCacheGen++;
 
         int prevNumRoutes = sol.numRoutes;
 
@@ -1334,7 +1437,20 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
 
         bool local_search_improved = true;
         while(local_search_improved) {
-            local_search_improved = local_search(sol, arena, cache, inst, local_granular_lists, chunkSize);
+            // pair_cache_k_max guard: only pass the cache if the arena's fixed-size array is
+            // actually large enough for this chunk's k -- pairCache is indexed
+            // nodeId*pairCacheKMax+j_idx, so k > pairCacheKMax would write out of bounds.
+            // Falls back to nullptr (T2-lite's exact pre-existing uncached behavior) rather
+            // than risk that; in practice local_granular_lists.k always matches the 30 both
+            // are built with (main.cpp's neighborLists.build call / reserve_fixed_capacity's
+            // default), so this should never actually trigger.
+            if (kEnablePairCache && local_granular_lists.k <= pair_cache_k_max) {
+                local_search_improved = local_search(sol, arena, cache, inst, local_granular_lists, chunkSize,
+                                                      nullptr, -1, -1, nullptr,
+                                                      arena.pairCache.data(), pair_cache_k_max, &local_granular_lists);
+            } else {
+                local_search_improved = local_search(sol, arena, cache, inst, local_granular_lists, chunkSize);
+            }
         }
 
         Cost delta = arena.pendingDelta;

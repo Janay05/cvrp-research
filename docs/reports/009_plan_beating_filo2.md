@@ -278,6 +278,62 @@ when T2 exists.
 **Net Stage 1-3 result on VDA: unchanged from T1-only (mean cost 22,003,614,
 gap ~1.21%)** — T3 contributed nothing net-positive in this architecture.
 
-**Next up: T2 (SMD rewrite)** is now the load-bearing item — it's the only
-remaining lever that attacks the root cause (103,000 dist() calls/iteration)
-directly, and both T3 and T4.1 are explicitly gated on it existing first.
+**T2 ("T2-lite"): implemented, verified correctness-neutral, disabled —
+targeted the wrong hot spot.** Full FILO2-faithful SMD (separate heap per
+operator, i-side/j-side algebraic delta factoring, cache persisted across the
+whole SA run with do/undo-list integration) was scoped down, by agreement, to
+a smaller, lower-risk subset: a per-(i,j)-candidate-pair delta cache
+(`PairCacheEntry` in `ThreadArena.hpp`) for `local_search`'s Step 2 (the
+9-operator × k-neighbor eval sweep the plan's root-cause section identified),
+scoped to a single `local_search`-to-convergence call so it never has to
+interact with `apply_undo_list`'s rollback. Generation-stamped (an established
+idiom already used by `rescan_touched_routes` in this file) for O(1)
+invalidation on a new call, plus a reverse-index-driven per-entry invalidation
+(`NeighborLists::reverseIdx`) when a touched vertex is any node's cached
+candidate. A real correctness gap was caught and fixed *before* it shipped:
+capacity checks depend on `routeLoad[r_i]`/`routeLoad[r_j]`, which can change
+from a move that touches neither `i` nor `j` (some other customer added to
+the same route elsewhere) — closed by snapshotting both route loads in the
+cache entry and re-checking them on every hit.
+
+Correctness: verified exactly — byte-identical final cost vs. the uncached
+baseline on repeat runs at a fixed seed (74832 on X-n1001-k43, 56421 on
+test_2000), feasible at Lazio scale (`-p 4`, 40,446 routes, cost matches
+independently-recomputed). This is strong evidence the caching logic itself
+is sound.
+
+Performance: **net negative**, for a different reason than T3/T4.2. A
+dist()-call-count comparison (`-DPROFILE_DIST`) showed cached vs. uncached
+gave essentially the same dist() calls/iteration (~85k/67k either way) — the
+cache wasn't reducing work at all. Root cause: Step 1 (`get_top3_insertions`,
+the SWAP* precompute that walks a candidate route's *entire* customer list)
+is the actual dominant cost, not the Step 2 evals this cache targets, and
+Step 1 was never cached by this design. With no work actually saved, the
+caching overhead (generation checks, routeLoad snapshot comparisons,
+reverse-index invalidation walks on every applied move) was pure loss: VDA
+iteration throughput dropped to 68,837/96,331 vs. 93,928/142,751 without it
+(same 40s budget, T3 already disabled in both). Disabled via `constexpr bool
+kEnablePairCache = false` in `stage2_ils` (`Stage2_ILS.cpp`), implementation
+left in place and Lazio-verified-safe for a follow-up.
+
+**A real full T2 would need to target Step 1, not Step 2** — a
+`(customer × route)`-shaped cache (not `(customer × candidate-index)`),
+substantially larger and differently invalidated, closer in spirit to
+FILO2's actual per-operator SMD heaps than what was tried here. That's a
+bigger, separate undertaking, not a small follow-up to this attempt.
+
+**Net Stage 1-4 result on VDA: unchanged from T1-only (mean cost 22,003,614,
+gap ~1.21%)** — three of four attempted levers (T3, T4.2, T2-lite) were
+implemented correctly, verified safe, and found net-negative or neutral in
+this specific architecture; only T1 (throughput) and T0.1-T0.3 delivered a
+measurable, kept win. The honest state of the program: cost gap to FILO2 is
+essentially where T0.4 found it, and every attempted lever beyond raw
+throughput has run into the same wall — our 9-operator local_search is
+meaningfully weaker than FILO2's ~22-operator one, and cost-side techniques
+(ROUTEMIN, adaptive shaking, pair caching) all depend on search quality/speed
+this architecture doesn't have yet. The remaining honest options are: (a) a
+real Step-1-targeted T2 (large, high-risk), (b) T5.2 (add the missing
+operator types outright, cheaper than a full SMD rewrite and directly
+addresses the "weaker local_search" root cause), or (c) accept the
+throughput-only result as the deliverable and pursue Stage 6's parallel
+architecture options for a time-side win instead.
