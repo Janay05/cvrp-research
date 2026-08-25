@@ -365,3 +365,43 @@ recommended, not yet attempted. Given E21/E22's gain was real but modest,
 each additional operator should be expected to add a similarly small,
 diminishing increment (matches the plan's own "0.1-0.2% total, diminishing"
 estimate for the full missing set).
+
+**Stage 6-C (parallel multi-start portfolio): implemented, real gain,
+essentially free on wall-clock — the best result of the whole program after
+T1.** Added `--out`/`--log` CLI flags to `main.cpp` so independent solver
+processes can run concurrently without racing on `results/final_solution.txt`
+(`tools/multistart.sh` launches N instances as separate OS processes, each
+its own seed, waits for all, keeps the lowest-cost result). No solver code
+touched — genuinely embarrassingly parallel, exactly as the plan predicted.
+
+VDA, 12 concurrent starts (p=2 each, seeds 1-12, same time budgets as every
+other VDA bench this session) on the dev machine's 28 cores: **wall clock
+101.9s — indistinguishable from a single solve.** Best-of-12 cost
+**21,966,881**, feasible and verified. That drops the gap-to-FILO2-at-equal-
+time from **1.20% (T5.2 single-start mean) to 1.04%** — a bigger single-step
+improvement than T3, T4.2, T2-lite, and T5.2 combined, for zero additional
+wall-clock cost and zero new correctness surface. Results:
+`results/bench/stage6c_multistart_vda/results.txt`.
+
+**Lazio-scale multi-start is not viable on this dev machine** — tried N=7
+(p=4 each) and then N=2 (p=4 each); both crashed the WSL VM outright (not a
+graceful OOM — the whole VM restarted, twice). Root cause: each process
+builds a full neighbor-list structure for Lazio's ~1M customers, including a
+k=100 Stage-5 list (`main.cpp`'s `stage5_neighborLists.build(inst, 100, P)`),
+and even 2 concurrent instances exceed the machine's 7.6GB budget at peak
+(construction-phase allocations spike higher than steady-state usage, which
+is why N=2 looked fine watching `free -h` right up until it wasn't). This is
+a hardware/memory-budget constraint on this specific dev machine, not a flaw
+in the approach — it would need either more RAM, fewer concurrent starts, or
+reducing each instance's peak memory footprint (e.g. a smaller Stage-5 k) to
+extend Stage 6-C to Lazio-scale instances. VDA-scale instances (and
+presumably anything meaningfully smaller than Lazio) are unaffected.
+
+**Recommendation given everything this session found**: Stage 6-C is the
+strongest remaining lever and should be the default way this solver is run
+whenever spare cores are available (which, on the actual eventual deployment
+hardware, may well include Lazio-scale instances even if not on this dev
+machine). It directly delivers on this plan's own §2 reframing: "match FILO2 on cost,
+decisively faster on wall-clock" — with a 1.04% gap and P x N-way
+parallelism against FILO2's single core and single start, that framing is
+now backed by a concrete number.

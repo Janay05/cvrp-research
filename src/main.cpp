@@ -51,14 +51,15 @@ int main(int argc, char** argv) {
     _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
     _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
 #endif
-    std::ofstream logFile("results/run_log.txt");
-    if (!logFile) {
-        std::cerr << "Failed to open results/run_log.txt" << std::endl;
-        return 1;
-    }
-
     int P = 4; // number of chunks
     std::string inputFile;
+    // Stage 6-C (docs/reports/009_plan_beating_filo2.md): multi-start portfolio runs several
+    // instances of this binary concurrently as separate OS processes (see
+    // tools/multistart.sh) -- --out/--log let each instance write to its own file instead of
+    // all of them racing to overwrite the same results/final_solution.txt and
+    // results/run_log.txt. Defaults preserve single-instance behavior exactly.
+    std::string outPath = "results/final_solution.txt";
+    std::string logPath = "results/run_log.txt";
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "-p" && i + 1 < argc) {
@@ -79,9 +80,19 @@ int main(int argc, char** argv) {
             g_seed = std::stoi(argv[++i]);
         } else if (arg == "--routemin-iters" && i + 1 < argc) {
             g_routemin_iterations = std::stoi(argv[++i]);
+        } else if (arg == "--out" && i + 1 < argc) {
+            outPath = argv[++i];
+        } else if (arg == "--log" && i + 1 < argc) {
+            logPath = argv[++i];
         } else if (arg[0] != '-') {
             inputFile = arg;
         }
+    }
+
+    std::ofstream logFile(logPath);
+    if (!logFile) {
+        std::cerr << "Failed to open " << logPath << std::endl;
+        return 1;
     }
 
     std::cout << "Starting CVRP Parallel..." << std::endl;
@@ -265,7 +276,7 @@ int main(int argc, char** argv) {
         if (globalSolution.routeHead[r] != 0) liveRouteCount++;
     }
 
-    std::ofstream solFile("results/final_solution.txt");
+    std::ofstream solFile(outPath);
     solFile << "Final Cost: " << globalSolution.totalCost << "\n";
     solFile << "Num Routes: " << liveRouteCount << "\n";
     for (int r = 0; r < globalSolution.numRoutes; ++r) {

@@ -1,0 +1,22 @@
+Stage 6-C multi-start portfolio, Valle-D-Aosta, 12 concurrent starts (p=2 each), seeds 1-12
+Config: --stage2-ms 40000 --stage3-ms 1000 --stage5-ms 60000 (same as single-start VDA bench)
+Wall clock: 101.9s (same as a single solve -- 12 processes ran fully concurrently on 28 cores)
+
+  seed 1:  22017763
+  seed 2:  21993957
+  seed 3:  21972585
+  seed 4:  22026854
+  seed 5:  21975451
+  seed 6:  21970393
+  seed 7:  21991274
+  seed 8:  22022160
+  seed 9:  21978889
+  seed 10: 21966881  <- best
+  seed 11: 22030956
+  seed 12: 21989125
+
+Best-of-12: 21,966,881 (feasible, verified)
+Single-start mean (T5.2/E21+E22 baseline, 5 seeds): 22,000,544
+FILO2 equal-time (102s, 5 seeds): 21,740,517
+
+Gap vs FILO2: best-of-12 = 1.041%  (down from 1.196% at single-start mean)
