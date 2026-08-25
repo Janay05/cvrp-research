@@ -196,10 +196,10 @@ int main(int argc, char** argv) {
         true_cost += dist(inst, p, 0);
     }
     globalSolution.totalCost = true_cost;
-    
+
     std::cout << "Running Stage 4 Cleanup..." << std::endl;
     // Stage 4 Cleanup
-    
+
     std::cout << "Running Stage 5 Polish..." << std::endl;
     logFile << "Running Stage 5 Polish..." << std::endl;
     ThreadArena globalArena;

@@ -9,6 +9,17 @@ struct DoUndoEntry {
     NodeId newPred, newSucc; // state after the change (for do)
     int prevRoute, newRoute;
     Cost costDelta; // signed change to totalCost from this single edit
+    // costToPred snapshot for undo (T1, see Solution.hpp): the caller (remove_customer/
+    // insert_customer) already computes these dist() values while building costDelta, so
+    // stashing them here lets apply_undo_list restore costToPred on rollback without any
+    // extra dist() calls -- the whole point of caching it. Meaning depends on type:
+    //  - type==INSERT (an undo entry for an original REMOVE): undoCostC/undoCostS are the
+    //    customer's and its old successor's costToPred as they were *before* the removal --
+    //    exactly what re-inserting on undo must restore.
+    //  - type==REMOVE (an undo entry for an original INSERT): undoCostS is the successor's
+    //    costToPred as it was *before* the insertion (i.e. dist(p, s)) -- what removing on
+    //    undo must restore. undoCostC is unused (the customer is leaving the route).
+    Cost undoCostC = 0, undoCostS = 0;
 };
 
 struct SVCCache {

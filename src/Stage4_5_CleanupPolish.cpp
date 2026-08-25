@@ -57,24 +57,33 @@ void stage4_route_cleanup(Solution& globalSolution, const Instance& inst, const 
                 
                 NodeId orig_p = globalSolution.pred[c];
                 NodeId orig_s = globalSolution.succ[c];
-                Cost rem_cost = dist(inst, orig_p, c) + dist(inst, c, orig_s) - dist(inst, orig_p, orig_s);
-                
+                Cost orig_p_orig_s = dist(inst, orig_p, orig_s);
+                Cost rem_cost = dist(inst, orig_p, c) + dist(inst, c, orig_s) - orig_p_orig_s;
+
                 if (best_route != -1 && best_delta - rem_cost < 1e-6) {
                     globalSolution.succ[orig_p] = orig_s;
                     globalSolution.pred[orig_s] = orig_p;
+                    // T1 (Solution.hpp): this function mutates pred/succ directly instead of
+                    // going through remove_customer/insert_customer, so it must maintain
+                    // costToPred itself -- orig_p_orig_s is the edge orig_s's pred now points
+                    // to. costToPred[0] (depot) is never tracked, see curEdgeCost's comment
+                    // in Stage2_ILS.cpp.
+                    if (orig_s != 0) globalSolution.costToPred[orig_s] = orig_p_orig_s;
                     if (orig_p == 0) globalSolution.routeHead[r] = orig_s;
                     if (orig_s == 0) globalSolution.routeTail[r] = orig_p;
                     globalSolution.routeLoad[r] -= inst.demand[c];
                     globalSolution.totalCost -= rem_cost;
-                    
+
                     globalSolution.pred[c] = best_p;
                     globalSolution.succ[c] = best_s;
                     globalSolution.succ[best_p] = c;
                     globalSolution.pred[best_s] = c;
+                    globalSolution.costToPred[c] = dist(inst, best_p, c);
+                    if (best_s != 0) globalSolution.costToPred[best_s] = dist(inst, c, best_s);
                     if (best_p == 0) globalSolution.routeHead[best_route] = c;
                     if (best_s == 0) globalSolution.routeTail[best_route] = c;
                     globalSolution.routeLoad[best_route] += inst.demand[c];
-                    
+
                     globalSolution.routeOf[c] = best_route;
                     globalSolution.totalCost += best_delta;
                 }

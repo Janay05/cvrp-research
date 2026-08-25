@@ -23,6 +23,7 @@ void merge_all_chunks_into_global(Solution& globalSolution,
     globalSolution.routeOf.assign(n + 1, -1);
     globalSolution.routePosition.assign(n + 1, 0);
     globalSolution.cumLoad.assign(n + 1, 0);
+    globalSolution.costToPred.assign(n + 1, 0);
     globalSolution.totalCost = 0;
     globalSolution.numRoutes = 0;
     
@@ -62,6 +63,7 @@ void merge_all_chunks_into_global(Solution& globalSolution,
             globalSolution.routePosition[curr] = pos++;
             current_load += inst.demand[curr];
             globalSolution.cumLoad[curr] = current_load;
+            globalSolution.costToPred[curr] = dist(inst, globalSolution.pred[curr], curr);
             curr = globalSolution.succ[curr];
         }
         globalSolution.routeLoad[r] = current_load; // Recompute to be absolutely safe
