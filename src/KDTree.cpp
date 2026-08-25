@@ -108,6 +108,7 @@ void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads
     if (num_threads <= 1 || inst.n < 1000) {
         // Small instances: thread setup overhead isn't worth it.
         knn_query_range(inst, tree, k, 0, inst.n + 1, nbr);
+        symmetrize(inst, k);
         return;
     }
 
@@ -120,4 +121,33 @@ void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads
         threads.emplace_back(knn_query_range, std::cref(inst), std::cref(tree), k, lo, hi, std::ref(nbr));
     }
     for (auto& th : threads) th.join();
+
+    symmetrize(inst, k);
+}
+
+// kNN as computed above is asymmetric: j in nbr[i] does not imply i in nbr[j].
+// For each i, offer i as a candidate to every j in nbr[i] that doesn't already have it,
+// then re-sort each affected list by distance and truncate back to k. This keeps list
+// sizes and the existing min(size(), k) call-site convention unchanged, while letting
+// genuinely close symmetric pairs unseat a farther one-directional neighbor.
+void NeighborLists::symmetrize(const Instance& inst, int k_neighbors) {
+    int n1 = inst.n + 1;
+    std::vector<std::vector<NodeId>> extra(n1);
+    for (int i = 0; i < n1; ++i) {
+        for (NodeId j : nbr[i]) {
+            bool present = false;
+            for (NodeId x : nbr[j]) {
+                if (x == i) { present = true; break; }
+            }
+            if (!present) extra[j].push_back(i);
+        }
+    }
+    for (int j = 0; j < n1; ++j) {
+        if (extra[j].empty()) continue;
+        nbr[j].insert(nbr[j].end(), extra[j].begin(), extra[j].end());
+        std::sort(nbr[j].begin(), nbr[j].end(), [&](NodeId a, NodeId b) {
+            return dist(inst, j, a) < dist(inst, j, b);
+        });
+        if ((int)nbr[j].size() > k_neighbors) nbr[j].resize(k_neighbors);
+    }
 }

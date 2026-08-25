@@ -19,7 +19,9 @@ extern thread_local long long thread_dist_calls;
 extern std::atomic<long long> global_dist_calls;
 
 inline Cost dist(const Instance& inst, NodeId a, NodeId b) {
+#ifdef PROFILE_DIST
     thread_dist_calls++;
+#endif
     double dx = (double)(inst.x[a] - inst.x[b]);
     double dy = (double)(inst.y[a] - inst.y[b]);
     return (Cost) std::llround(std::sqrt(dx*dx + dy*dy));

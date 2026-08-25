@@ -149,6 +149,7 @@ Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result&
     sol.routeLoad.resize(best_routes.size());
     sol.routePosition.assign(inst.n + 1, 0);
     sol.cumLoad.assign(inst.n + 1, 0);
+    sol.costToPred.assign(inst.n + 1, 0);
     sol.numRoutes = best_routes.size();
     sol.totalCost = best_cost;
 
@@ -177,9 +178,11 @@ Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result&
 
             if (i > 0) sol.pred[c] = globalIds[route[i-1]];
             else sol.pred[c] = 0;
-            
+
             if (i < route.size() - 1) sol.succ[c] = globalIds[route[i+1]];
             else sol.succ[c] = 0;
+
+            sol.costToPred[c] = dist(inst, sol.pred[c], c);
         }
         sol.routeLoad[r] = load;
     }

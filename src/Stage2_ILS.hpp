@@ -17,4 +17,3 @@ void stage2_ils(Solution& sol, ThreadArena& arena, const Instance& inst,
 void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const Instance& inst, const NeighborLists& neighborLists, double avgArcCostEstimate);
 
 void update_route_info(Solution& sol, int route, const Instance& inst);
-void stage5_fleet_minimization(Solution& sol, ThreadArena& arena, const Instance& inst, const NeighborLists& granular_lists, double avgArcCostEstimate);

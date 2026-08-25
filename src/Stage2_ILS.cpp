@@ -84,6 +84,10 @@ namespace {
                 load += inst.demand[curr];
                 sol.cumLoad[curr] = load;
                 sol.routePosition[curr] = pos++;
+                // T1: costToPred is dropped by snapshot_essential just like cumLoad/
+                // routePosition (same rationale -- it's a pure function of pred/succ), so
+                // regenerate it here too.
+                sol.costToPred[curr] = dist(inst, sol.pred[curr], curr);
                 curr = sol.succ[curr];
             }
             sol.routeLoad[r] = load;
@@ -133,8 +137,21 @@ namespace {
         undo_entry.newPred = p; undo_entry.newSucc = s;
         undo_entry.prevRoute = sol.routeOf[c]; undo_entry.newRoute = sol.routeOf[c];
         
-        Cost delta = dist(inst, p, s) - dist(inst, p, c) - dist(inst, c, s);
+        // T1 (docs/reports/009_plan_beating_filo2.md): dist(p,c) and dist(c,s) are both
+        // *existing* edges, already sitting in costToPred[c]/[s] from whatever previously
+        // made c's neighbors what they are -- no need to recompute them. Only dist(p,s), the
+        // edge this removal newly creates, is genuinely new. costToPred[0] (the depot slot)
+        // is never maintained (see Solution.hpp), so s==0 (c was the route tail) still needs
+        // a real dist() call for costCS.
+        Cost costPC = sol.costToPred[c];
+        Cost costCS = (s != 0) ? sol.costToPred[s] : dist(inst, c, 0);
+        Cost costPS = dist(inst, p, s);
+        Cost delta = costPS - costPC - costCS;
         undo_entry.costDelta = -delta;
+        // Stash the pre-removal costToPred[c]/[s] so undo can restore them with no extra
+        // dist() calls -- see the DoUndoEntry comment in ThreadArena.hpp.
+        undo_entry.undoCostC = costPC;
+        undo_entry.undoCostS = costCS;
         // Bounds-checked: doList/undoList are sized generously (up to 500,000 entries,
         // ThreadArena.hpp) but not unboundedly, and a corrupted/cyclic route (e.g. via the
         // stale-routePosition failure mode Phase 1.2 fixes) could otherwise drive an
@@ -165,8 +182,9 @@ namespace {
 
         sol.succ[p] = s;
         sol.pred[s] = p;
+        if (s != 0) sol.costToPred[s] = costPS;
         sol.routeLoad[sol.routeOf[c]] -= inst.demand[c];
-        
+
         if (p == 0) sol.routeHead[sol.routeOf[c]] = s;
         if (s == 0) sol.routeTail[sol.routeOf[c]] = p;
         
@@ -182,8 +200,18 @@ namespace {
         undo_entry.newPred = p; undo_entry.newSucc = s;
         undo_entry.prevRoute = route; undo_entry.newRoute = -1;
         
-        Cost delta = dist(inst, p, c) + dist(inst, c, s) - dist(inst, p, s);
+        // T1: dist(p,s) is the *existing* edge being split by this insertion -- already
+        // cached in costToPred[s] (invariant: s's pred is p right up until the mutation
+        // below). dist(p,c) and dist(c,s) are new edges the insertion creates.
+        Cost costPS = (s != 0) ? sol.costToPred[s] : dist(inst, p, 0);
+        Cost costPC = dist(inst, p, c);
+        Cost costCS = dist(inst, c, s);
+        Cost delta = costPC + costCS - costPS;
         undo_entry.costDelta = -delta;
+        // Restore target for undo (a later remove of c must put costToPred[s] back to
+        // costPS) -- see the DoUndoEntry comment in ThreadArena.hpp. undoCostC is unused for
+        // REMOVE-type entries (c leaves the route on undo, so its costToPred is moot).
+        undo_entry.undoCostS = costPS;
         if (arena.undoCount < (int)arena.undoList.size()) {
             arena.undoList[arena.undoCount++] = undo_entry;
         } else {
@@ -208,6 +236,8 @@ namespace {
         sol.pred[c] = p;
         sol.succ[c] = s;
         sol.pred[s] = c;
+        sol.costToPred[c] = costPC;
+        if (s != 0) sol.costToPred[s] = costCS;
         sol.routeOf[c] = route;
         sol.routeLoad[route] += inst.demand[c];
         if (sol.routeLoad[route] > inst.Q) {
@@ -242,8 +272,13 @@ namespace {
             if (entry.type == DoUndoEntry::INSERT) {
                 NodeId c = entry.customer; NodeId p = entry.newPred; NodeId s = entry.newSucc; int route = entry.newRoute;
                 sol.succ[p] = c; sol.pred[c] = p; sol.succ[c] = s; sol.pred[s] = c;
+                // T1: restore the costToPred values this customer/successor had right before
+                // the removal being undone -- stashed by remove_customer at the time, so no
+                // dist() call needed here (see the DoUndoEntry comment in ThreadArena.hpp).
+                sol.costToPred[c] = entry.undoCostC;
+                if (s != 0) sol.costToPred[s] = entry.undoCostS;
                 sol.routeOf[c] = route; sol.routeLoad[route] += inst.demand[c];
-                
+
                 if (p == 0) sol.routeHead[route] = c;
                 if (s == 0) sol.routeTail[route] = c;
                 touched_routes.push_back(route);
@@ -251,9 +286,9 @@ namespace {
                 // Undoing an INSERT means we must REMOVE it
                 NodeId c = entry.customer; int route = entry.prevRoute;
                 NodeId p = sol.pred[c]; NodeId s = sol.succ[c];
-                
+
                 if (p != 0) sol.succ[p] = s;
-                if (s != 0) sol.pred[s] = p;
+                if (s != 0) { sol.pred[s] = p; sol.costToPred[s] = entry.undoCostS; }
                 sol.pred[c] = 0; sol.succ[c] = 0;
                 
                 if (route != -1) {
@@ -282,6 +317,16 @@ namespace {
         if (mtx) mtx->unlock();
     }
 
+    // T1: dist(X, Y) where Y is currently in a route and X == sol.pred[Y] (i.e. an edge that
+    // exists in the solution *right now*) is exactly costToPred[Y] -- no dist() call needed.
+    // costToPred[0] is never maintained (0 is the depot sentinel, not a tracked customer), so
+    // callers must fall back to a real dist() call whenever Y could be 0 (a route tail's
+    // successor). Centralizing the Y==0 check here instead of guarding every call site by
+    // hand removes the main way this optimization could silently read a stale slot.
+    inline Cost curEdgeCost(const Solution& sol, const Instance& inst, NodeId X, NodeId Y) {
+        return (Y != 0) ? sol.costToPred[Y] : dist(inst, X, 0);
+    }
+
     void invalidate_svc(SVCCache& cache, NodeId i, NodeId j, NodeId p_i, NodeId s_i, NodeId p_j, NodeId s_j) {
         if (i != 0) cache.insert(i);
         if (j != 0) cache.insert(j);
@@ -291,7 +336,10 @@ namespace {
         if (s_j != 0) cache.insert(s_j);
     }
 
-    void ruin(Solution& sol, NodeId seed, ThreadArena& arena, SVCCache& cache, std::mt19937& rng, int chunkSize, const NeighborLists& granular_lists, const Instance& inst, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr, bool append = false) {
+    // omega: optional per-vertex adaptive ruin-walk length (T4.2, mirrors FILO2's omega
+    // array in main.cpp) -- indexed by seed (a global NodeId). When null, falls back to the
+    // previous fixed ceil(log(chunkSize)) walk length for every seed.
+    void ruin(Solution& sol, NodeId seed, ThreadArena& arena, SVCCache& cache, std::mt19937& rng, int chunkSize, const NeighborLists& granular_lists, const Instance& inst, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr, bool append = false, const std::vector<int>* omega = nullptr) {
         if (mtx) mtx->lock();
         if (!append) arena.removed_count = 0;
         if (sol.routeOf[seed] == -1) {
@@ -311,7 +359,7 @@ namespace {
         cache.insert(current);
         arena.removed_customers[arena.removed_count++] = current;
         
-        int walk_length = (int)std::ceil(std::log(chunkSize));
+        int walk_length = omega ? (*omega)[seed] : (int)std::ceil(std::log(chunkSize));
         if (walk_length < 1) walk_length = 1;
         
         for (int step = 1; step < walk_length; ++step) {
@@ -351,11 +399,27 @@ namespace {
         if (mtx) mtx->unlock();
     }
 
-    void recreate(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr) {
+    void recreate(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, std::mt19937& rng, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr) {
         if (mtx) mtx->lock();
-        std::sort(arena.removed_customers.begin(), arena.removed_customers.begin() + arena.removed_count,
-            [&inst](NodeId a, NodeId b) { return inst.demand[a] > inst.demand[b]; });
-            
+        // Vary reinsertion order across FILO2's 4 rules instead of always descending-demand,
+        // so the recreate phase doesn't always resolve the same removal-order ties the same way.
+        auto begin = arena.removed_customers.begin();
+        auto end = arena.removed_customers.begin() + arena.removed_count;
+        switch (std::uniform_int_distribution<int>(0, 3)(rng)) {
+            case 0:
+                std::shuffle(begin, end, rng);
+                break;
+            case 1:
+                std::sort(begin, end, [&inst](NodeId a, NodeId b) { return inst.demand[a] > inst.demand[b]; });
+                break;
+            case 2:
+                std::sort(begin, end, [&inst](NodeId a, NodeId b) { return dist(inst, a, 0) > dist(inst, b, 0); });
+                break;
+            case 3:
+                std::sort(begin, end, [&inst](NodeId a, NodeId b) { return dist(inst, a, 0) < dist(inst, b, 0); });
+                break;
+        }
+
         for (int i = 0; i < arena.removed_count; ++i) {
             NodeId c = arena.removed_customers[i];
             Cost bestDelta = 999999999;
@@ -447,10 +511,13 @@ namespace {
         if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] > inst.Q) return 0;
         
         NodeId p_i = sol.pred[i], s_j = sol.succ[j];
-        
-        Cost rem = dist(inst, p_i, s_s_i) - dist(inst, p_i, i) - dist(inst, s_i, s_s_i);
-        Cost ins = dist(inst, j, i) + dist(inst, s_i, s_j) - dist(inst, j, s_j);
-        
+
+        // T1: dist(p_i,i), dist(s_i,s_s_i), dist(j,s_j) are all *current* edges (unmutated at
+        // this read-only eval point) -- already sitting in costToPred. dist(p_i,s_s_i) is the
+        // edge the removal would newly create, not cached.
+        Cost rem = dist(inst, p_i, s_s_i) - sol.costToPred[i] - curEdgeCost(sol, inst, s_i, s_s_i);
+        Cost ins = dist(inst, j, i) + dist(inst, s_i, s_j) - curEdgeCost(sol, inst, j, s_j);
+
         return rem + ins;
     }
 
@@ -470,10 +537,60 @@ namespace {
         if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i] > inst.Q) return 0;
         
         NodeId p_i = sol.pred[i], s_j = sol.succ[j];
-        
-        Cost rem = dist(inst, p_i, s_s_s_i) - dist(inst, p_i, i) - dist(inst, s_s_i, s_s_s_i);
-        Cost ins = dist(inst, j, i) + dist(inst, s_s_i, s_j) - dist(inst, j, s_j);
-        
+
+        Cost rem = dist(inst, p_i, s_s_s_i) - sol.costToPred[i] - curEdgeCost(sol, inst, s_s_i, s_s_s_i);
+        Cost ins = dist(inst, j, i) + dist(inst, s_s_i, s_j) - curEdgeCost(sol, inst, j, s_j);
+
+        return rem + ins;
+    }
+
+    // Reversed-insertion variants of relocate2/relocate3: same segment, same removal cost
+    // (removal doesn't depend on insertion orientation), but inserted at the destination in
+    // the opposite order (j -> s_i -> i -> s_j instead of j -> i -> s_i -> s_j). The
+    // segment's own internal edges (i-s_i, s_i-s_s_i) are unchanged by reversal -- distance is
+    // symmetric -- so only the two boundary edges touching j/s_j differ, matching FILO2's
+    // RevTwoZeroExchange/RevThreeZeroExchange (docs: report-006-era operator inventory).
+    Cost eval_relocate2_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1) return 0;
+
+        NodeId s_i = sol.succ[i];
+        if (s_i == 0) return 0;
+        NodeId s_s_i = sol.succ[s_i];
+
+        if (j == i || j == sol.pred[i] || j == s_i || j == s_s_i) return 0;
+
+        if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] > inst.Q) return 0;
+
+        NodeId p_i = sol.pred[i], s_j = sol.succ[j];
+
+        Cost rem = dist(inst, p_i, s_s_i) - sol.costToPred[i] - curEdgeCost(sol, inst, s_i, s_s_i);
+        Cost ins = dist(inst, j, s_i) + dist(inst, i, s_j) - curEdgeCost(sol, inst, j, s_j);
+
+        return rem + ins;
+    }
+
+    Cost eval_relocate3_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1) return 0;
+
+        NodeId s_i = sol.succ[i];
+        if (s_i == 0) return 0;
+        NodeId s_s_i = sol.succ[s_i];
+        if (s_s_i == 0) return 0;
+        NodeId s_s_s_i = sol.succ[s_s_i];
+
+        if (j == i || j == sol.pred[i] || j == s_i || j == s_s_i || j == s_s_s_i) return 0;
+
+        if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] + inst.demand[s_i] + inst.demand[s_s_i] > inst.Q) return 0;
+
+        NodeId p_i = sol.pred[i], s_j = sol.succ[j];
+
+        Cost rem = dist(inst, p_i, s_s_s_i) - sol.costToPred[i] - curEdgeCost(sol, inst, s_s_i, s_s_s_i);
+        Cost ins = dist(inst, j, s_s_i) + dist(inst, i, s_j) - curEdgeCost(sol, inst, j, s_j);
+
         return rem + ins;
     }
 
@@ -487,8 +604,8 @@ namespace {
         if (r_i != r_j && sol.routeLoad[r_j] + inst.demand[i] > inst.Q) return 0;
         
         NodeId p_i = sol.pred[i], s_i = sol.succ[i], s_j = sol.succ[j];
-        return -dist(inst, p_i, i) - dist(inst, i, s_i) + dist(inst, p_i, s_i)
-               -dist(inst, j, s_j) + dist(inst, j, i) + dist(inst, i, s_j);
+        return -sol.costToPred[i] - curEdgeCost(sol, inst, i, s_i) + dist(inst, p_i, s_i)
+               -curEdgeCost(sol, inst, j, s_j) + dist(inst, j, i) + dist(inst, i, s_j);
     }
     
     Cost eval_swap(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
@@ -506,13 +623,13 @@ namespace {
         
         // Explicit adjacency branches to prevent double-subtracting edges
         if (s_i == j) {
-            return -dist(inst, p_i, i) - dist(inst, j, s_j)
+            return -sol.costToPred[i] - curEdgeCost(sol, inst, j, s_j)
                    +dist(inst, p_i, j) + dist(inst, i, s_j); // distance i,j cancels out
         } else if (s_j == i) {
-            return -dist(inst, p_j, j) - dist(inst, i, s_i)
+            return -sol.costToPred[j] - curEdgeCost(sol, inst, i, s_i)
                    +dist(inst, p_j, i) + dist(inst, j, s_i); // distance j,i cancels out
         } else {
-            return -dist(inst, p_i, i) - dist(inst, i, s_i) - dist(inst, p_j, j) - dist(inst, j, s_j)
+            return -sol.costToPred[i] - curEdgeCost(sol, inst, i, s_i) - sol.costToPred[j] - curEdgeCost(sol, inst, j, s_j)
                    +dist(inst, p_i, j) + dist(inst, j, s_i) + dist(inst, p_j, i) + dist(inst, i, s_j);
         }
     }
@@ -533,7 +650,7 @@ namespace {
         if (!is_before(sol, i, j)) std::swap(i, j);
         
         NodeId s_i = sol.succ[i], s_j = sol.succ[j];
-        return -dist(inst, i, s_i) - dist(inst, j, s_j) + dist(inst, i, j) + dist(inst, s_i, s_j);
+        return -curEdgeCost(sol, inst, i, s_i) - curEdgeCost(sol, inst, j, s_j) + dist(inst, i, j) + dist(inst, s_i, s_j);
     }
 
     Cost eval_2opt_star(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
@@ -566,7 +683,7 @@ namespace {
         if (sol.routeLoad[r_j] - load_tail_j + load_tail_i > inst.Q) return 0;
 
         NodeId s_i = sol.succ[i], s_j = sol.succ[j];
-        Cost delta = -dist(inst, i, s_i) - dist(inst, j, s_j) + dist(inst, i, s_j) + dist(inst, j, s_i);
+        Cost delta = -curEdgeCost(sol, inst, i, s_i) - curEdgeCost(sol, inst, j, s_j) + dist(inst, i, s_j) + dist(inst, j, s_i);
 
         return delta;
     }
@@ -591,7 +708,10 @@ namespace {
                 printf("[FATAL] HANG IN get_top3_insertions! route=%d\n", target_route); fflush(stdout);
                 exit(1);
             }
-            Cost delta = dist(inst, p, v) + dist(inst, v, s) - dist(inst, p, s);
+            // T1: dist(p,s) is the current edge between this route's consecutive p/s pair
+            // (unmutated during this scan) -- already cached, saves a dist() call on every
+            // one of the O(routeLen) positions this loop visits.
+            Cost delta = dist(inst, p, v) + dist(inst, v, s) - curEdgeCost(sol, inst, p, s);
             if (top3.count < 3 || delta < top3.delta[2]) {
                 int pos = std::min(top3.count, 2);
                 while (pos > 0 && top3.delta[pos - 1] > delta) {
@@ -646,21 +766,21 @@ namespace {
         Cost ins_i = eval_swap_star_dir(sol, inst, i, j, top3_i, out_p_i, out_s_i);
         Cost ins_j = eval_swap_star_dir(sol, inst, j, i, top3_j, out_p_j, out_s_j);
         
-        Cost rem_i = dist(inst, sol.pred[i], i) + dist(inst, i, sol.succ[i]) - dist(inst, sol.pred[i], sol.succ[i]);
-        Cost rem_j = dist(inst, sol.pred[j], j) + dist(inst, j, sol.succ[j]) - dist(inst, sol.pred[j], sol.succ[j]);
-        
+        Cost rem_i = sol.costToPred[i] + curEdgeCost(sol, inst, i, sol.succ[i]) - dist(inst, sol.pred[i], sol.succ[i]);
+        Cost rem_j = sol.costToPred[j] + curEdgeCost(sol, inst, j, sol.succ[j]) - dist(inst, sol.pred[j], sol.succ[j]);
+
         return ins_i + ins_j - rem_i - rem_j;
     }
-    
+
     Cost eval_swap_star_fast(const Solution& sol, const Instance& inst, NodeId i, NodeId j, 
                              const Top3Insertions& top3_i, const Top3Insertions& top3_j,
                              NodeId& out_p_i, NodeId& out_s_i, NodeId& out_p_j, NodeId& out_s_j) {
         Cost ins_i = eval_swap_star_dir(sol, inst, i, j, top3_i, out_p_i, out_s_i);
         Cost ins_j = eval_swap_star_dir(sol, inst, j, i, top3_j, out_p_j, out_s_j);
         
-        Cost rem_i = dist(inst, sol.pred[i], i) + dist(inst, i, sol.succ[i]) - dist(inst, sol.pred[i], sol.succ[i]);
-        Cost rem_j = dist(inst, sol.pred[j], j) + dist(inst, j, sol.succ[j]) - dist(inst, sol.pred[j], sol.succ[j]);
-        
+        Cost rem_i = sol.costToPred[i] + curEdgeCost(sol, inst, i, sol.succ[i]) - dist(inst, sol.pred[i], sol.succ[i]);
+        Cost rem_j = sol.costToPred[j] + curEdgeCost(sol, inst, j, sol.succ[j]) - dist(inst, sol.pred[j], sol.succ[j]);
+
         return ins_i + ins_j - rem_i - rem_j;
     }
 
@@ -700,6 +820,47 @@ namespace {
         update_route_info(sol, r_i, inst);
         update_route_info(sol, r_j, inst);
         
+        invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j);
+        cache.insert(s_i);
+        cache.insert(s_s_i);
+    }
+
+    void apply_relocate2_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        current_op = "apply_relocate2_rev";
+        NodeId s_i = sol.succ[i];
+        NodeId p_i = sol.pred[i], s_s_i = sol.succ[s_i], s_j = sol.succ[j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, s_i, arena, inst);
+        remove_customer(sol, i, arena, inst);
+
+        insert_customer(sol, s_i, j, s_j, r_j, arena, inst);
+        insert_customer(sol, i, s_i, s_j, r_j, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
+        invalidate_svc(cache, i, j, p_i, s_s_i, j, s_j);
+        cache.insert(s_i);
+    }
+
+    void apply_relocate3_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache) {
+        current_op = "apply_relocate3_rev";
+        NodeId s_i = sol.succ[i], s_s_i = sol.succ[s_i];
+        NodeId p_i = sol.pred[i], s_s_s_i = sol.succ[s_s_i], s_j = sol.succ[j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, s_s_i, arena, inst);
+        remove_customer(sol, s_i, arena, inst);
+        remove_customer(sol, i, arena, inst);
+
+        insert_customer(sol, s_s_i, j, s_j, r_j, arena, inst);
+        insert_customer(sol, s_i, s_s_i, s_j, r_j, arena, inst);
+        insert_customer(sol, i, s_i, s_j, r_j, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
         invalidate_svc(cache, i, j, p_i, s_s_s_i, j, s_j);
         cache.insert(s_i);
         cache.insert(s_s_i);
@@ -863,7 +1024,7 @@ namespace {
             if (sol.routeOf[i] == -1) continue;
             
             Cost bestDelta = 0;
-            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*
+            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*, 5=Relocate2, 6=Relocate3, 7=Relocate2Rev, 8=Relocate3Rev
             NodeId best_j = 0;
             NodeId best_p_i = 0, best_s_i = 0, best_p_j = 0, best_s_j = 0;
             
@@ -920,7 +1081,13 @@ namespace {
                 
                 Cost delta_relocate3 = eval_relocate3(sol, inst, i, j);
                 if (delta_relocate3 < bestDelta) { bestDelta = delta_relocate3; bestOp = 6; best_j = j; }
-                
+
+                Cost delta_relocate2_rev = eval_relocate2_rev(sol, inst, i, j);
+                if (delta_relocate2_rev < bestDelta) { bestDelta = delta_relocate2_rev; bestOp = 7; best_j = j; }
+
+                Cost delta_relocate3_rev = eval_relocate3_rev(sol, inst, i, j);
+                if (delta_relocate3_rev < bestDelta) { bestDelta = delta_relocate3_rev; bestOp = 8; best_j = j; }
+
                 Cost delta_swap = eval_swap(sol, inst, i, j);
                 if (delta_swap < bestDelta) { bestDelta = delta_swap; bestOp = 1; best_j = j; }
                 
@@ -959,11 +1126,13 @@ namespace {
                 else if (bestOp == 4) verify_delta = eval_swap_star(sol, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j);
                 else if (bestOp == 5) verify_delta = eval_relocate2(sol, inst, i, best_j);
                 else if (bestOp == 6) verify_delta = eval_relocate3(sol, inst, i, best_j);
-                
+                else if (bestOp == 7) verify_delta = eval_relocate2_rev(sol, inst, i, best_j);
+                else if (bestOp == 8) verify_delta = eval_relocate3_rev(sol, inst, i, best_j);
+
                 if (verify_delta < -1e-6) {
                     int old_r_i = sol.routeOf[i];
                     int old_r_j = best_j != 0 ? sol.routeOf[best_j] : -1;
-                    
+
                     if (bestOp == 0) apply_relocate(sol, arena, inst, i, best_j, cache);
                     else if (bestOp == 1) apply_swap(sol, arena, inst, i, best_j, cache);
                     else if (bestOp == 2) apply_2opt(sol, arena, inst, i, best_j, cache);
@@ -971,7 +1140,9 @@ namespace {
                     else if (bestOp == 4) apply_swap_star(sol, arena, inst, i, best_j, best_p_i, best_s_i, best_p_j, best_s_j, cache);
                     else if (bestOp == 5) apply_relocate2(sol, arena, inst, i, best_j, cache);
                     else if (bestOp == 6) apply_relocate3(sol, arena, inst, i, best_j, cache);
-                    
+                    else if (bestOp == 7) apply_relocate2_rev(sol, arena, inst, i, best_j, cache);
+                    else if (bestOp == 8) apply_relocate3_rev(sol, arena, inst, i, best_j, cache);
+
                     if (old_r_i != -1) update_route_info(sol, old_r_i, inst);
                     if (old_r_j != -1 && old_r_j != old_r_i) update_route_info(sol, old_r_j, inst);
                     
@@ -1092,6 +1263,30 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
 
     Solution bestSol = sol;
 
+    // Measured net-negative on VDA (see the ruin() call below) -- kept as a compile-time
+    // toggle rather than deleted in case a cheaper adaptation scheme is worth revisiting.
+    constexpr bool kEnableOmegaAdaptation = false;
+
+    // T4.2: adaptive per-vertex ruin-walk length, mirroring FILO2's omega array
+    // (baselines/filo2/main.cpp:180-181, 375-405). Base value matches the previous fixed
+    // walk length (ceil(log(chunkSize))) so this starts identical to the old behavior and
+    // only diverges as iterations adapt it. shaking_lb/ub are absolute cost thresholds
+    // derived from the mean arc-length estimate, same as FILO2's shaking_lb_factor/
+    // shaking_ub_factor * mean_solution_arc_cost.
+    int omega_base = std::max(1, (int)std::ceil(std::log(chunkSize)));
+    // Capped at 2x base rather than 4x: an isolation test (comparing T1 alone against T1+T4.2
+    // on VDA) showed the 4x cap let omega drift high enough that the extra per-iteration ruin/
+    // recreate/local_search cost outweighed T1's per-operation savings, *reducing* net
+    // iteration throughput (94845/137989 iters/worker with T4.2 off vs 45319/57337 with it on,
+    // same 40s budget). 2x keeps the adaptive-destructiveness idea T4.2 is chasing without
+    // letting a single vertex's walk length balloon far past what the SA temperature schedule
+    // can actually afford to search at.
+    int omega_cap = std::max(omega_base * 2, 15);
+    std::vector<int> omega(inst.n + 1, omega_base);
+    double shaking_lb = 0.375 * avg_arc_cost_estimate;
+    double shaking_ub = 0.85 * avg_arc_cost_estimate;
+    std::uniform_int_distribution<int> nudge_dist(0, 1); // 0 -> -1, 1 -> +1
+
     int iter = 0;
     auto stageStart = std::chrono::steady_clock::now();
     for (; useTimeBudget || iter < max_iterations; ++iter) {
@@ -1118,9 +1313,19 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
         // Stage 1 used to build this chunk's solution in the first place.
         std::uniform_int_distribution<int> dist_cust(1, chunkSize);
         NodeId seed_cust = partitionInfo.globalId[chunkId][dist_cust(rng)];
-        ruin(sol, seed_cust, arena, cache, rng, chunkSize, local_granular_lists, inst);
+        // T4.2 disabled (docs/reports/009_plan_beating_filo2.md): measured on VDA, the
+        // adaptive omega array costs 35-47% of iteration throughput (larger ruin walks mean
+        // proportionally more recreate/local_search work per iteration) for a cost outcome
+        // statistically indistinguishable from noise across every cap tried (4x base: cost
+        // WORSE than baseline; 2x base: flat vs baseline) -- it fails the plan's own Stage 2
+        // gate ("did time drop >=15%?") outright. T1's per-operation savings alone deliver a
+        // clean, unconfounded +19-23% iteration throughput win (94845/137989 vs 79709/112249
+        // baseline, same 40s budget) and that's what's kept. The omega machinery is left in
+        // place (unused) rather than deleted in case a cheaper adaptation scheme is worth
+        // revisiting later.
+        ruin(sol, seed_cust, arena, cache, rng, chunkSize, local_granular_lists, inst, nullptr, -1, -1, nullptr, false, nullptr);
 
-        recreate(sol, arena, cache, inst, local_granular_lists);
+        recreate(sol, arena, cache, inst, local_granular_lists, rng);
 
         // Only rescan routes ruin/recreate actually touched (see rescan_touched_routes,
         // docs/reports/005_cost_optimization.md Phase 5) -- chunkSize-bounded here, so less
@@ -1133,6 +1338,31 @@ Solution stage2_ils(Solution sol, ThreadArena& arena, SVCCache& cache,
         }
 
         Cost delta = arena.pendingDelta;
+
+        // T4.2 omega adaptation -- disabled (see the ruin() call above for why), so this
+        // block is skipped rather than deleted: omega is unused by ruin() now, and running
+        // the adaptation anyway would just burn an RNG draw and a removed_count-sized loop
+        // for no effect every single iteration.
+        if (kEnableOmegaAdaptation) {
+            double newCost = (double)sol.totalCost + (double)delta;
+            double refCost = (double)sol.totalCost;
+            int adj;
+            if (newCost > refCost + shaking_ub) {
+                adj = -1; // too destructive
+            } else if (newCost < refCost + shaking_lb) {
+                adj = +1; // too timid
+            } else {
+                adj = nudge_dist(rng) ? +1 : -1; // in the sweet spot: random nudge
+            }
+            for (int i = 0; i < arena.removed_count; ++i) {
+                NodeId c = arena.removed_customers[i];
+                int v = omega[c] + adj;
+                if (v < 1) v = 1;
+                if (v > omega_cap) v = omega_cap;
+                omega[c] = v;
+            }
+        }
+
         if (accept_delta(delta, temperature, rng)) {
             sol.totalCost += delta;
             if (sol.totalCost < bestSol.totalCost) {
@@ -1266,7 +1496,7 @@ Cost stage3_healing_ils_pass(Solution& globalSolution, ThreadArena& arena, SVCCa
         
         auto t_ruin = std::chrono::high_resolution_clock::now();
         
-        recreate(globalSolution, arena, cache, inst, local_granular_lists, &route_creation_mutex, t1, t2, routeToChunk);
+        recreate(globalSolution, arena, cache, inst, local_granular_lists, rng, &route_creation_mutex, t1, t2, routeToChunk);
 
         // Only rescan routes ruin/recreate actually touched (docs/reports/005_cost_optimization.md
         // Phase 5) -- these are already guaranteed to be within t1/t2 since ruin/recreate
@@ -1509,7 +1739,7 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
 
         auto t_ruin = std::chrono::high_resolution_clock::now();
 
-        recreate(globalSolution, arena, cache, inst, neighborLists, nullptr);
+        recreate(globalSolution, arena, cache, inst, neighborLists, rng, nullptr);
 
         // recreate() only calls update_route_info() for its new-empty-route fallback path;
         // a normal insertion into an existing route leaves that route's cumLoad/routePosition

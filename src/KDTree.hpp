@@ -24,4 +24,8 @@ struct NeighborLists {
     // with no synchronization needed and identical, deterministic output regardless of
     // thread count -- see docs/reports/006_throughput_and_parallelism.md Phase 2.5.
     void build(const Instance& inst, int k_neighbors, int num_threads = 1);
+
+    // Post-pass: makes the candidate relation closer to symmetric (see KDTree.cpp for why
+    // the raw kNN query is asymmetric and what this does about it).
+    void symmetrize(const Instance& inst, int k_neighbors);
 };
