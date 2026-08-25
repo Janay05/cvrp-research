@@ -1,6 +1,7 @@
 #pragma once
 #include "Types.hpp"
 #include <vector>
+#include <utility>
 
 struct KDNode {
     NodeId id;
@@ -28,4 +29,12 @@ struct NeighborLists {
     // Post-pass: makes the candidate relation closer to symmetric (see KDTree.cpp for why
     // the raw kNN query is asymmetric and what this does about it).
     void symmetrize(const Instance& inst, int k_neighbors);
+
+    // T2-lite (docs/reports/009_plan_beating_filo2.md): reverseIdx[v] lists every (i, j_idx)
+    // such that nbr[i][j_idx] == v -- "who has v as a candidate". Purely structural (depends
+    // only on nbr, not on solution state), so it's safe to build once per chunk and reuse for
+    // that chunk's entire Stage 2 run; used by local_search/invalidate_svc's pair-cache
+    // invalidation to find which OTHER nodes' cached entries a touched vertex v affects.
+    std::vector<std::vector<std::pair<NodeId,int>>> reverseIdx;
+    void build_reverse_index();
 };

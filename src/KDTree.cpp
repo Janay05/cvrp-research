@@ -151,3 +151,13 @@ void NeighborLists::symmetrize(const Instance& inst, int k_neighbors) {
         if ((int)nbr[j].size() > k_neighbors) nbr[j].resize(k_neighbors);
     }
 }
+
+void NeighborLists::build_reverse_index() {
+    reverseIdx.assign(nbr.size(), std::vector<std::pair<NodeId,int>>());
+    for (int i = 0; i < (int)nbr.size(); ++i) {
+        for (int j_idx = 0; j_idx < (int)nbr[i].size(); ++j_idx) {
+            NodeId v = nbr[i][j_idx];
+            reverseIdx[v].emplace_back((NodeId)i, j_idx);
+        }
+    }
+}
