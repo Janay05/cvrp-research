@@ -383,19 +383,37 @@ improvement than T3, T4.2, T2-lite, and T5.2 combined, for zero additional
 wall-clock cost and zero new correctness surface. Results:
 `results/bench/stage6c_multistart_vda/results.txt`.
 
-**Lazio-scale multi-start is not viable on this dev machine** — tried N=7
-(p=4 each) and then N=2 (p=4 each); both crashed the WSL VM outright (not a
-graceful OOM — the whole VM restarted, twice). Root cause: each process
-builds a full neighbor-list structure for Lazio's ~1M customers, including a
-k=100 Stage-5 list (`main.cpp`'s `stage5_neighborLists.build(inst, 100, P)`),
-and even 2 concurrent instances exceed the machine's 7.6GB budget at peak
-(construction-phase allocations spike higher than steady-state usage, which
-is why N=2 looked fine watching `free -h` right up until it wasn't). This is
-a hardware/memory-budget constraint on this specific dev machine, not a flaw
-in the approach — it would need either more RAM, fewer concurrent starts, or
-reducing each instance's peak memory footprint (e.g. a smaller Stage-5 k) to
-extend Stage 6-C to Lazio-scale instances. VDA-scale instances (and
-presumably anything meaningfully smaller than Lazio) are unaffected.
+**Lazio-scale multi-start initially crashed the WSL VM twice (N=7, then
+N=2), which led to finding and fixing a real memory bug — not a hardware
+ceiling.** Measuring peak memory directly (`/usr/bin/time -v`) on a single
+Lazio-scale (~1M customer) run showed **~7.0GB resident — ~92% of the whole
+7.6GB WSL budget for one process**, which is why even 2 concurrent instances
+went over. Investigating why turned up a real, fixable bug:
+`ThreadArena::reserve_fixed_capacity` (`ThreadArena.hpp`) was
+unconditionally allocating T2-lite's `pairCache` buffer (`(instance size)
+x 30 x 32 bytes`) at every one of its three call sites — even though T2-lite
+is disabled everywhere (`kEnablePairCache = false`) and nothing ever reads
+that buffer. Unlike `doList`/`undoList`, which are capped at a fixed 2M
+entries regardless of instance size, `pairCache` had no cap and scaled
+directly with the *full* instance `n` at every call site (Worker.cpp's P
+worker arenas, main.cpp's `globalArena`, and Stage 3's per-color-class
+`arena_pool`) — at Lazio scale that's ~960MB of pure waste *per arena*,
+multiplied across every one of them.
+
+Fixed by defaulting `k_max` to 0 (skip the allocation entirely) instead of
+30, since no current caller needs it. Re-measured: peak memory dropped from
+**~7.0GB to ~3.5GB — a 49.8% reduction** — with zero behavior change
+(byte-identical costs on the determinism check before and after). Major
+page faults during the Lazio run also dropped from 28,972 to 5, confirming
+the "before" state was genuinely swap-thrashing under memory pressure, not
+just tight. With the fix, **2 concurrent Lazio-scale starts now run
+successfully** (verified: no crash, WSL uptime intact, feasible output,
+`results/multistart_lazio_safety` — not committed, a smoke test). Full-scale
+multi-start at Lazio (N>2) is still untested and would need either more
+host RAM or a smaller N; but this is now a genuine headroom question, not a
+correctness bug forcing VDA-only use. VDA-scale instances were always
+unaffected (their `pairCache` waste was ~7MB/arena, negligible next to
+everything else).
 
 **Recommendation given everything this session found**: Stage 6-C is the
 strongest remaining lever and should be the default way this solver is run
