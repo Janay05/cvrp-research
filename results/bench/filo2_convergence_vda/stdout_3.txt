@@ -1,0 +1,33 @@
+Pre-processing the instance.
+Done in 3 seconds.
+
+Running CLARKE&WRIGHT to generate an initial solution.
+Done in 0 seconds.
+Initial solution: obj = 2.22316e+07, n. of routes = 810.
+
+Setting up MOVEGENERATORS data structures.
+Done in 0 seconds.
+Using at most 596914 move-generators out of 400000000 total arcs (approx. 0.14923%)
+
+Computing a greedy upper bound on the n. of routes.
+Done in 2 milliseconds.
+Around 800 routes should do the job.
+
+Running ROUTEMIN heuristic for at most 1000 iterations.
+Starting solution: obj = 2.2232e+07, n. of routes = 810.
+Final solution: obj = 2.1932e+07, n. routes = 801
+Done in 1 seconds.
+
+Shaking LB = 380.75
+Shaking UB = 863.03
+Simulated annealing temperature goes from 1777.3 to 17.773.
+
+Running COREOPT for 0 seconds.
+
+Best solution found:
+obj = 2.1932e+07, n. routes = 801
+
+Run completed in 5 seconds 
+Results stored in
+ - results/bench/filo2_convergence_vda/t3_/Valle-D-Aosta.vrp_seed-1.out
+ - results/bench/filo2_convergence_vda/t3_/Valle-D-Aosta.vrp_seed-1.vrp.sol

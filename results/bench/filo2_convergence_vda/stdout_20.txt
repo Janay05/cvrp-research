@@ -1,0 +1,43 @@
+Pre-processing the instance.
+Done in 3 seconds.
+
+Running CLARKE&WRIGHT to generate an initial solution.
+Done in 0 seconds.
+Initial solution: obj = 2.22316e+07, n. of routes = 810.
+
+Setting up MOVEGENERATORS data structures.
+Done in 0 seconds.
+Using at most 596914 move-generators out of 400000000 total arcs (approx. 0.14923%)
+
+Computing a greedy upper bound on the n. of routes.
+Done in 2 milliseconds.
+Around 800 routes should do the job.
+
+Running ROUTEMIN heuristic for at most 1000 iterations.
+Starting solution: obj = 2.2232e+07, n. of routes = 810.
+Final solution: obj = 2.1932e+07, n. routes = 801
+Done in 1 seconds.
+
+Shaking LB = 380.75
+Shaking UB = 863.03
+Simulated annealing temperature goes from 1777.3 to 17.773.
+
+Running COREOPT for 15 seconds.
+
+[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  [0m
+                                                                                                                         
+ 13.34         3718     21859553      801      1849.00        13.00        57.64       473.12    0.25    10.75   961.50 
+ 26.68         7307     21844057      802      1822.00        11.00        59.45       480.72    0.25    11.61   520.18 
+ 40.01        10798     21828170      802      1796.00         9.00        59.78       488.43    0.25    12.43   281.50 
+ 53.35        13713     21821904      801      1711.00         7.00        61.12       514.25    0.27    13.16   152.29 
+ 66.69        16510     21807111      801      1649.00         5.00        62.43       534.64    0.27    13.90    82.42 
+ 80.02        19155     21800251      801      1594.00         3.00        64.27       553.13    0.28    14.61    44.60 
+ 93.36        21848     21791798      801      1559.00         1.00        66.05       565.37    0.28    15.42    24.13 
+
+Best solution found:
+obj = 21790302, n. routes = 801
+
+Run completed in 20 seconds 
+Results stored in
+ - results/bench/filo2_convergence_vda/t20_/Valle-D-Aosta.vrp_seed-1.out
+ - results/bench/filo2_convergence_vda/t20_/Valle-D-Aosta.vrp_seed-1.vrp.sol

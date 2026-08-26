@@ -1,0 +1,58 @@
+Pre-processing the instance.
+Done in 3 seconds.
+
+Running CLARKE&WRIGHT to generate an initial solution.
+Done in 0 seconds.
+Initial solution: obj = 2.22316e+07, n. of routes = 810.
+
+Setting up MOVEGENERATORS data structures.
+Done in 0 seconds.
+Using at most 596914 move-generators out of 400000000 total arcs (approx. 0.14923%)
+
+Computing a greedy upper bound on the n. of routes.
+Done in 2 milliseconds.
+Around 800 routes should do the job.
+
+Running ROUTEMIN heuristic for at most 1000 iterations.
+Starting solution: obj = 2.2232e+07, n. of routes = 810.
+Final solution: obj = 2.1932e+07, n. routes = 801
+Done in 1 seconds.
+
+Shaking LB = 380.75
+Shaking UB = 863.03
+Simulated annealing temperature goes from 1777.3 to 17.773.
+
+Running COREOPT for 35 seconds.
+
+[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  [0m
+                                                                                                                         
+  5.71         3781     21863074      802      1881.00        33.00        57.35       464.40    0.25    10.73   1366.05 
+ 11.43         7361     21852041      803      1835.00        31.00        59.96       476.78    0.25    11.56   1049.98 
+ 17.14        10680     21848622      802      1777.00        29.00        60.94       494.10    0.25    12.28   807.04 
+ 22.86        13985     21840709      802      1745.00        27.00        62.40       502.68    0.25    12.93   620.31 
+ 28.57        17149     21831338      802      1713.00        25.00        63.36       512.67    0.25    13.58   476.72 
+ 34.29        20014     21823879      801      1666.00        23.00        64.83       527.54    0.25    14.21   366.37 
+ 40.01        22635     21819820      801      1615.00        21.00        66.25       544.83    0.25    14.67   281.60 
+ 45.72        25526     21812593      802      1594.00        19.00        66.79       552.39    0.26    15.17   216.45 
+ 51.44        28460     21806851      801      1580.00        17.00        67.60       557.13    0.26    15.80   166.34 
+ 58.91        28474     21806851      801      1422.00        15.00        67.61       648.73    0.26    15.80   117.89 
+ 51.85        28668     21806851      801      1591.00        17.00        67.65   643461143913964.50    0.27    15.86   163.18 
+ 57.57        31304     21804463      800      1564.00        15.00        68.17   589277538772277.12    0.27    16.47   125.42 
+ 63.29        33741     21800404      800      1532.00        13.00        68.82   546715985706680.75    0.27    17.02    96.38 
+ 69.01        36205     21796737      800      1507.00        11.00        69.80   509508191513074.75    0.27    17.57    74.07 
+ 74.72        38736     21792018      800      1489.00         9.00        70.55   476217060969966.06    0.27    18.12    56.92 
+
+[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  [0m
+                                                                                                                         
+ 80.44        41169     21789312      800      1469.00         7.00        71.55   448073649438519.56    0.27    18.78    43.75 
+ 86.15        43453     21786277      800      1447.00         5.00        72.97   424521760838978.81    0.27    19.35    33.63 
+ 91.87        45849     21770113      800      1432.00         3.00        74.18   402336890090032.75    0.27    20.03    25.85 
+ 97.59        48209     21767121      800      1417.00         1.00        75.30   382641085144676.75    0.27    20.78    19.86 
+
+Best solution found:
+obj = 21766836, n. routes = 800
+
+Run completed in 40 seconds 
+Results stored in
+ - results/bench/filo2_convergence_vda/t40_/Valle-D-Aosta.vrp_seed-1.out
+ - results/bench/filo2_convergence_vda/t40_/Valle-D-Aosta.vrp_seed-1.vrp.sol
