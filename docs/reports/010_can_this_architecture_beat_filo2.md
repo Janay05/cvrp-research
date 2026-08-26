@@ -1,6 +1,84 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26. Status: **verdict — no.** Evidence below.
+Date: 2026-08-26. Status: **VERDICT WITHDRAWN — see §0.** Original verdict was
+"no, dead end"; a later measurement in the same session invalidated the basis
+for it. All measurements in §1–§5 stand; the conclusion drawn from them in §6
+does not.
+
+---
+
+## 0. Verdict withdrawn — the ceiling was measured with a broken tool
+
+This report originally concluded the architecture is a dead end, resting on
+"cost is flat in P" and "cost is flat in time" (§2.1, §2.2) as evidence of an
+architectural quality ceiling.
+
+Then I decomposed the gap (`tools/decompose_gap.py`) and found:
+
+| Valle-D'Aosta, ~102 s | ours (seed 2) | FILO2 (seed 11) | delta |
+|---|---|---|---|
+| routes | 805 | 800 | **+5** |
+| depot-leg cost | 20,784,004 | 20,607,561 | +176,443 (**97.5 % of gap**) |
+| inter-customer cost | 1,123,433 | 1,118,940 | +4,493 (2.5 % of gap) |
+| total | 21,907,437 | 21,726,501 | +180,936 (+0.833 %) |
+
+**Our customer sequencing is at parity with FILO2 — within 0.4 %. Essentially
+the entire cost gap is surplus vehicles**: 5 extra routes at ~35,289 of depot
+round-trip apiece. That directly contradicts the "weaker neighbourhood /
+weaker local search" diagnosis in §3 and in report 009.
+
+The one technique aimed squarely at vehicle count is ROUTEMIN. Our port (T3)
+was measured as net-negative and disabled. Re-examining it found **two defects
+in the port, not in the architecture**:
+
+1. **Live-route counting (fixed).** `stage1_5_routemin` steered on
+   `Solution::numRoutes`, which is an allocation high-water mark, not a live
+   count — `remove_customer` empties a route but nothing decrements
+   `numRoutes`, and `open_route` only increments it. `main.cpp` reports the
+   *live* count, so the two are different quantities. All four route-count
+   decisions (kmin early-exit, the open-new-route-vs-leave-unserved gate, the
+   accept-fewer-routes tiebreak, the kmin stop condition) plus the log line
+   read a number that **cannot decrease**. That is why T3 appeared to *add*
+   routes (810 → 831 at P=1). Fixed via `count_live_routes()`; the same run now
+   reports 810 → 814 and cost improves 22,050,223 → 21,970,454.
+2. **Neighbourhood width (identified, not fixed).** Our port runs ROUTEMIN
+   against the k=30 granular list. FILO2 runs it at **gamma = 1.0 over a list
+   of up to 1500** — *"We are going to use all the available move generators
+   for during this procedure"* (`opt/routemin.hpp`) — a ~50× wider candidate
+   set, precisely during the phase whose job is finding residual capacity
+   anywhere in the solution to absorb customers from destroyed routes. With
+   only 30 candidates, most of their routes are full, reinsertion fails, and we
+   open a new route instead. I had written this narrowing off in a code comment
+   as "acceptable" without ever measuring it.
+
+**Why this invalidates the verdict:** every flat-in-P and flat-in-time
+experiment was run with route minimization broken *and* disabled. They
+establish the ceiling of *this pipeline without working route minimization* —
+not an architectural ceiling. And the defect they were used to rule out is
+precisely the one that accounts for 97.5 % of the gap.
+
+Rough headroom, arithmetic not measurement: eliminating the 5 surplus routes
+recovers ~176,000 of the ~181,000 gap, landing between +0.02 % (marginal
+depot cost per route) and +0.24 % (average depot cost per route) of FILO2 —
+i.e. most of the gap, with 2 cores against their 1.
+
+**Open questions that a real verdict needs answered:**
+- Does ROUTEMIN reduce routes toward kmin once given FILO2's neighbourhood
+  width? (Not yet tested.)
+- Is there a genuine *architectural* route-count penalty at P>1? Bin packing
+  is not additive — `kmin(A ∪ B) ≤ kmin(A) + kmin(B)` — so per-chunk route
+  minimization cannot reach the global optimum. This is a real partitioning
+  cost, but it is bounded by the number of chunks and we are currently 5
+  routes above kmin at P=1, where no such penalty exists.
+- Do the flat-in-P / flat-in-time ceilings move once route minimization works?
+
+Until those are answered, **"dead end" is not a supportable claim.** What is
+supportable: as it stands today FILO2 wins on both axes, the dominant defect
+is vehicle count, and our tool for it is mis-ported.
+
+---
+
+## Original report follows (measurements valid; §6's conclusion withdrawn)
 
 The question this report answers is narrow and deliberately not softened: *is
 the current architecture (Hilbert-curve spatial partitioning → independent
