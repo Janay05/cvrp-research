@@ -41,11 +41,22 @@ void worker_main(WorkerContext& ctx) {
             // construction and before this chunk's stage2_ils, matching FILO2's placement.
             extern int g_routemin_iterations;
             if (g_routemin_iterations > 0) {
-                int routesBefore = sol.numRoutes;
+                // Must log LIVE routes (routeHead[r] != 0), not sol.numRoutes -- numRoutes is
+                // an allocation high-water mark that only ever grows, so logging it made
+                // ROUTEMIN look like it was ADDING routes (810 -> 831 at P=1 on VDA) when
+                // that number simply cannot go down. main.cpp reports the live count, so this
+                // now matches what the solver actually reports. See count_live_routes in
+                // Stage2_ILS.cpp.
+                auto live = [](const Solution& s) {
+                    int n = 0;
+                    for (int r = 0; r < s.numRoutes; ++r) if (s.routeHead[r] != 0) ++n;
+                    return n;
+                };
+                int routesBefore = live(sol);
                 sol = stage1_5_routemin(sol, arena, cache, *ctx.instance, *ctx.partitionInfo,
                                         *ctx.neighborLists, chunkId, ctx.rng, g_routemin_iterations);
                 ctx.log << "Worker " << ctx.workerId << " chunk " << chunkId
-                         << " routemin: routes " << routesBefore << " -> " << sol.numRoutes << "\n";
+                         << " routemin: live routes " << routesBefore << " -> " << live(sol) << "\n";
             }
 
             ctx.chunkSolutions.push_back(std::move(sol));
