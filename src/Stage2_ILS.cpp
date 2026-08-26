@@ -1645,6 +1645,21 @@ namespace {
 
     // Opens (or reuses) an empty route slot. No mutex: T3 runs per-chunk, single-threaded
     // within that chunk, same as stage2_ils's own iteration loop.
+    // Number of routes actually carrying customers. Solution::numRoutes is an allocation
+    // high-water mark, not a live count: remove_customer sets routeHead[r]=0 when a route
+    // empties but nothing ever decrements numRoutes, and open_route only ever increments it.
+    // main.cpp reports the LIVE count (its liveRouteCount loop), so numRoutes and the number
+    // the solver actually reports are different quantities. ROUTEMIN's whole job is driving
+    // the live count down toward kmin, so every route-count decision in stage1_5_routemin
+    // must use this, not numRoutes -- see the comment there.
+    int count_live_routes(const Solution& sol) {
+        int live = 0;
+        for (int r = 0; r < sol.numRoutes; ++r) {
+            if (sol.routeHead[r] != 0) ++live;
+        }
+        return live;
+    }
+
     int open_route(Solution& sol) {
         for (int r = 0; r < sol.numRoutes; ++r) {
             if (sol.routeHead[r] == 0) return r;
@@ -1679,7 +1694,13 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
     if (chunkSize < 3) return sol; // not enough customers for a meaningful FFD/route-pair destroy
 
     int kmin = greedy_ffd_kmin(inst, partitionInfo.globalId[chunkId], chunkSize);
-    if (kmin >= sol.numRoutes) return sol; // already at (or below) the estimated minimum
+    // Live count, NOT sol.numRoutes -- see count_live_routes above. Using numRoutes here (as
+    // this function originally did, across all four route-count decisions below) meant
+    // ROUTEMIN was steering on a number that can only increase, so it could never observe a
+    // route reduction, never hit its kmin stop condition, and its accept-fewer-routes
+    // tiebreak never fired. Measured effect of that defect at P=1 on Valle-D'Aosta: routes
+    // went 810 -> 831 (up), where FILO2's ROUTEMIN on the same instance goes 810 -> 801.
+    if (kmin >= count_live_routes(sol)) return sol; // already at (or below) the estimated minimum
 
     cache.init(inst.n);
     cache.clear();
@@ -1698,6 +1719,7 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
 
     Solution bestSol = sol;
     Solution current = sol;
+    int bestLive = count_live_routes(bestSol);
 
     const double t_base = 1.0, t_end = 0.01;
     double t = t_base;
@@ -1784,7 +1806,7 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
                 cache.insert(c);
             } else {
                 double roll = uniform01(rng);
-                if (roll > t || current.numRoutes < kmin) {
+                if (roll > t || count_live_routes(current) < kmin) {
                     int r = open_route(current);
                     current.routeLoad[r] = 0;
                     insert_customer(current, c, 0, 0, r, arena, inst);
@@ -1818,10 +1840,12 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
         current.totalCost += arena.pendingDelta;
 
         if (still_removed.empty()) {
+            int currentLive = count_live_routes(current);
             if (current.totalCost < bestSol.totalCost ||
-                (current.totalCost == bestSol.totalCost && current.numRoutes < bestSol.numRoutes)) {
+                (current.totalCost == bestSol.totalCost && currentLive < bestLive)) {
                 bestSol = current;
-                if (bestSol.numRoutes <= kmin) break; // hit the target, stop early
+                bestLive = currentLive;
+                if (bestLive <= kmin) break; // hit the target, stop early
             }
         }
 
