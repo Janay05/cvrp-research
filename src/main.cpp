@@ -43,6 +43,16 @@ int g_seed = 1337;
 // likely worth revisiting once T2 (SMD rewrite, which is also what would bring the fuller
 // move-generator set) exists. See docs/reports/009_plan_beating_filo2.md T3.
 int g_routemin_iterations = 0;
+// Candidate-list width used by ROUTEMIN specifically, overridable via --routemin-k.
+// FILO2 runs ROUTEMIN at gamma=1.0 over a neighbour list of up to 1500 ("We are going to
+// use all the available move generators for during this procedure", opt/routemin.hpp),
+// because that phase's job is finding residual capacity ANYWHERE in the solution to absorb
+// customers from the routes it destroys. Our original port reused the k=30 granular list,
+// a ~50x narrower candidate set -- with only 30 candidates most of their routes are full,
+// reinsertion fails, and we open a new route instead, which is the suspected reason route
+// count rose instead of falling. The list is only built when ROUTEMIN is actually enabled
+// (it costs n*k*4 bytes, which is ~1.2GB at Lazio scale for k=300).
+int g_routemin_k = 100;
 
 int main(int argc, char** argv) {
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -80,6 +90,8 @@ int main(int argc, char** argv) {
             g_seed = std::stoi(argv[++i]);
         } else if (arg == "--routemin-iters" && i + 1 < argc) {
             g_routemin_iterations = std::stoi(argv[++i]);
+        } else if (arg == "--routemin-k" && i + 1 < argc) {
+            g_routemin_k = std::stoi(argv[++i]);
         } else if (arg == "--out" && i + 1 < argc) {
             outPath = argv[++i];
         } else if (arg == "--log" && i + 1 < argc) {
@@ -118,6 +130,13 @@ int main(int argc, char** argv) {
     NeighborLists stage5_neighborLists;
     stage5_neighborLists.build(inst, 100, P);
 
+    // Only built when ROUTEMIN is enabled -- see g_routemin_k's comment above.
+    NeighborLists routemin_neighborLists;
+    if (g_routemin_iterations > 0) {
+        std::cout << "Building ROUTEMIN neighbor list (k=" << g_routemin_k << ")..." << std::endl;
+        routemin_neighborLists.build(inst, g_routemin_k, P);
+    }
+
     std::cout << "Running Stage 0 with P=" << P << " chunks..." << std::endl;
     Stage0Result partitionInfo = run_stage0(inst, neighborLists, P);
     
@@ -135,6 +154,7 @@ int main(int argc, char** argv) {
         contexts[i].instance = &inst;
         contexts[i].neighborLists = &neighborLists;
         contexts[i].stage5_neighborLists = &stage5_neighborLists;
+        contexts[i].routemin_neighborLists = &routemin_neighborLists;
         contexts[i].partitionInfo = &partitionInfo;
         contexts[i].rng.seed(g_seed + i); // Isolated deterministic seed per thread
     }
