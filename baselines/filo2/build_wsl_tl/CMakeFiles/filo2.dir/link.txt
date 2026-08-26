@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wextra -Wpedantic -Wuninitialized -O3 -DNDEBUG -O3 -march=native -flto=auto CMakeFiles/filo2.dir/base/KDTree.cpp.o CMakeFiles/filo2.dir/instance/Instance.cpp.o CMakeFiles/filo2.dir/instance/Parser.cpp.o CMakeFiles/filo2.dir/solution/Solution.cpp.o CMakeFiles/filo2.dir/main.cpp.o -o filo2 
