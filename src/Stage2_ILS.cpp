@@ -1705,6 +1705,24 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
     cache.init(inst.n);
     cache.clear();
 
+    // Two lists, deliberately different widths.
+    //
+    // local_granular_lists (WIDE, whatever --routemin-k gives): used for choosing the second
+    // route to destroy and, critically, for the reinsertion candidate scan. Width is what
+    // makes reinsertion succeed -- it decides how many distinct routes we can even consider
+    // when looking for residual capacity to absorb a destroyed route's customers. Too narrow
+    // and every candidate route is full, so we open a new route and route count RISES
+    // (measured on VDA at P=1: k=30 -> 810->814, k=300 -> 810->805, k=1000 -> 810->800=kmin).
+    //
+    // local_narrow_lists (capped at 30): used ONLY for the local_search calls below. Our
+    // local_search is O(k x route_length) per node pop (11 operators x k neighbours, and
+    // get_top3_insertions walks a whole route), so feeding it the wide list is catastrophic
+    // -- measured 69-124 s per worker for 2000 ROUTEMIN iterations at k=1000, versus ~11 s
+    // to build the wide list itself. FILO2 can afford gamma=1.0 here because its local
+    // search is incremental (SMD + per-operator heaps, recomputing only the moves an applied
+    // move invalidates); ours is not, so it pays full width on every pop. Narrowing just the
+    // local_search input keeps the reinsertion benefit at a fraction of the cost.
+    // nbr[] is sorted by ascending distance, so truncating is exactly "the 30 nearest".
     NeighborLists local_granular_lists;
     local_granular_lists.k = neighborLists.k;
     local_granular_lists.nbr.assign(inst.n + 1, std::vector<NodeId>());
@@ -1715,6 +1733,17 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
                 local_granular_lists.nbr[global_i].push_back(global_j);
             }
         }
+    }
+
+    constexpr int kRoutemimLocalSearchK = 30;
+    NeighborLists local_narrow_lists;
+    local_narrow_lists.k = std::min(local_granular_lists.k, kRoutemimLocalSearchK);
+    local_narrow_lists.nbr.assign(inst.n + 1, std::vector<NodeId>());
+    for (int i = 1; i <= chunkSize; ++i) {
+        NodeId global_i = partitionInfo.globalId[chunkId][i];
+        const auto& wide = local_granular_lists.nbr[global_i];
+        int take = std::min((int)wide.size(), kRoutemimLocalSearchK);
+        local_narrow_lists.nbr[global_i].assign(wide.begin(), wide.begin() + take);
     }
 
     Solution bestSol = sol;
@@ -1831,7 +1860,8 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
 
         bool improved = true;
         while (improved) {
-            improved = local_search(current, arena, cache, inst, local_granular_lists, chunkSize);
+            // NARROW list here on purpose -- see the two-list comment above.
+            improved = local_search(current, arena, cache, inst, local_narrow_lists, chunkSize);
         }
         // remove_customer/insert_customer/local_search only accumulate into
         // arena.pendingDelta (see local_search's own doc comment above) -- the caller must

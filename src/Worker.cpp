@@ -53,8 +53,11 @@ void worker_main(WorkerContext& ctx) {
                     return n;
                 };
                 int routesBefore = live(sol);
+                // Deliberately the WIDE routemin list, not the k=30 granular one -- see
+                // g_routemin_k in main.cpp for why the narrow list is suspected of causing
+                // route count to rise.
                 sol = stage1_5_routemin(sol, arena, cache, *ctx.instance, *ctx.partitionInfo,
-                                        *ctx.neighborLists, chunkId, ctx.rng, g_routemin_iterations);
+                                        *ctx.routemin_neighborLists, chunkId, ctx.rng, g_routemin_iterations);
                 ctx.log << "Worker " << ctx.workerId << " chunk " << chunkId
                          << " routemin: live routes " << routesBefore << " -> " << live(sol) << "\n";
             }

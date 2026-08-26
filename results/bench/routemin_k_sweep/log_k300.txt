@@ -1,0 +1,10 @@
+Starting CVRP Parallel...
+Worker 0 chunk 0 chunkSize=19999 stage2_time_budget_ms=40000
+Worker 0 chunk 0 routemin: live routes 810 -> 805
+Worker 0 chunk 0 actual_iterations_completed=45025
+Worker 0 Stage 1: 86826.5 ms | Stage 2: 40013 ms | dist_calls=0
+Cost BEFORE Stage 3 Healing: 21930542
+Cost AFTER Stage 3 Healing: 21930542
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Final cost: 21929445

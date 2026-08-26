@@ -1,0 +1,55 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Valle-D-Aosta.vrp (n=19999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building ROUTEMIN neighbor list (k=1000)...
+Running Stage 0 with P=2 chunks...
+Setting up workers...
+Launching threads...
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 0 Stage 2 startingWorker 
+Worker 0 ILS chunk 0
+1 ILS chunk 1
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 15048.3 ms | Stage 2: 32009.9 ms
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 16228.8 ms | Stage 2: 32015.3 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 21906658
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Incremental Cost Bookkeeping: 21906179
+Scratch Computed Final cost: 21906179
+Cost AFTER Stage 3 Healing: 21906179
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 0.0 ms
+SA Iter: 100, elapsed: 3891.8 ms
+SA Iter: 200, elapsed: 7966.3 ms
+SA Iter: 300, elapsed: 12008.3 ms
+SA Iter: 400, elapsed: 15679.0 ms
+SA Iter: 500, elapsed: 19645.8 ms
+SA Iter: 600, elapsed: 23229.3 ms
+SA Iter: 700, elapsed: 27242.4 ms
+SA Iter: 800, elapsed: 31052.5 ms
+SA Iter: 900, elapsed: 34621.3 ms
+SA Iter: 1000, elapsed: 38040.8 ms
+SA Iter: 1100, elapsed: 41553.3 ms
+SA Iter: 1200, elapsed: 45378.4 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 21902098
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 16027.4 ms
+Stage 1 & 2 (Parallel Construction/ILS): 48352.9 ms
+Stage 3 (Parallel Healing): 1071.09 ms
+Stage 4 & 5 (Cleanup/Polish): 47177.2 ms
+Total time: 112629 ms
+Total distance evaluations: 0

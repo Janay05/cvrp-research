@@ -17,6 +17,9 @@ struct alignas(64) WorkerContext {
     const Instance* instance;
     const NeighborLists* neighborLists;
     const NeighborLists* stage5_neighborLists;
+    // Wider list used only by ROUTEMIN (see g_routemin_k in main.cpp). Empty unless
+    // ROUTEMIN is enabled.
+    const NeighborLists* routemin_neighborLists;
     const Stage0Result* partitionInfo;
 
     // filled by this worker
