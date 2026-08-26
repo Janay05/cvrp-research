@@ -1,16 +1,166 @@
-Subject: Updated Runtime Analysis and Apology Regarding Benchmarking Discrepancy
+Subject: CVRP Solver — Verdict: the current architecture cannot beat FILO2 on both time and cost
 
 Hi [Mentor's Name],
 
-I hope this email finds you well.
+I've been trying to close the remaining cost gap to FILO2, and I now think
+I owe you a clear answer rather than another incremental update: the
+current architecture cannot beat FILO2 on both time and cost. I don't
+think this is a tuning problem or a "needs more effort" problem. Below is
+the evidence, including a measurement I should have run much earlier and a
+correction to a number I reported to you previously.
 
-Please find attached the updated report (007) detailing the algorithms and design decisions behind our solver's runtime results. You can go through the attached report to see exactly where we are getting our benefits in runtime from, such as the parallel partitioning, constant-time search steps, and boundary healing.
+Full write-up: docs/reports/010_can_this_architecture_beat_filo2.md
 
-I also wanted to sincerely apologize for a mistake in our earlier benchmarking. In previous reports, I didn't account for a compiler difference: our solver was built with MSVC while FILO2 was built using a different configuration that affected the comparisons. We have now fixed this compiler-parity validity gap by building both solvers under the same verified WSL/g++ environment (as detailed in report 008). While our solver remains faster (about 1.30x-1.36x faster), the previously claimed 2.3x-3.9x speedup was inflated due to this discrepancy. 
+THE MEASUREMENT I HAD BEEN MISSING
 
-I've updated the runtime numbers in the attached report to reflect the corrected, verified benchmarks. Moving forward, I will ensure stricter parity in all our performance tests.
+Every comparison I've reported so far ran each solver to *its own* stopping
+point and then compared costs. That answers "who does better in their own
+time" — it does not answer "who does better per unit of time". The correct
+test is iso-quality: how much time does each solver need to reach a given
+solution quality?
 
-Please let me know if you have any questions or feedback.
+I built FILO2 with its time-limit flag and swept its budget on
+Valle-D'Aosta (single core):
+
+  FILO2 budget    Cost
+  -----------------------------
+  3 s             21,932,131    (log: "COREOPT for 0 seconds" — this is
+  5 s             21,932,131     construction + route-min only, no search)
+  10 s            21,824,646
+  20 s            21,790,302
+  40 s            21,766,836
+  102 s           21,738,409
+
+Against that, our solver's best result *ever recorded* — the lowest cost
+across every configuration, seed, time budget and core count in every
+benchmark we have — is 21,923,585 (102 s, 2 cores, verified feasible).
+
+So: FILO2 beats our all-time best result in 10 seconds on a single core.
+Ours consumed 204 core-seconds; FILO2's took 10. Roughly 20x less compute
+for a 0.45% better answer.
+
+At Lazio (~1M customers) it is worse, not better — and I'd assumed scale was
+where we'd look strongest. Pinning FILO2 to our own 315 s wall-clock:
+
+                                                  Cost            Routes
+  ------------------------------------------------------------------------
+  FILO2, initial construction (no optimization)   3,177,770,000   40,252
+  FILO2, final @ 315 s                            3,159,235,192   40,111
+  Ours, 315 s, 4 cores                            3,182,981,663   40,431
+
+FILO2's *construction heuristic alone*, before any optimization runs at all,
+beats our entire 315-second 4-core pipeline on both cost and route count.
+
+A CORRECTION TO MY LAST UPDATE
+
+I reported that the parallel multi-start portfolio (best-of-12) closed the
+gap from 1.20% to 1.04%. That comparison was wrong, and in our favour: I
+compared *our* best-of-12 against FILO2's *single-run* mean. FILO2 is also a
+seeded randomized solver and is single-threaded, so on the same machine it
+gets the identical trick for free. Measured properly, FILO2 best-of-12 =
+21,729,621 vs our 21,966,881 — the like-for-like gap is 1.09%, and
+multi-start is not a competitive advantage at all. It helps us slightly more
+than them only because our seed-to-seed variance is larger, which is itself
+a symptom of a less reliable search.
+
+WHY MORE EFFORT WON'T FIX IT
+
+The three levers this architecture has are all exhausted, and I measured
+each rather than assuming:
+
+1. More cores — cost is flat. Across a P=1..16 sweep, every configuration
+   lands at 22.0-22.15M. P=1, which has *zero* partitioning penalty, is the
+   worst point. This directly falsifies the architecture's stated premise
+   (from our own design doc) that partitioning converts parallel search
+   effort into better cost. The extra cores buy iterations that don't
+   convert into quality.
+
+2. More time — cost is flat. Running 4.6x longer (471 s) gave 21,979,044,
+   which is still worse than our own 102 s best. We are converged, not
+   time-starved. Our quality ceiling is ~21.92M; FILO2's *floor* at 102 s
+   is 21.73M. Our ceiling sits above their floor.
+
+3. Better search — four attempts, ~0.014% total. Since the route-min
+   experiment I tried adaptive ruin-sizing (cost 35-47% throughput, no
+   gain), a move-evaluation cache (correct, but cached the wrong stage), and
+   two new local-search operators (+0.014%, kept). All are documented; three
+   are disabled in the code.
+
+A CORRECTION TO MY OWN DIAGNOSIS
+
+I should also flag that the root cause I gave in my last report was wrong,
+and I only found this out by finally measuring it instead of asserting it.
+
+I had written that our local search does ~103,000 distance evaluations per
+iteration "against FILO2's low hundreds", and concluded we simply couldn't
+afford enough search. The 103,000 was measured and is real. FILO2's "low
+hundreds" was never measured — I assumed it from reading their code. So I
+instrumented FILO2's distance function and counted:
+
+  Distance evaluations per search iteration
+  -----------------------------------------
+  Ours      ~78,300
+  FILO2     ~73,900
+
+A ratio of 1.06x — essentially identical, not the ~300x I implied. And on
+throughput we are ahead, not behind: ~2,742 iterations/sec/core against
+FILO2's ~1,150, and once you normalise for the fact that their iterations
+destroy ~23 customers to our ~9, we do about the same search work per core
+per second — on 2 cores to their 1. So we deploy roughly twice FILO2's
+total search effort and still finish 1.09% behind.
+
+So the binding constraint is not speed, and never was. It's what FILO2 does
+with each unit of work:
+
+- Their starting point is roughly our finishing point. FILO2's construction
+  + route-minimisation, in about 4 seconds, gives 21,932,131 at
+  Valle-D'Aosta; our fully converged best is 21,923,585. At Lazio their
+  construction alone beats our final answer. We spend our whole search
+  budget arriving roughly where they begin.
+- They run 22 operator types including ejection chains (depth ~25); we run
+  11 and have no ejection chain. Once the easy moves are gone, they have
+  moves available that we don't.
+
+This correction makes the verdict stronger rather than weaker: we cannot
+compute our way out, because we already out-compute them and lose. It also
+explains point 1 above — throughput is the one thing partitioning buys, and
+throughput was never what was holding us back, which is exactly why cost is
+flat in P.
+
+And it is why I'd call this a dead end rather than a backlog item. Closing
+the gap means adopting FILO2's *algorithm* — their construction, their
+ejection chains, their adaptive control. Once we do that, partitioning still
+contributes nothing (it only buys throughput, which we've established isn't
+the constraint), while continuing to constrain solutions at chunk boundaries
+and requiring the whole boundary-healing stage to exist. The end state is
+FILO2's algorithm wrapped in a parallel layer that measurably doesn't help —
+at which point the thing that makes this architecture ours has been removed
+for no gain.
+
+WHAT THE ARCHITECTURE DOES WIN (stated for completeness, not as a
+consolation)
+
+- Memory at scale: 3.5 GB vs FILO2's 7.04 GB at Lazio, a 2x win — after I
+  found and fixed a bug this week where a disabled feature's buffer was
+  still being allocated at full instance size (that fix alone halved our
+  footprint, 7.0 GB -> 3.5 GB, with zero behaviour change).
+- Predictable wall-clock: we're time-budgeted by construction (103.4-103.6 s
+  across seeds) where FILO2's iteration-budgeted design varies 87-194 s.
+
+Neither changes the verdict on the actual aim.
+
+WHERE I'D LIKE YOUR STEER
+
+There is one design that could plausibly win on both axes, but it is a
+*different* architecture, not an extension of this one: FILO2-quality global
+localized search parallelised by optimistic concurrency (per-route locks,
+abort/retry on conflict — each iteration touches ~50 vertices, so conflicts
+should be rare). I'd budget 3-4 weeks with real concurrency-correctness
+risk, and I would not want to start it without your agreement that it's
+worth the time given what we've just learned.
+
+Happy to walk through any of the measurements — all the raw data and scripts
+are committed.
 
 Best regards,
 
