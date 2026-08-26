@@ -120,16 +120,63 @@ vs FILO2's ~0.15 %), which is itself a symptom of a less reliable search.
 
 ---
 
-## 3. Why — the structural reason
+## 3. Why — and a correction to report 009's stated root cause
 
-The root cause identified in report 009 stands: our local search performs
-**~103,000 distance evaluations per ILS iteration** against FILO2's low
-hundreds, because FILO2 keeps every candidate move alive in per-operator heaps
-(Static Move Descriptors) and recomputes only the handful invalidated by an
-applied move, while we re-evaluate all operators × all 30 neighbours on every
-node pop.
+**Report 009's root-cause claim was wrong, and this report retracts it.**
 
-Four separate attempts to close that this program (all implemented, verified
+Report 009 stated our local search performs "~103,000 distance evaluations per
+ILS iteration against FILO2's *low hundreds*", concluding that we "cannot
+afford enough iterations to close the cost gap". The 103,000 figure was
+measured and is real. **FILO2's "low hundreds" was never measured — it was an
+assertion, and it is off by roughly three orders of magnitude.**
+
+Measured directly for this report by instrumenting FILO2's `Instance::get_cost`
+with a call counter (temporary; reverted after measuring). Isolating core
+optimization by differencing a 60 s run against a 4 s run whose log confirms
+`Running COREOPT for 0 seconds`:
+
+| | Distance evaluations per ILS iteration |
+|---|---|
+| Ours (Stage 2, current build, VDA) | **~78,300** (92,028 worker 0 / 64,551 worker 1) |
+| FILO2 (COREOPT, VDA) | **~73,900** (5,121,753,273 calls ÷ 69,341 iterations) |
+
+**A ratio of 1.06× — essentially identical, not 300×.** The premise that we are
+computationally out-classed per iteration is false.
+
+Iteration throughput points the *same* way, against us:
+
+| | Iterations/s per core | Ruin size (omega) | Customers ruined/s/core |
+|---|---|---|---|
+| Ours | ~2,742 | ~9.2 (fixed, `ceil(ln n)`) | ~25,200 |
+| FILO2 | ~1,150 | ~23 (adaptive, observed) | ~26,450 |
+
+Per core the two are within ~5 % of each other on actual search work done —
+and **we run 2 cores to FILO2's 1**, so we deploy roughly *twice* FILO2's
+total search effort and still finish 1.09 % behind. FILO2 does use ~2.6× fewer
+distance evaluations per *unit of destruction* (3,211 vs 8,510 per ruined
+customer), which is a real efficiency edge — but 2.6× is nowhere near enough
+to explain the outcome, and we more than compensate for it with parallelism.
+
+So the binding constraint is **not** throughput, not per-iteration cost, and
+not distance-evaluation efficiency. It is **what FILO2 does with each unit of
+work** — search effectiveness, not search speed. The supporting evidence:
+
+1. **Their starting point ≈ our finishing point.** FILO2's construction +
+   ROUTEMIN, using 186 M cost calls and ~4 s, yields 21,932,131 at VDA. Our
+   fully converged best is 21,923,585. At Lazio their construction alone
+   *beats* our final result outright (§1). We spend our entire search budget
+   getting to roughly where FILO2 begins.
+2. **Neighbourhood richness**: FILO2 applies 22 operator types including
+   ejection chains (depth ~25), SPLIT, TAILS and 3-segment exchanges; we have
+   11 and no ejection chain. Once easy moves are exhausted, they have moves
+   available that we simply do not.
+3. **Working adaptive control**: FILO2's gamma (~0.27) and omega (~23) adapt
+   during the run. Our attempts to replicate that (T4.2) measurably hurt.
+
+This correction makes the verdict *stronger*, not weaker: we cannot compute
+our way out of the gap, because we already out-compute FILO2 and still lose.
+
+Four separate attempts to close the gap this program (all implemented, verified
 correct, and measured):
 
 | Attempt | Result |
@@ -150,20 +197,30 @@ precisely what we lack, and precisely why T3 failed.
 
 ## 4. Why this is an architecture verdict, not a tuning verdict
 
-To close 1.09 % we would need FILO2's per-iteration search efficiency, i.e.
-the full SMD + per-operator-heap + incremental-invalidation design. But:
+Given §3, closing 1.09 % is not a matter of making our existing search faster —
+it is already fast enough, and faster than FILO2 in aggregate. It requires
+making it *better*: a competitive construction (Clarke-Wright + a route
+minimization that actually works), a materially richer neighbourhood (ejection
+chains and the 3-segment/SPLIT/TAILS families), and adaptive control that
+functions. That is not a tuning exercise — it is FILO2's algorithm.
 
-1. That **is** FILO2's architecture. Adopting it means replacing our inner
-   loop with theirs.
-2. Once it exists, partitioning contributes nothing — §2.1 shows cost is flat
-   in P, so the Hilbert-partitioning layer (the distinctive part of this
-   architecture) would be doing no useful work, while still constraining the
-   solution space at boundaries.
+The decisive point is what happens *after* you do all that:
 
-So the end state of "fixing" this architecture is *FILO2's search with a
-parallel wrapper around it* — at which point the thing that made this
-architecture ours has been removed. That is the definition of a dead end for
-the stated aim.
+1. **Partitioning would still contribute nothing.** §2.1 shows cost is flat
+   from P=1 to P=16 *today*, and the reason is now clear: throughput was never
+   the binding constraint, so buying more of it changes nothing. Improving
+   search quality does not make partitioning start paying — if anything it
+   raises the value of the *unconstrained* global moves that chunking forbids
+   at boundaries.
+2. **So the distinctive layer becomes pure overhead.** Hilbert partitioning is
+   what makes this architecture ours rather than a FILO2 reimplementation. It
+   would be doing no useful work while still constraining the solution space
+   at chunk boundaries and forcing the Stage 3 healing machinery to exist.
+
+So the end state of "fixing" this architecture is *FILO2's algorithm with a
+parallel wrapper that measurably does not help* — at which point the thing
+that made this architecture ours has been removed for no gain. That is the
+definition of a dead end for the stated aim.
 
 There is a genuinely different design that could win — FILO2-quality global
 localized search parallelised by optimistic concurrency (report 009's Stage
@@ -198,9 +255,16 @@ incremental: FILO2 beats our all-time best result in 10 seconds on one core
 (~20× less compute), and at Lazio its *construction heuristic alone* beats our
 full 315-second 4-core pipeline. Cost is flat in P, flat in time, and
 multi-start is symmetric — the three levers this architecture has are all
-exhausted. Closing the remaining ~1.09 % requires adopting FILO2's search
-design, at which point the partitioning that defines this architecture is
-inert.
+exhausted.
+
+And the reason is not the one report 009 gave. We are **not** computationally
+out-classed: per-iteration distance-evaluation cost is within 6 % of FILO2's,
+and in aggregate we deploy roughly *twice* their total search work (§3). We
+lose anyway. Throughput — the one thing partitioning buys — is not the binding
+constraint and never was, which is exactly why cost is flat in P. Closing the
+remaining ~1.09 % means adopting FILO2's *algorithm* (construction, ejection
+chains, working adaptive control), at which point the partitioning that
+defines this architecture is inert overhead.
 
 Recommendation: report this as a dead end for the "beat FILO2 on both axes"
 aim, and treat Stage 6-B (optimistic-concurrency global search) as a separate
