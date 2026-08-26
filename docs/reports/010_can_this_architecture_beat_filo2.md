@@ -76,6 +76,68 @@ Until those are answered, **"dead end" is not a supportable claim.** What is
 supportable: as it stands today FILO2 wins on both axes, the dominant defect
 is vehicle count, and our tool for it is mis-ported.
 
+### 0.1 Both defects fixed — gap 1.20 % → 0.71 %
+
+Defect 2 confirmed and fixed. `--routemin-k` gives ROUTEMIN a dedicated wide
+list; ROUTEMIN's effect on live route count, VDA at P=1:
+
+| ROUTEMIN k | live routes | final routes | final cost |
+|---|---|---|---|
+| 30 (original) | 810 → **814** (rises) | 807 | 22,036,221 |
+| 100 | 810 → 809 | 808 | 22,007,110 |
+| 300 | 810 → 805 | 804 | 21,929,445 |
+| 1000 | 810 → **800** (= kmin) | 801 | 21,875,130 |
+| *FILO2* | *810 → 801* | *800* | *21,738,409* |
+
+Width was the whole story: it decides how many distinct routes reinsertion can
+consider when hunting for residual capacity. Also split the neighbourhood —
+**wide** for reinsertion/seed selection, **narrow (30)** for the `local_search`
+calls inside ROUTEMIN, since our `local_search` is O(k × route_length) per node
+pop and the wide list cost 69–124 s/worker (FILO2 affords gamma=1.0 there only
+because its search is incremental). That cut wall clock 232 s → 124 s with no
+loss of route reduction.
+
+**5-seed, equal wall clock (~102 s), all verified feasible:**
+
+| | mean cost | mean routes | gap to FILO2 |
+|---|---|---|---|
+| baseline (no ROUTEMIN) | 22,000,544 | 805.0 | 1.196 % |
+| **fixed ROUTEMIN** | **21,895,496** | **802.6** | **0.713 %** |
+| FILO2 (equal time) | 21,740,517 | 800.0 | — |
+
+**The largest single improvement of the program — bigger than every other kept
+change combined**, and it came from fixing two bugs in our own port rather than
+from any new algorithm.
+
+### 0.2 What the fix revealed: the real remaining constraint
+
+Decomposing again after the fix changes the picture from §0:
+
+| | routes | depot legs | inter-customer |
+|---|---|---|---|
+| Ours, no ROUTEMIN | 805 | 20,784,004 | 1,123,433 |
+| Ours, fixed ROUTEMIN | 802 | **20,458,582** | **1,433,160** |
+| FILO2 | 800 | 20,607,561 | 1,118,940 |
+
+Our depot-leg cost is now **better than FILO2's** — route minimization works.
+But inter-customer cost degraded 28 % (1,123,433 → 1,433,160). Giving 22 s more
+optimization moved it 0.2 %, so this is **structural, not a budget artifact**:
+
+> **We can achieve good route count *or* good tour quality, but not both at
+> once. FILO2 holds both simultaneously.**
+
+A tightly packed route is a harder sequencing sub-problem — less slack, and the
+improving moves needed are longer-range and multi-route (ejection chains,
+3-segment exchanges) rather than the relocate/swap/2-opt family our 11
+operators provide. So §3's neighbourhood diagnosis was directionally right, but
+it only becomes the *binding* constraint once route minimization works; before
+that, route count masked it.
+
+**Net:** the remaining ~0.71 % is now a single, well-identified constraint —
+tour quality on packed routes — which is exactly what T2 (SMD + richer
+neighbourhood) targets, no longer confounded by route count. Whether that is
+worth doing is a scoping decision, not a settled "dead end".
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
