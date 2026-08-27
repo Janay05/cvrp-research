@@ -1,6 +1,7 @@
 #include "Stage1_Construction.hpp"
 #include "UnionFind.hpp"
 #include <algorithm>
+#include <functional>
 
 namespace {
     struct Edge {
@@ -43,6 +44,111 @@ namespace {
         return routes;
     }
 
+    // T6 (docs/reports/009_plan_beating_filo2.md): Clarke & Wright savings construction,
+    // ported from FILO2's solution/savings.hpp. Returns routes in LOCAL chunk ids so it
+    // drops straight into the same Solution-building code the MST path already uses.
+    //
+    // Why: measured, our MST+randomized-DFS construction starts materially worse than CW --
+    // 22,522,444 vs 22,231,600 at Valle-D-Aosta (1.3%), and 3,208,434,488 vs 3,177,770,000
+    // at Lazio (0.96%). At Lazio that matters enormously: FILO2's CW output alone
+    // (3,177,770,000 / 40,252 routes) beats our entire 315 s 4-core FINAL answer
+    // (3,182,981,663 / 40,431 routes), on both cost and route count. Report 009 estimated
+    // this technique at "0-0.15%"; measurement says ~1%.
+    //
+    // Savings s(i,j) = d(0,i) + d(0,j) - lambda*d(i,j): how much is saved by serving i and j
+    // on one route (i's tail joined to j's head) instead of two separate out-and-back trips.
+    // Merges are applied greedily in descending savings order, subject to i being its route's
+    // tail, j its route's head, different routes, and combined load fitting capacity.
+    //
+    // Route identity under merging is tracked with a local union-find (route id == the local
+    // id of the customer that started it) so "which route is i in?" stays near-O(1) as routes
+    // combine; the sequence itself is a `next` linked list so a merge is O(1) pointer work
+    // rather than copying one route's customers into another.
+    std::vector<std::vector<NodeId>> clarke_wright_routes(int chunkId, const Instance& inst,
+                                                           const Stage0Result& partitionInfo,
+                                                           const NeighborLists& neighborLists,
+                                                           int chunkSize,
+                                                           const std::vector<int64_t>& demand_local,
+                                                           int cw_neighbors) {
+        const auto& globalIds = partitionInfo.globalId[chunkId];
+
+        std::vector<NodeId> next(chunkSize + 1, 0);
+        std::vector<int> parent(chunkSize + 1), usize(chunkSize + 1, 1);
+        std::vector<NodeId> head(chunkSize + 1), tail(chunkSize + 1);
+        std::vector<Cost> load(chunkSize + 1, 0);
+        for (int i = 0; i <= chunkSize; ++i) {
+            parent[i] = i;
+            head[i] = (NodeId)i;
+            tail[i] = (NodeId)i;
+            load[i] = (i == 0) ? 0 : demand_local[i];
+        }
+        std::function<int(int)> find = [&](int x) {
+            while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+            return x;
+        };
+
+        struct Saving { NodeId i, j; Cost value; };
+        std::vector<Saving> savings;
+        savings.reserve((size_t)chunkSize * std::min(cw_neighbors, 16));
+
+        for (int i = 1; i <= chunkSize; ++i) {
+            NodeId global_i = globalIds[i];
+            Cost d0i = dist(inst, 0, global_i);
+            int added = 0;
+            for (NodeId global_j : neighborLists.nbr[global_i]) {
+                if (added >= cw_neighbors) break;
+                if (partitionInfo.chunkOf[global_j] != chunkId) continue;
+                NodeId local_j = partitionInfo.localId[global_j];
+                if (local_j <= 0 || local_j > chunkSize) continue;
+                // i < j only: the saving is symmetric, so generating both directions would
+                // just double the sort cost for identical merge decisions.
+                if ((NodeId)i >= local_j) continue;
+                Cost value = d0i + dist(inst, 0, global_j) - dist(inst, global_i, global_j);
+                savings.push_back({(NodeId)i, local_j, value});
+                ++added;
+            }
+        }
+
+        std::sort(savings.begin(), savings.end(),
+                  [](const Saving& a, const Saving& b) { return a.value > b.value; });
+
+        for (const auto& s : savings) {
+            int ri = find(s.i), rj = find(s.j);
+            if (ri == rj) continue;
+            if (load[ri] + load[rj] > inst.Q) continue;
+
+            NodeId newHead, newTail;
+            if (tail[ri] == s.i && head[rj] == s.j) {
+                next[s.i] = s.j;
+                newHead = head[ri]; newTail = tail[rj];
+            } else if (tail[rj] == s.j && head[ri] == s.i) {
+                next[s.j] = s.i;
+                newHead = head[rj]; newTail = tail[ri];
+            } else {
+                continue; // neither orientation joins an end to an end
+            }
+
+            Cost merged = load[ri] + load[rj];
+            int root = ri, other = rj;
+            if (usize[ri] < usize[rj]) { root = rj; other = ri; }
+            parent[other] = root;
+            usize[root] += usize[other];
+            head[root] = newHead; tail[root] = newTail; load[root] = merged;
+        }
+
+        std::vector<std::vector<NodeId>> routes;
+        for (int i = 1; i <= chunkSize; ++i) {
+            if (find(i) != i) continue; // not a route root
+            std::vector<NodeId> r;
+            for (NodeId c = head[i]; c != 0; c = next[c]) {
+                r.push_back(c);
+                if ((int)r.size() > chunkSize) break; // cycle guard
+            }
+            if (!r.empty()) routes.push_back(std::move(r));
+        }
+        return routes;
+    }
+
     Cost compute_total_cost(const std::vector<std::vector<NodeId>>& routes, const std::vector<NodeId>& localToGlobal, const Instance& inst) {
         Cost total = 0;
         for (const auto& r : routes) {
@@ -57,7 +163,9 @@ namespace {
     }
 }
 
-Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result& partitionInfo, const NeighborLists& neighborLists, std::mt19937& rng) {
+Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result& partitionInfo,
+                          const NeighborLists& neighborLists, std::mt19937& rng,
+                          const NeighborLists* cw_neighborLists) {
     const auto& globalIds = partitionInfo.globalId[chunkId];
     int chunkSize = globalIds.size() - 1; // excluding depot
     NodeId depot_local = 0;
@@ -116,12 +224,25 @@ Solution stage1_construct(int chunkId, const Instance& inst, const Stage0Result&
         mst_adj[edge.v].push_back(edge.u);
     }
 
-    int rho = 100;
-    
     Cost best_cost = -1;
     std::vector<std::vector<NodeId>> best_routes;
 
-    for (int attempt = 0; attempt < rho; ++attempt) {
+    // T6: Clarke & Wright instead of MST+randomized-DFS when enabled -- see
+    // clarke_wright_routes above for the measured justification. The MST path below is kept
+    // (not deleted) so the two are A/B-comparable on the same build.
+    extern int g_use_clarke_wright;
+    extern int g_cw_neighbors;
+    if (g_use_clarke_wright) {
+        // Deliberately the wide list when one is supplied -- see the header comment.
+        const NeighborLists& cwLists = cw_neighborLists ? *cw_neighborLists : neighborLists;
+        best_routes = clarke_wright_routes(chunkId, inst, partitionInfo, cwLists,
+                                           chunkSize, demand_local, g_cw_neighbors);
+        best_cost = compute_total_cost(best_routes, globalIds, inst);
+    }
+
+    int rho = 100;
+
+    for (int attempt = 0; g_use_clarke_wright == 0 && attempt < rho; ++attempt) {
         auto adj_copy = mst_adj;
         for (auto& neighbors : adj_copy) {
             std::shuffle(neighbors.begin(), neighbors.end(), rng);

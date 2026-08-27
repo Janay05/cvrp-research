@@ -61,6 +61,16 @@ int g_routemin_iterations = 0;
 // count rose instead of falling. The list is only built when ROUTEMIN is actually enabled
 // (it costs n*k*4 bytes, which is ~1.2GB at Lazio scale for k=300).
 int g_routemin_k = 100;
+// T6: use Clarke & Wright savings construction instead of MST+randomized-DFS.
+// --construction cw|mst. See clarke_wright_routes in Stage1_Construction.cpp for the
+// measured motivation (our MST construction starts ~1% worse than CW on both VDA and
+// Lazio, and at Lazio FILO2's CW output alone beats our final answer).
+int g_use_clarke_wright = 0;
+// Savings candidates per customer. FILO2's DEFAULT_CW_NEIGHBORS is 100; ours is capped by
+// whatever neighbour list Stage 1 is handed (currently k=30), so this mainly guards memory:
+// the savings array is O(chunkSize * cw_neighbors) per chunk, built concurrently by P
+// workers.
+int g_cw_neighbors = 100;
 
 int main(int argc, char** argv) {
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -100,6 +110,10 @@ int main(int argc, char** argv) {
             g_routemin_iterations = std::stoi(argv[++i]);
         } else if (arg == "--routemin-k" && i + 1 < argc) {
             g_routemin_k = std::stoi(argv[++i]);
+        } else if (arg == "--construction" && i + 1 < argc) {
+            g_use_clarke_wright = (std::string(argv[++i]) == "cw") ? 1 : 0;
+        } else if (arg == "--cw-neighbors" && i + 1 < argc) {
+            g_cw_neighbors = std::stoi(argv[++i]);
         } else if (arg == "--out" && i + 1 < argc) {
             outPath = argv[++i];
         } else if (arg == "--log" && i + 1 < argc) {
@@ -138,10 +152,13 @@ int main(int argc, char** argv) {
     NeighborLists stage5_neighborLists;
     stage5_neighborLists.build(inst, 100, P);
 
-    // Only built when ROUTEMIN is enabled -- see g_routemin_k's comment above.
+    // One wide candidate list, shared by ROUTEMIN and Clarke & Wright -- both need width for
+    // the same underlying reason (enough distinct candidate routes to merge into / reinsert
+    // into), and building it twice would double an already-expensive allocation. Only built
+    // when at least one of them is enabled; see g_routemin_k's comment above for the cost.
     NeighborLists routemin_neighborLists;
-    if (g_routemin_iterations > 0) {
-        std::cout << "Building ROUTEMIN neighbor list (k=" << g_routemin_k << ")..." << std::endl;
+    if (g_routemin_iterations > 0 || g_use_clarke_wright) {
+        std::cout << "Building wide neighbor list (k=" << g_routemin_k << ")..." << std::endl;
         routemin_neighborLists.build(inst, g_routemin_k, P);
     }
 
