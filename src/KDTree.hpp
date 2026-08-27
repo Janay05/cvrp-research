@@ -28,7 +28,10 @@ struct NeighborLists {
 
     // Post-pass: makes the candidate relation closer to symmetric (see KDTree.cpp for why
     // the raw kNN query is asymmetric and what this does about it).
-    void symmetrize(const Instance& inst, int k_neighbors);
+    // num_threads: output is identical for any thread count (see KDTree.cpp) -- this was
+    // measured as the dominant cost of list construction at scale (137 s of a 180 s Stage 0
+    // at Lazio/k=300, versus 3.4 s for the actual kNN queries), so it must not stay serial.
+    void symmetrize(const Instance& inst, int k_neighbors, int num_threads = 1);
 
     // T2-lite (docs/reports/009_plan_beating_filo2.md): reverseIdx[v] lists every (i, j_idx)
     // such that nbr[i][j_idx] == v -- "who has v as a candidate". Purely structural (depends
