@@ -261,13 +261,58 @@ feasible:**
 315 s. (We use P cores to FILO2's 1, so these are wall-clock wins, not
 compute-per-core wins.)
 
-**Defaults still off, for one reason: memory.** Lazio peaks at 7.43 GB — 98 % of
-this machine's 7.6 GB WSL ceiling, against 3.5 GB for the baseline. The spike is
-transient, inside `symmetrize` (the `extra` buffers plus pre-truncation growth
-of `nbr[j]`), not steady state. Turning this on by default would put the
-reference large instance one allocation away from the OOM that crashed this VM
-twice earlier. Either raise WSL's limit (the host has 16 GB, WSL2 self-caps at
-half) or reduce the transient before flipping the default.
+### 0.7 Memory ceiling raised, wider k at Lazio, defaults now on
+
+The 7.43 GB Lazio peak was 98 % of the 7.6 GB WSL ceiling — too tight to default.
+Root cause was configuration, not the solver: WSL2 self-caps at ~50 % of host RAM
+and no `.wslconfig` existed. Created one (`memory=10GB`, `swap=4GB`; host is
+15.71 GB, so this leaves ~5.7 GB for Windows). Swap is deliberate — an overrun
+now degrades into paging instead of the abrupt VM loss seen twice earlier.
+Ceiling is now **9.7 GiB + 4 GiB swap**.
+
+That headroom buys a wider list at Lazio, which was previously memory-blocked:
+
+| Lazio, CW + ROUTEMIN | cost | routes | wall | peak RSS | gap |
+|---|---|---|---|---|---|
+| k=300 | 3,171,997,628 | 40,267 | 284.9 s | 7.43 GB (77 %) | 0.404 % |
+| **k=500** | **3,165,857,376** | **40,209** | 319.1 s | 9.11 GB (94 %) | **0.210 %** |
+| FILO2 | 3,159,235,192 | 40,111 | 315 s | 7.04 GB | — |
+
+k=500 nearly halves the gap again, at essentially equal wall clock — but at 94 %
+of the ceiling, so it stays an explicit opt-in. **k=300 is the default at Lazio
+scale**: 77 % of ceiling and still *faster* than the baseline.
+
+**Defaults are now on** (`--construction cw`, `--routemin-iters 2000`), with the
+wide-list width chosen from instance size, since no single k serves both ends:
+`k = clamp(300e6 / n, 300, 1000)` — 1000 at VDA (80 MB, the best measured
+setting there), 300 at Lazio (7.4–7.8 GB peak, comfortable). Verified on the
+default path: VDA 21,786,433 / 803 routes / 87.9 s; Lazio 3,172,491,626 / 40,269
+routes / 307.2 s / 7.79 GB; X-n1001-k43 74,682 (was 74,913), deterministic and
+feasibility-verified.
+
+### 0.8 Where this leaves the original question
+
+The question this report opened with was whether the architecture can beat FILO2
+on **both** time and cost. Current standing, equal wall clock:
+
+| | gap at session start | gap now | wall clock |
+|---|---|---|---|
+| Valle-D'Aosta | 1.196 % | **0.233 %** | 94.6 s vs 102 s |
+| Lazio (k=300 default) | 0.752 % | **0.404 %** | 284.9 s vs 314.5 s |
+| Lazio (k=500 opt-in) | 0.752 % | **0.210 %** | 319.1 s vs 315 s |
+
+**Still behind on cost, now by ~0.2–0.4 % instead of ~0.8–1.2 %, and ahead on
+wall clock** — with the standing caveat that we use P cores to FILO2's 1, so
+these are wall-clock wins, not compute-per-core wins. The §6 "dead end" verdict
+remains withdrawn: five-sixths of the VDA gap and roughly half the Lazio gap
+turned out to be defects in our own ports (ROUTEMIN's live-route counting and
+neighbourhood width) plus one pre-existing serial bottleneck (`symmetrize`), not
+architectural limits.
+
+What is genuinely architectural, and still unaddressed: our `local_search` costs
+O(k × route_length) per node pop where FILO2's is incremental, which is why we
+must ration candidate width by instance size at all. Closing the last ~0.2 %
+plausibly needs that (T2), but it is no longer confounded by anything else.
 
 ---
 
