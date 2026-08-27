@@ -178,6 +178,97 @@ incremental search charges only for what an applied move invalidates. FILO2
 runs gamma=1.0 over 1500 neighbours at *every* scale, including Lazio, for the
 same reason it can afford ROUTEMIN there at all.
 
+> **Superseded by §0.5.** The "wide lists are unaffordable at Lazio" conclusion
+> above was correct about the *symptom* but wrong about the *cause*: the cost
+> was not intrinsic, it was a single-threaded `symmetrize`. Once fixed, the wide
+> list costs 33 s instead of 188 s and Lazio becomes viable after all.
+
+### 0.4 Clarke & Wright (T6) — the combination that works
+
+Our MST+randomized-DFS construction starts materially worse than FILO2's
+Clarke & Wright: 22,522,444 vs 22,231,600 at VDA, 3,208,434,488 vs
+3,177,770,000 at Lazio. At Lazio their *construction alone* beat our entire
+315 s 4-core final answer. Report 009 estimated this technique at "0–0.15 %".
+
+Ported CW (`--construction cw`). Candidate width dominates its quality exactly
+as it does ROUTEMIN's — VDA, construction only, P=1:
+
+| CW k | cost | routes |
+|---|---|---|
+| 30 | 23,534,274 | 846 |
+| 100 | 22,665,236 | 820 |
+| 300 | 22,392,504 | 815 |
+| **1000** | **22,185,233** | **811** — beats FILO2's own construction |
+| *FILO2 CW* | *22,231,600* | *810* |
+
+**CW alone is worse than baseline; CW + ROUTEMIN is the combination that
+works**, and the decomposition explains why — it inverts §0.2:
+
+| | routes | depot legs | inter-customer |
+|---|---|---|---|
+| MST + ROUTEMIN | 802 | 20,458,582 | 1,433,160 |
+| **CW + ROUTEMIN** | 803 | 20,718,014 | **1,061,438** |
+| FILO2 | 800 | 20,607,561 | 1,118,940 |
+
+CW builds routes by savings-merging, which produces genuinely good *sequences*,
+so tour quality ends up **better than FILO2's**, while ROUTEMIN handles
+consolidation. The remaining deficit is 3 surplus routes.
+
+### 0.5 `symmetrize` was the real scaling wall — and it was pre-existing
+
+Profiling the neighbour-list build at Lazio found `symmetrize` (single-threaded,
+run after the parallel kNN queries join) dominates everything:
+
+| k | kdtree | knn queries | **symmetrize** |
+|---|---|---|---|
+| 30 | 0.2 s | 1.4 s | **6.3 s** |
+| 100 | 0.2 s | 4.9 s | **30.7 s** |
+| 300 | 0.2 s | 3.4 s | **136.7 s** |
+
+137 s of a 180 s Stage 0, against 3.4 s for the actual queries. Its phase-1
+membership test is a linear scan of `nbr[j]` per neighbour per node, so cost
+grows super-linearly in k. **This was already burning ~37 s of serial work in
+every Lazio run** for the existing k=30/k=100 lists, before any of this
+session's features.
+
+Parallelised both phases, output verified bit-identical (74619 with parallel
+and with serial forced, P=4; 74913 at P=1). **Lazio setup: 188 s → 33 s** — now
+*less* than the 38 s the old baseline spent with no wide list at all.
+
+### 0.6 Final standing — both instances, better cost in less wall clock
+
+**Valle-D'Aosta, 5 seeds, equal wall clock, all verified feasible:**
+
+| | mean cost | routes | wall | gap |
+|---|---|---|---|---|
+| baseline (MST) | 22,000,544 | 805.0 | ~102 s | 1.196 % |
+| MST + ROUTEMIN | 21,895,496 | 802.6 | ~102 s | 0.713 % |
+| **CW + ROUTEMIN** | **21,791,054** | 802.6 | **94.6 s** | **0.233 %** |
+| FILO2 | 21,740,517 | 800.0 | 102 s | — |
+
+**Lazio (~1 M), identical stage budgets to the published baseline, verified
+feasible:**
+
+| | cost | routes | wall | peak RSS | gap |
+|---|---|---|---|---|---|
+| baseline (MST) | 3,182,981,663 | 40,431 | 314.5 s | 3.5 GB | 0.752 % |
+| CW only | 3,178,280,587 | 40,327 | 305.7 s | 7.25 GB | 0.603 % |
+| **CW + ROUTEMIN** | **3,171,997,628** | **40,267** | **284.9 s** | 7.43 GB | **0.404 %** |
+| FILO2 | 3,159,235,192 | 40,111 | 315 s | 7.04 GB | — |
+
+**Both instances improved on cost *and* wall clock simultaneously**: VDA
+1.196 % → 0.233 % at 94.6 s vs 102 s; Lazio 0.752 % → 0.404 % at 284.9 s vs
+315 s. (We use P cores to FILO2's 1, so these are wall-clock wins, not
+compute-per-core wins.)
+
+**Defaults still off, for one reason: memory.** Lazio peaks at 7.43 GB — 98 % of
+this machine's 7.6 GB WSL ceiling, against 3.5 GB for the baseline. The spike is
+transient, inside `symmetrize` (the `extra` buffers plus pre-truncation growth
+of `nbr[j]`), not steady state. Turning this on by default would put the
+reference large instance one allocation away from the OOM that crashed this VM
+twice earlier. Either raise WSL's limit (the host has 16 GB, WSL2 self-caps at
+half) or reduce the transient before flipping the default.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
