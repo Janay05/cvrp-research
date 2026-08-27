@@ -42,6 +42,14 @@ int g_seed = 1337;
 // (deterministic, feasible, matches FILO2's algorithm) and left available via this flag --
 // likely worth revisiting once T2 (SMD rewrite, which is also what would bring the fuller
 // move-generator set) exists. See docs/reports/009_plan_beating_filo2.md T3.
+// Stays 0 (off) deliberately -- see docs/reports/010 section 0.3. With both port defects
+// fixed, ROUTEMIN is a clear 0.48% win at Valle-D-Aosta scale (n~20k) using
+// --routemin-iters 2000 --routemin-k 1000, but it needs a WIDE neighbour list to work at
+// all, and that width does not scale: at Lazio (n~1M) k=300 costs +50% wall clock
+// (315s -> 473s) and 7.11GB peak (94% of this machine's WSL ceiling) for +0.048% cost,
+// while any k cheap enough to build there (k<=100) makes route count WORSE. So enabling it
+// globally would trade a small-instance win for a large-instance regression.
+// Recommended: n <= ~50k use --routemin-iters 2000 --routemin-k 1000; n >= ~500k leave off.
 int g_routemin_iterations = 0;
 // Candidate-list width used by ROUTEMIN specifically, overridable via --routemin-k.
 // FILO2 runs ROUTEMIN at gamma=1.0 over a neighbour list of up to 1500 ("We are going to

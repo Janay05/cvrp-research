@@ -138,6 +138,46 @@ tour quality on packed routes — which is exactly what T2 (SMD + richer
 neighbourhood) targets, no longer confounded by route count. Whether that is
 worth doing is a scoping decision, not a settled "dead end".
 
+### 0.3 The fix does not transfer to Lazio scale — keep it opt-in
+
+The VDA win depends on a wide ROUTEMIN neighbourhood, and width is exactly what
+gets unaffordable as n grows. Measured at Lazio (~1 M customers, `-p 4`):
+
+| ROUTEMIN k | ROUTEMIN effect on live routes | final routes | cost | wall clock | peak RSS |
+|---|---|---|---|---|---|
+| off (baseline) | — | 40,431 | 3,182,981,663 | 315 s | 3.5 GB |
+| 100 | 40,513 → **40,561** (rises) | 40,438 | 3,182,872,316 | 365 s | 4.8 GB |
+| 300 | 40,513 → 40,476 (falls) | 40,409 | 3,181,453,037 | **473 s** | **7.11 GB** |
+
+k=100 reproduces the *broken* behaviour (route count rises) — the width that was
+merely mediocre at VDA is actively harmful at Lazio. k=300 finally works
+directionally, but the trade is bad: **+50 % wall clock (315 s → 473 s) for
++0.048 % cost**, with peak memory at 7.11 GB — 94 % of this machine's 7.6 GB
+WSL ceiling, i.e. back at the level that crashed the VM twice earlier.
+
+The cause is a scaling mismatch. The wide list costs **O(n·k) memory and
+O(n·k·log n) build time**, while the benefit scales with route count, ~O(n/25).
+Setup alone went 38 s → 177 s at k=300 — more than half the original *total*
+runtime spent building a neighbour list. Extrapolating the measured build cost,
+the k=1000 that produced the VDA win would need ~4 GB and ~600 s at Lazio:
+outright infeasible. And there is no useful middle: any k cheap enough to build
+at 1 M customers (k ≲ 100) is in the range that makes route count *worse*.
+
+**So ROUTEMIN stays off by default** (`g_routemin_iterations = 0`). Enabling it
+globally would trade a 0.48 % gain at 20 k scale for a 50 %-wall-clock
+regression at 1 M scale on the instance family this solver exists to handle.
+Recommended usage is explicit and size-dependent:
+
+- **n ≲ 50 k**: `--routemin-iters 2000 --routemin-k 1000` — a real 0.48 % win.
+- **n ≳ 500 k**: leave off; no k is simultaneously affordable and effective.
+
+This is itself a finding about the architecture: the technique that closed 40 %
+of the cost gap is one we can only afford at small scale, because our
+`local_search` charges O(k × route_length) per node pop where FILO2's
+incremental search charges only for what an applied move invalidates. FILO2
+runs gamma=1.0 over 1500 neighbours at *every* scale, including Lazio, for the
+same reason it can afford ROUTEMIN there at all.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
