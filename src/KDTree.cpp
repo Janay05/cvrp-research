@@ -4,6 +4,10 @@
 #include <cmath>
 #include <thread>
 #include <vector>
+#ifdef PROFILE_NBR_BUILD
+#include <chrono>
+#include <cstdio>
+#endif
 
 namespace {
     int build_recursive(std::vector<KDNode>& nodes, std::vector<NodeId>& ids, int start, int end, int depth, const Instance& inst) {
@@ -99,11 +103,23 @@ namespace {
 }
 
 void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads) {
+#ifdef PROFILE_NBR_BUILD
+    auto _t0 = std::chrono::steady_clock::now();
+    auto _lap = [&](const char* what) {
+        auto now = std::chrono::steady_clock::now();
+        std::fprintf(stderr, "[nbr k=%d] %s: %.1f s\n", k_neighbors, what,
+                     std::chrono::duration<double>(now - _t0).count());
+        _t0 = now;
+    };
+#endif
     k = k_neighbors;
     nbr.assign(inst.n + 1, std::vector<NodeId>());
 
     KDTree tree;
     tree.build(inst);
+#ifdef PROFILE_NBR_BUILD
+    _lap("kdtree build");
+#endif
 
     if (num_threads <= 1 || inst.n < 1000) {
         // Small instances: thread setup overhead isn't worth it.
@@ -121,8 +137,14 @@ void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads
         threads.emplace_back(knn_query_range, std::cref(inst), std::cref(tree), k, lo, hi, std::ref(nbr));
     }
     for (auto& th : threads) th.join();
+#ifdef PROFILE_NBR_BUILD
+    _lap("knn queries");
+#endif
 
-    symmetrize(inst, k);
+    symmetrize(inst, k, num_threads);
+#ifdef PROFILE_NBR_BUILD
+    _lap("symmetrize");
+#endif
 }
 
 // kNN as computed above is asymmetric: j in nbr[i] does not imply i in nbr[j].
@@ -130,25 +152,81 @@ void NeighborLists::build(const Instance& inst, int k_neighbors, int num_threads
 // then re-sort each affected list by distance and truncate back to k. This keeps list
 // sizes and the existing min(size(), k) call-site convention unchanged, while letting
 // genuinely close symmetric pairs unseat a farther one-directional neighbor.
-void NeighborLists::symmetrize(const Instance& inst, int k_neighbors) {
+// Parallelised in both phases. This was measured as the dominant cost of building any
+// neighbour list at scale -- at Lazio (n~1M) it was 6.3 s at k=30, 30.7 s at k=100 and
+// 136.7 s at k=300, against 1.4-4.9 s for the parallel kNN queries it follows. Phase 1's
+// membership test is a linear scan of nbr[j], so its cost grows super-linearly in k, which
+// is what made wide lists (needed by Clarke & Wright and ROUTEMIN) unaffordable.
+//
+// Output is bit-identical to the original serial version, and to itself for any thread
+// count, which the rest of the codebase relies on:
+//   - Phase 1 is read-only on nbr; each thread accumulates (j, i) pairs into its own buffer,
+//     and buffers are merged in ascending thread order, so extra[j] ends up holding exactly
+//     the same i values in the same ascending-i order the serial loop produced.
+//   - Phase 2 partitions by j, so each nbr[j] is written by exactly one thread, and it reads
+//     only that same j. std::sort on identical input is deterministic, so ties resolve
+//     identically too.
+void NeighborLists::symmetrize(const Instance& inst, int k_neighbors, int num_threads) {
     int n1 = inst.n + 1;
-    std::vector<std::vector<NodeId>> extra(n1);
-    for (int i = 0; i < n1; ++i) {
-        for (NodeId j : nbr[i]) {
-            bool present = false;
-            for (NodeId x : nbr[j]) {
-                if (x == i) { present = true; break; }
+    if (num_threads < 1) num_threads = 1;
+
+    // Phase 1: which (j, i) pairs need adding, computed without touching nbr.
+    std::vector<std::vector<std::pair<NodeId, NodeId>>> found(num_threads);
+    auto scan_range = [&](int t, int lo, int hi) {
+        auto& out = found[t];
+        for (int i = lo; i < hi; ++i) {
+            for (NodeId j : nbr[i]) {
+                bool present = false;
+                for (NodeId x : nbr[j]) {
+                    if (x == i) { present = true; break; }
+                }
+                if (!present) out.emplace_back(j, (NodeId)i);
             }
-            if (!present) extra[j].push_back(i);
         }
+    };
+    if (num_threads == 1) {
+        scan_range(0, 0, n1);
+    } else {
+        std::vector<std::thread> threads;
+        int chunk = (n1 + num_threads - 1) / num_threads;
+        for (int t = 0; t < num_threads; ++t) {
+            int lo = t * chunk;
+            int hi = std::min(n1, lo + chunk);
+            if (lo >= hi) break;
+            threads.emplace_back(scan_range, t, lo, hi);
+        }
+        for (auto& th : threads) th.join();
     }
-    for (int j = 0; j < n1; ++j) {
-        if (extra[j].empty()) continue;
-        nbr[j].insert(nbr[j].end(), extra[j].begin(), extra[j].end());
-        std::sort(nbr[j].begin(), nbr[j].end(), [&](NodeId a, NodeId b) {
-            return dist(inst, j, a) < dist(inst, j, b);
-        });
-        if ((int)nbr[j].size() > k_neighbors) nbr[j].resize(k_neighbors);
+
+    // Merged in thread order == ascending i, matching the original serial append order.
+    std::vector<std::vector<NodeId>> extra(n1);
+    for (int t = 0; t < num_threads; ++t) {
+        for (const auto& pr : found[t]) extra[pr.first].push_back(pr.second);
+    }
+
+    // Phase 2: independent per j.
+    auto fix_range = [&](int lo, int hi) {
+        for (int j = lo; j < hi; ++j) {
+            if (extra[j].empty()) continue;
+            nbr[j].insert(nbr[j].end(), extra[j].begin(), extra[j].end());
+            std::sort(nbr[j].begin(), nbr[j].end(), [&](NodeId a, NodeId b) {
+                return dist(inst, j, a) < dist(inst, j, b);
+            });
+            if ((int)nbr[j].size() > k_neighbors) nbr[j].resize(k_neighbors);
+        }
+    };
+    if (num_threads == 1) {
+        fix_range(0, n1);
+    } else {
+        std::vector<std::thread> threads;
+        int chunk = (n1 + num_threads - 1) / num_threads;
+        for (int t = 0; t < num_threads; ++t) {
+            int lo = t * chunk;
+            int hi = std::min(n1, lo + chunk);
+            if (lo >= hi) break;
+            threads.emplace_back(fix_range, lo, hi);
+        }
+        for (auto& th : threads) th.join();
     }
 }
 

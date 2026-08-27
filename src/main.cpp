@@ -158,8 +158,19 @@ int main(int argc, char** argv) {
     // when at least one of them is enabled; see g_routemin_k's comment above for the cost.
     NeighborLists routemin_neighborLists;
     if (g_routemin_iterations > 0 || g_use_clarke_wright) {
-        std::cout << "Building wide neighbor list (k=" << g_routemin_k << ")..." << std::endl;
-        routemin_neighborLists.build(inst, g_routemin_k, P);
+        // Built with ALL available cores, not P. NeighborLists::build partitions node ranges
+        // across threads with no shared mutable state, and its own contract says output is
+        // "identical, deterministic ... regardless of thread count" (KDTree.hpp), so this is
+        // free parallelism. It matters a lot at scale: the k=300 list for Lazio's ~1M
+        // customers took 194.6 s of a 315 s budget at P=4 -- 62% of the entire run spent
+        // building a neighbour list. The narrower neighborLists/stage5_neighborLists above
+        // are deliberately left at P so every previously published baseline timing stays
+        // comparable; only this new list changes.
+        unsigned hw = std::thread::hardware_concurrency();
+        int build_threads = std::max(P, (int)(hw ? hw : (unsigned)P));
+        std::cout << "Building wide neighbor list (k=" << g_routemin_k
+                  << ", " << build_threads << " threads)..." << std::endl;
+        routemin_neighborLists.build(inst, g_routemin_k, build_threads);
     }
 
     std::cout << "Running Stage 0 with P=" << P << " chunks..." << std::endl;
