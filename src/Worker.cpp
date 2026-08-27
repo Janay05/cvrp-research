@@ -35,7 +35,12 @@ void worker_main(WorkerContext& ctx) {
                 int legacyMaxIter = g_max_iterations_override > 0 ? g_max_iterations_override : ctx.instance->n * g_iters_per_node;
                 ctx.log << " max_iterations=" << legacyMaxIter << "\n";
             }
-            Solution sol = stage1_construct(chunkId, *ctx.instance, *ctx.partitionInfo, *ctx.neighborLists, ctx.rng);
+            // Clarke & Wright gets the WIDE list (--routemin-k), not the k=30 granular one:
+            // measured at VDA, CW's output degrades sharply as candidates thin out
+            // (k=30 -> 846 routes / 23,534,274; k=100 -> 822 / 22,616,201), because a route
+            // whose ends find no candidate partner simply never merges.
+            Solution sol = stage1_construct(chunkId, *ctx.instance, *ctx.partitionInfo,
+                                            *ctx.neighborLists, ctx.rng, ctx.routemin_neighborLists);
 
             // T3 (docs/reports/009_plan_beating_filo2.md): ROUTEMIN runs right after
             // construction and before this chunk's stage2_ils, matching FILO2's placement.
