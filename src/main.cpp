@@ -42,15 +42,15 @@ int g_seed = 1337;
 // (deterministic, feasible, matches FILO2's algorithm) and left available via this flag --
 // likely worth revisiting once T2 (SMD rewrite, which is also what would bring the fuller
 // move-generator set) exists. See docs/reports/009_plan_beating_filo2.md T3.
-// Stays 0 (off) deliberately -- see docs/reports/010 section 0.3. With both port defects
-// fixed, ROUTEMIN is a clear 0.48% win at Valle-D-Aosta scale (n~20k) using
-// --routemin-iters 2000 --routemin-k 1000, but it needs a WIDE neighbour list to work at
-// all, and that width does not scale: at Lazio (n~1M) k=300 costs +50% wall clock
-// (315s -> 473s) and 7.11GB peak (94% of this machine's WSL ceiling) for +0.048% cost,
-// while any k cheap enough to build there (k<=100) makes route count WORSE. So enabling it
-// globally would trade a small-instance win for a large-instance regression.
-// Recommended: n <= ~50k use --routemin-iters 2000 --routemin-k 1000; n >= ~500k leave off.
-int g_routemin_iterations = 0;
+// ON by default. Combined with Clarke & Wright construction below, this is a measured win at
+// both ends of the instance-size range, on cost AND wall clock (docs/reports/010 s0.6):
+//   VDA   (n~20k) 1.196% -> 0.233% gap,  94.6 s vs 102 s   (5 seeds, all verified feasible)
+//   Lazio (n~1M)  0.752% -> 0.404% gap, 284.9 s vs 314.5 s
+// The earlier "does not scale, keep it off" conclusion (report 010 s0.3) was withdrawn: the
+// blocker was a single-threaded symmetrize costing 137 s of a 180 s Stage 0, not anything
+// intrinsic to ROUTEMIN. Once parallelised that dropped to 33 s and Lazio became viable.
+// Set --routemin-iters 0 to disable.
+int g_routemin_iterations = 2000;
 // Candidate-list width used by ROUTEMIN specifically, overridable via --routemin-k.
 // FILO2 runs ROUTEMIN at gamma=1.0 over a neighbour list of up to 1500 ("We are going to
 // use all the available move generators for during this procedure", opt/routemin.hpp),
@@ -60,12 +60,18 @@ int g_routemin_iterations = 0;
 // reinsertion fails, and we open a new route instead, which is the suspected reason route
 // count rose instead of falling. The list is only built when ROUTEMIN is actually enabled
 // (it costs n*k*4 bytes, which is ~1.2GB at Lazio scale for k=300).
-int g_routemin_k = 100;
-// T6: use Clarke & Wright savings construction instead of MST+randomized-DFS.
-// --construction cw|mst. See clarke_wright_routes in Stage1_Construction.cpp for the
-// measured motivation (our MST construction starts ~1% worse than CW on both VDA and
-// Lazio, and at Lazio FILO2's CW output alone beats our final answer).
-int g_use_clarke_wright = 0;
+// -1 means "choose from instance size" (see pick_wide_k below); an explicit --routemin-k
+// overrides. A single fixed value cannot serve both ends of the range: the wide list costs
+// n*k*4 bytes, so k=1000 is 80 MB at Valle-D-Aosta (n~20k, and measurably the best setting
+// there) but would be several GB at Lazio (n~1M), while k=300 is safe at Lazio and leaves
+// quality on the table at VDA.
+int g_routemin_k = -1;
+// T6: Clarke & Wright savings construction instead of MST+randomized-DFS. ON by default --
+// see clarke_wright_routes in Stage1_Construction.cpp. Note CW ALONE is worse than the MST
+// baseline (22,055,836 vs 22,000,544 at VDA); it is the CW + ROUTEMIN combination that wins,
+// because CW supplies good route *sequences* (its tour quality beats FILO2's) while ROUTEMIN
+// supplies route-count consolidation. Disable with --construction mst.
+int g_use_clarke_wright = 1;
 // Savings candidates per customer. FILO2's DEFAULT_CW_NEIGHBORS is 100; ours is capped by
 // whatever neighbour list Stage 1 is handed (currently k=30), so this mainly guards memory:
 // the savings array is O(chunkSize * cw_neighbors) per chunk, built concurrently by P
@@ -156,6 +162,19 @@ int main(int argc, char** argv) {
     // the same underlying reason (enough distinct candidate routes to merge into / reinsert
     // into), and building it twice would double an already-expensive allocation. Only built
     // when at least one of them is enabled; see g_routemin_k's comment above for the cost.
+    // Wide-list width from instance size when not set explicitly. Holds the list's own
+    // footprint near a fixed budget (n*k*4 bytes ~= 1.2 GB) rather than letting it scale with
+    // n, then clamps to the range actually measured useful:
+    //   n ~ 20k  (Valle-D-Aosta) -> 1000, the best measured setting there (80 MB)
+    //   n ~ 1M   (Lazio)         -> 300,  which peaks at 7.43 GB of the 9.7 GB ceiling
+    // k=500 at Lazio does score better (0.210% vs 0.404% gap) but peaks at 9.11 GB, 94% of
+    // the ceiling, so it is left as an explicit opt-in rather than the default.
+    if (g_routemin_k < 0) {
+        long long budget_entries = 300000000LL; // n*k target
+        long long k_fit = budget_entries / std::max(1, inst.n);
+        g_routemin_k = (int)std::min(1000LL, std::max(300LL, k_fit));
+    }
+
     NeighborLists routemin_neighborLists;
     if (g_routemin_iterations > 0 || g_use_clarke_wright) {
         // Built with ALL available cores, not P. NeighborLists::build partitions node ranges
