@@ -1,0 +1,85 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Lazio.vrp (n=999999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=500, 28 threads)...
+Running Stage 0 with P=4 chunks...
+Setting up workers...
+Launching threads...
+Worker 2 Stage 1 starting
+Worker 2 constructing chunk 2
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 3 Stage 1 starting
+Worker 3 constructing chunk 3
+Worker 3 Stage 1 finished
+Worker 0 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 2 Stage 1 finished
+Worker 2 Stage 2 starting
+Worker 2 ILS chunk 2
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 3 Stage 2 starting
+Worker 3 ILS chunk 3
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: Worker 1 Stage 2 finished
+Worker 1 Stage 1: 88428.6 ms | Stage 2: 42829.4 ms
+87325.8 ms | Stage 2: 42827.1 ms
+Worker 3 Stage 2 finished
+Worker 3 Stage 1: 87222 ms | Stage 2: 42832.7 ms
+Worker 2 Stage 2 finished
+Worker 2 Stage 1: 89953.4 ms | Stage 2: 42864.1 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 3160946297
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Healing chunk pair (2,3)
+[PROFILE] Pair(2,3) Iter 1343 Total=5158.56ms (Ruin=0.044061, Recr=0.147957, LS=5158.37) loops=2
+[PROFILE] Pair(0,1) Iter 1841 Total=5160.73ms (Ruin=0.027731, Recr=0.295218, LS=5160.4) loops=2
+[PROFILE] Pair(0,1) Iter 4075 Total=5163.14ms (Ruin=0.027747, Recr=0.247902, LS=5162.86) loops=2
+[PROFILE] Pair(2,3) Iter 2929 Total=5163.37ms (Ruin=0.02577, Recr=0.187641, LS=5163.16) loops=2
+Healing chunk pair (1,3)
+Healing chunk pair (0,2)
+[PROFILE] Pair(1,3) Iter 22296 Total=5160.65ms (Ruin=0.001478, Recr=0.053719, LS=5160.59) loops=2
+[PROFILE] Pair(0,2) Iter 1103 Total=5163.3ms (Ruin=0.108569, Recr=0.166861, LS=5163.02) loops=2
+[PROFILE] Pair(1,3) Iter 54185 Total=5155.79ms (Ruin=0.001523, Recr=0.043034, LS=5155.75) loops=2
+[PROFILE] Pair(0,2) Iter 2663 Total=5158.92ms (Ruin=0.011926, Recr=0.278661, LS=5158.63) loops=2
+Healing chunk pair (1,2)
+Healing chunk pair (0,3)
+[PROFILE] Pair(0,3) Iter 3600 Total=5155.49ms (Ruin=0.00484, Recr=0.165821, LS=5155.32) loops=2
+[PROFILE] Pair(1,2) Iter 830 Total=5157.64ms (Ruin=0.050629, Recr=0.277677, LS=5157.31) loops=2
+[PROFILE] Pair(1,2) Iter 2547 Total=5163.9ms (Ruin=0.062178, Recr=0.35331, LS=5163.48) loops=2
+[PROFILE] Pair(0,3) Iter 9929 Total=5158.44ms (Ruin=0.011231, Recr=0.14743, LS=5158.28) loops=2
+Incremental Cost Bookkeeping: 3160929035
+Scratch Computed Final cost: 3160929035
+Cost AFTER Stage 3 Healing: 3160929035
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 0.0 ms
+SA Iter: 100, elapsed: 5306.0 ms
+SA Iter: 200, elapsed: 10197.3 ms
+SA Iter: 300, elapsed: 14555.6 ms
+SA Iter: 400, elapsed: 19396.5 ms
+SA Iter: 500, elapsed: 23496.2 ms
+SA Iter: 600, elapsed: 27576.5 ms
+SA Iter: 700, elapsed: 31460.3 ms
+SA Iter: 800, elapsed: 35845.8 ms
+SA Iter: 900, elapsed: 40188.0 ms
+SA Iter: 1000, elapsed: 44374.2 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 3159782660
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 48930.8 ms
+Stage 1 & 2 (Parallel Construction/ILS): 133333 ms
+Stage 3 (Parallel Healing): 36363.6 ms
+Stage 4 & 5 (Cleanup/Polish): 82031.5 ms
+Total time: 300659 ms
+Total distance evaluations: 0
+327.34 s  9583192 KB

@@ -314,6 +314,66 @@ O(k × route_length) per node pop where FILO2's is incremental, which is why we
 must ration candidate width by instance size at all. Closing the last ~0.2 %
 plausibly needs that (T2), but it is no longer confounded by anything else.
 
+### 0.9 The last 0.2 % was route count, and ROUTEMIN was under-converged
+
+Decomposing the remaining Lazio gap (k=500) against FILO2's own published seed-1
+solution inverts the earlier picture completely:
+
+| Lazio | routes | depot legs | inter-customer | total |
+|---|---|---|---|---|
+| ours (k=500) | 40,209 | 3,125,500,846 | **40,356,530** | 3,165,857,376 |
+| FILO2 | 40,086 | 3,098,524,132 | 58,618,021 | 3,157,142,153 |
+
+**Our tours are 31 % better than FILO2's.** The whole gap — and more — is 123
+surplus vehicles at ~219,323 of depot legs each. Matching their route count while
+keeping our tour quality projects to ~3,138,880,647, i.e. **0.58 % ahead of
+FILO2**. This retires the §3/§0.2 "weak neighbourhood" thesis for good: tour
+quality is our *strength*, so T2 targets what we already win.
+
+The cause was mundane. ROUTEMIN ran a flat 2000 iterations per chunk regardless
+of instance size, and each iteration destroys exactly two routes — so what
+matters is iterations *per route*:
+
+- VDA: 2000 ÷ ~405 routes per chunk = **~4.9 passes per route**
+- Lazio: 2000 ÷ ~10,100 routes per chunk = **~0.20 passes per route** (25× less)
+
+At Lazio it was stopping before it had looked at most routes even once.
+
+| Lazio, k=500 | ROUTEMIN iters | final routes | cost | wall |
+|---|---|---|---|---|
+| | 2,000 | 40,209 | 3,165,857,376 | 319.1 s |
+| | 8,000 | 40,157 | 3,159,961,835 | 269.4 s |
+| | **12,000** | **40,144** | **3,158,865,362** | **291.7 s** |
+| FILO2 (equal time) | — | 40,111 | 3,159,235,192 | 315 s |
+
+At 12,000 iterations, seed 1 gave **3,158,865,362 in 291.7 s against FILO2's
+3,159,235,192 in 315 s** — apparently better on cost *and* 23.3 s faster
+(verified feasible, cost independently recomputed).
+
+**That apparent win does not survive multi-seed testing, and should not be
+reported.** The margin was 0.012 %, against a measured Lazio seed spread of
+~0.04 % (ours) and ~0.065 % (FILO2) — i.e. inside the noise. Worse, the
+comparison was not like-for-like: our 291.7 s run was being compared against a
+FILO2 run given a 315 s budget. Re-running both at the same 292 s budget:
+
+| seed | ours | FILO2 | verdict |
+|---|---|---|---|
+| 2 | 3,159,782,660 (300.7 s) | 3,158,761,465 (294.0 s) | FILO2 +0.032 % better |
+| 3 | 3,159,399,366 (297.1 s) | 3,159,377,689 (295.0 s) | FILO2 +0.0007 % better |
+| **mean** | **3,159,591,013 (298.9 s)** | **3,159,069,577 (294.5 s)** | **FILO2 0.0165 % better, 4.4 s faster** |
+
+**Corrected conclusion: we have reached parity at Lazio, not a win.** FILO2 is
+ahead by 0.0165 % on cost and 4.4 s on wall clock — both differences well inside
+seed noise, so the honest reading is "statistically indistinguishable", with
+FILO2 marginally ahead on the point estimates.
+
+That is still a large result: Lazio went from **0.752 % behind at the start of
+this session to statistical parity**. But "beats FILO2 on both axes" is not
+supported, and seed 1 alone was a favourable draw.
+
+Also unchanged: we use 4 cores to FILO2's 1, so even parity here is
+wall-clock parity, not compute-per-core parity.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
