@@ -2153,7 +2153,13 @@ void stage5_serial_polish(Solution& globalSolution, ThreadArena& arena, const In
     // streak is low-risk (bounded time cost) and can still occasionally escape a local
     // optimum, so time-budget mode relies on the time cutoff alone. Legacy mode (no time
     // budget) keeps stagnation_limit as its only safety valve, unchanged.
-    auto stageStart = std::chrono::steady_clock::now();
+    //
+    // Reuses sweepStart (not a fresh std::chrono::steady_clock::now() here) -- this actually
+    // implements the "one clock, one budget" comment above sweepStart's declaration. A fresh
+    // capture here previously gave the pre-loop full_sweep_local_search its own full
+    // g_stage5_time_budget_ms AND then gave this loop another full budget on top, up to
+    // doubling Stage 5's real wall time (measured: 88.6 s against a 45 s budget at Lazio).
+    auto stageStart = sweepStart;
     for (int iter = 0; useTimeBudget || iter < max_iterations; ++iter) {
         if (useTimeBudget) {
             double elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - stageStart).count();
