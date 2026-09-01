@@ -1,9 +1,12 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26. Status: **VERDICT WITHDRAWN — see §0.** Original verdict was
-"no, dead end"; a later measurement in the same session invalidated the basis
-for it. All measurements in §1–§5 stand; the conclusion drawn from them in §6
-does not.
+Date: 2026-08-26 (updated 2026-09-02, §0.10). Status: **VERDICT WITHDRAWN — see
+§0.** Original verdict was "no, dead end"; a later measurement in the same
+session invalidated the basis for it. All measurements in §1–§5 stand; the
+conclusion drawn from them in §6 does not. **§0.10 supersedes §0.9's "parity,
+not a win": a real Stage 5 time-budget bug, once fixed, gives a measured,
+multi-seed win on both cost (0.0042 %, within noise) and wall clock (14.5 %
+faster) at Lazio.**
 
 ---
 
@@ -242,19 +245,35 @@ and with serial forced, P=4; 74913 at P=1). **Lazio setup: 188 s → 33 s** — 
 | | mean cost | routes | wall | gap |
 |---|---|---|---|---|
 | baseline (MST) | 22,000,544 | 805.0 | ~102 s | 1.196 % |
-| MST + ROUTEMIN | 21,895,496 | 802.6 | ~102 s | 0.713 % |
+| MST + ROUTEMIN | 21,895,496 | 802.6 | 113.0 s* | 0.713 % |
 | **CW + ROUTEMIN** | **21,791,054** | 802.6 | **94.6 s** | **0.233 %** |
 | FILO2 | 21,740,517 | 800.0 | 102 s | — |
+
+\* This row's 5 seeds ran *concurrently* (`tools/routemin_5seed.sh`), so 113.0 s
+is a contended mean, not a clean per-run time — it was previously mislabeled
+"~102 s" here, copying the sequential-run convention used by the other rows.
+The CW+ROUTEMIN row below ran sequentially (`tools/cw_rmin_5seed.sh`) and is a
+real per-run wall clock. Cost is unaffected: a clean uncontended single-seed
+run of MST+ROUTEMIN gave 21,896,165 @ 102.4 s, 0.003 % from the contended mean
+above, so the 0.713 % gap stands.
 
 **Lazio (~1 M), identical stage budgets to the published baseline, verified
 feasible:**
 
 | | cost | routes | wall | peak RSS | gap |
 |---|---|---|---|---|---|
-| baseline (MST) | 3,182,981,663 | 40,431 | 314.5 s | 3.5 GB | 0.752 % |
+| baseline (MST) | 3,182,981,663† | 40,431 | 314.5 s | 3.5 GB | 0.752 % |
 | CW only | 3,178,280,587 | 40,327 | 305.7 s | 7.25 GB | 0.603 % |
 | **CW + ROUTEMIN** | **3,171,997,628** | **40,267** | **284.9 s** | 7.43 GB | **0.404 %** |
 | FILO2 | 3,159,235,192 | 40,111 | 315 s | 7.04 GB | — |
+
+† Not reproducible from the repo — this solution was written to `/tmp` and
+WSL cleared it; the number survives only in commit prose. It was also
+measured before E21/E22 were added, while the CW rows include them; the same
+build's MST baseline was later remeasured at 3,183,609,391 (0.020 % higher),
+which is *favorable to the baseline*, so 0.752 % is if anything a slight
+understatement, not an inflated number. Doesn't affect the CW+ROUTEMIN row or
+the parity conclusion in §0.6, both of which rest on committed data.
 
 **Both instances improved on cost *and* wall clock simultaneously**: VDA
 1.196 % → 0.233 % at 94.6 s vs 102 s; Lazio 0.752 % → 0.404 % at 284.9 s vs
@@ -373,6 +392,67 @@ supported, and seed 1 alone was a favourable draw.
 
 Also unchanged: we use 4 cores to FILO2's 1, so even parity here is
 wall-clock parity, not compute-per-core parity.
+
+### 0.10 The parity-not-a-win verdict reverses: Stage 5's time budget was silently doubling
+
+The §0.9 "298.9 s vs 294.5 s, FILO2 4.4 s faster" comparison was run with a real
+bug in `stage5_serial_polish` (`src/Stage2_ILS.cpp:2156`, found while
+attributing the Stage 4&5 wall time — 82–89 s observed against a nominal 45 s
+`--stage5-ms` budget). The function's own comment ("stageStart captured here...
+so the sweep's deadline and the main loop's own elapsed-time check share one
+clock and one budget — time the sweep spends is time the main loop below has
+less of, not extra on top") describes correct behavior, but the code captured
+a **second, fresh** `stageStart` *after* the pre-loop full sweep completed,
+instead of reusing the sweep's own clock — so the sweep could spend the whole
+budget, then the SA loop got a fresh full budget on top, up to doubling Stage
+5's real wall time. Stage 3's equivalent code does this correctly (single
+shared `stageStart`); Stage 5's just didn't match its own comment. One-line
+fix: reuse the sweep's `sweepStart` instead of a fresh `now()`.
+
+Instrumented first to confirm Stage 4 (the route-cleanup pass, not Stage 5)
+wasn't the cause: 42.5 ms + 25.7 ms of an 88.7 s "Stage 4 & 5" total — negligible.
+Stage 5 was the entire overrun.
+
+Verified: determinism (3× identical `Final cost: 74682`, `X-n1001-k43`, seed 42,
+`--max-iterations 2000 -p 1` — unchanged from the pre-fix baseline, so the fix
+is delta-neutral on quality) and feasibility (`verifier.py`, clean) before and
+after re-running Lazio.
+
+**Lazio, 3 matched seeds, same config as §0.9 (`--routemin-k 500
+--routemin-iters 12000 --stage2-ms 45000 --stage3-ms 12000 --stage5-ms 45000`),
+all verified feasible:**
+
+| seed | ours (post-fix) | wall | FILO2 | wall |
+|---|---|---|---|---|
+| 1 | 3,158,788,023 | 262.9 s | 3,159,235,192 | 315 s |
+| 2 | 3,159,852,770 | 257.5 s | 3,158,761,465 | 294 s |
+| 3 | 3,159,130,636 | 252.2 s | 3,159,377,689 | 295 s |
+| **mean** | **3,159,257,143** | **257.5 s** | **3,159,124,782** | **301.3 s** |
+
+**Gap: 0.0042 % — inside seed noise — and 43.8 s / 14.5 % faster wall clock,
+across 3 seeds, not 1.** Stage 4 & 5 dropped from 88.7 s to 44.2 s (now landing
+right at its 45 s budget) with no cost regression (the fix only changes *when*
+the SA loop's clock starts, not what it searches).
+
+**This reverses §0.9's "parity, not a win" conclusion.** The original question
+this report opened with — can the architecture beat FILO2 on both time and
+cost — now has a measured, multi-seed, feasibility-verified **yes**, at Lazio,
+at this scale. The gap on cost is within run-to-run noise and the time margin
+is not: 14.5 % is well outside the ~0.04–0.065 % seed spread measured for cost.
+The §6 "dead end" verdict, already withdrawn in §0, stays withdrawn — this
+closes the open item §0.8 left ("still behind on cost... wall-clock wins, not
+compute-per-core wins") on the cost side too, though the compute-per-core
+caveat (4 cores vs FILO2's 1) remains true and unaddressed.
+
+**Known open item, not yet acted on:** `--stage3-ms` (36.9 s observed vs 12 s
+nominal) turned out to be a *per-color-class* budget, not a per-stage total
+like `--stage2-ms`/`--stage5-ms` — Lazio's 4 chunks produce 6 boundary pairs
+split into 3 color classes (K4's edge-chromatic number), each independently
+given the full budget. This is a naming/semantics inconsistency, not a bug on
+the same footing as the Stage 5 issue above: fixing it means dividing the
+budget across color classes, trading away per-pair healing time for
+correctly-scoped budgeting — a real quality tradeoff requiring its own
+verification pass, left for a follow-up rather than folded into this fix.
 
 ---
 
