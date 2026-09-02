@@ -1,13 +1,13 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-02, §0.10). Status: **VERDICT WITHDRAWN — see
-§0.** Original verdict was "no, dead end"; a later measurement in the same
+Date: 2026-08-26 (updated 2026-09-03, §0.11). Status: **VERDICT WITHDRAWN — see
+§0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
-conclusion drawn from them in §6 does not. **§0.10 supersedes §0.9's "parity,
-not a win" on the *time* axis only: a real Stage 5 time-budget bug, once fixed,
-gives a measured, multi-seed 14.5 % wall-clock win at Lazio while cost stays at
-parity (mean 0.0042 % *worse*, sign flips seed-to-seed — a tie, not a cost
-win).**
+conclusion drawn from them in §6 does not. **§0.10 and §0.11 supersede §0.9's
+"parity, not a win" on the *time* axis only: two real time-budget bugs (Stage
+5, then Stage 3), once fixed, give a measured, multi-seed 22.9 % wall-clock win
+at Lazio while cost stays at parity throughout (gap 0.0069 %, an order of
+magnitude inside seed noise — a tie, not a cost win, in either direction).**
 
 ---
 
@@ -459,15 +459,69 @@ wall-clock wins, not compute-per-core wins") is closed only on the *time* side:
 cost went from behind to level, not from behind to ahead, and the
 compute-per-core caveat (4 cores vs FILO2's 1) remains true and unaddressed.
 
-**Known open item, not yet acted on:** `--stage3-ms` (36.9 s observed vs 12 s
-nominal) turned out to be a *per-color-class* budget, not a per-stage total
-like `--stage2-ms`/`--stage5-ms` — Lazio's 4 chunks produce 6 boundary pairs
-split into 3 color classes (K4's edge-chromatic number), each independently
-given the full budget. This is a naming/semantics inconsistency, not a bug on
-the same footing as the Stage 5 issue above: fixing it means dividing the
-budget across color classes, trading away per-pair healing time for
-correctly-scoped budgeting — a real quality tradeoff requiring its own
-verification pass, left for a follow-up rather than folded into this fix.
+**Known open item at the time of writing, since fixed — see §0.11:**
+`--stage3-ms` (36.9 s observed vs 12 s nominal) turned out to be a
+*per-color-class* budget, not a per-stage total like `--stage2-ms`/
+`--stage5-ms` — Lazio's 4 chunks produce 6 boundary pairs split into 3 color
+classes (K4's edge-chromatic number), each independently given the full
+budget.
+
+### 0.11 Stage 3's budget fixed too — another 25 s reclaimed, cost still a tie
+
+Fixed the item §0.10 left open: `run_stage3_healing`
+(`Stage3_MergeHealing.cpp`) now divides `g_stage3_time_budget_ms` by
+`(max_color + 1)` before the color-class loop runs, via an RAII guard that
+restores the original global on every exit path. `stage3_healing_ils_pass`
+(`Stage2_ILS.cpp`) is unchanged — it still reads the global directly, so the
+fix is entirely in how much budget it's handed, not in how it spends it. No
+new bug here (unlike Stage 5): the per-class-not-per-stage behavior matched
+what the code actually did, it just didn't match what the flag name implied.
+
+Verified before benchmarking: determinism unaffected (3× identical
+`Final cost: 74682` on `X-n1001-k43`, seed 42 — this instance runs in
+iteration-budget mode where `g_stage3_time_budget_ms <= 0`, so the new
+divide-and-restore code is a proven no-op on this path). Then real-scale:
+Lazio, same 3 seeds and same flags as §0.10
+(`--routemin-k 500 --routemin-iters 12000 --stage2-ms 45000 --stage3-ms 12000
+--stage5-ms 45000`), all verified feasible:
+
+| seed | cost (post Stage-3-fix) | wall | Stage 3 wall (was ~36.9 s) |
+|---|---|---|---|
+| 1 | 3,158,766,627 | 235.5 s | 12.5 s |
+| 2 | 3,159,950,003 | 226.7 s | 10.7 s |
+| 3 | 3,159,323,188 | 235.0 s | 15.2 s |
+| **mean** | **3,159,346,606** | **232.4 s** | **~12.8 s** |
+
+Stage 3 now actually costs what `--stage3-ms` asks for. Comparing to §0.10's
+post-Stage-5-fix baseline (same seeds, same flags, pre-this-fix):
+
+| | §0.10 (pre) | §0.11 (post) | Δ |
+|---|---|---|---|
+| mean cost | 3,159,257,143 | 3,159,346,606 | +89,463 (+0.0028 %) |
+| mean wall | 257.5 s | 232.4 s | **-25.1 s** |
+
+Cost moved by 0.0028 % — an order of magnitude below the ~0.04–0.065 % seed
+spread established earlier, and the per-seed direction isn't even consistent
+(seed 1 got *better*, seeds 2 and 3 got slightly worse) — textbook noise, not
+a regression. Wall clock dropped a further 25.1 s, on top of the 43.8 s
+already reclaimed in §0.10. Against FILO2's mean (3,159,124,782 cost,
+301.3 s wall): cost gap is 0.0069 % — still a tie, same band as §0.10's
+0.0042 % — and the wall-clock margin widens to **68.9 s / 22.9 % faster**.
+
+**Net effect of §0.10 + §0.11 combined**, same Lazio config, 3 seeds, all
+feasibility-verified, cost held flat throughout while our own wall clock fell
+in two independent steps:
+
+| | our wall (mean) | cost gap to FILO2 |
+|---|---|---|
+| §0.9 (pre-fix, "parity, not a win") | 298.9 s | -0.0165 % (behind) |
+| §0.10 (Stage 5 fix only) | 257.5 s | +0.0042 % (tie) |
+| §0.11 (Stage 5 + Stage 3 fix) | 232.4 s | +0.0069 % (tie) |
+
+298.9 s → 232.4 s is a **22.3 % reduction in our own wall clock**, cost gap
+never leaving the noise band the whole way. Neither fix touched what the
+search explores, only when its clocks start and how a budget is divided —
+cost holding flat across both is the expected result, not a coincidence.
 
 ---
 
