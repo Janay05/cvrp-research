@@ -523,6 +523,58 @@ never leaving the noise band the whole way. Neither fix touched what the
 search explores, only when its clocks start and how a budget is divided —
 cost holding flat across both is the expected result, not a coincidence.
 
+### 0.12 Multi-start re-measured on the current baseline: the lever shrank
+
+§2.3 (original report) found Stage 6-C multi-start (N independent seeded
+solves, keep the best) was "not a competitive advantage — a technique both
+solvers get" once compared like-for-like, but report 009's headline number
+(1.20 % → 1.04 % gap, "the strongest remaining lever") predates CW+ROUTEMIN
+and was never corrected for the like-for-like point on the *current* baseline.
+Re-measured here because CW+ROUTEMIN materially tightened our seed-to-seed
+spread — and multi-start's entire value proposition comes from spread.
+
+VDA, 12 concurrent starts (current default: CW + ROUTEMIN, `-p 2` each,
+seeds 1–12, same flags as the SS0.6 single-start baseline), 105.3 s wall
+(same order as a single 94.6 s solve — still effectively free):
+
+| | cost |
+|---|---|
+| best-of-12 (seed 8) | **21,773,068** (verified feasible) |
+| worst-of-12 (seed 3) | 21,832,565 |
+| spread | 0.27 % |
+
+Compare to §0.6's old MST-based multistart spread that produced the 1.20 %→
+1.04 % headline: that run's per-seed range wasn't published, but the
+underlying single-start spread was ~0.29 % (§2.3) — CW+ROUTEMIN has *not*
+meaningfully tightened it (0.27 % vs 0.29 %), so the shrinkage isn't from
+tighter variance. It's from a **tighter baseline mean**: CW+ROUTEMIN moved
+the mean itself down 21,791,054 vs the old MST mean 22,000,544 — closer to
+FILO2's floor, so there's less room left for any technique, multi-start
+included, to find.
+
+Two ways to read the gap, same distinction §2.3 already drew:
+
+| comparison | gap |
+|---|---|
+| our best-of-12 vs FILO2's single mean (21,740,517) | 0.150 % |
+| our best-of-12 vs FILO2's best-of-12 (21,729,621, §2.3, FILO2 binary unchanged so still valid) | **0.200 %** |
+| (for reference) our single-start mean vs FILO2's single mean | 0.233 % |
+
+**Like-for-like — the only fair comparison, since FILO2 gets multi-start for
+free too — multi-start now closes the VDA gap from 0.233 % to 0.200 %: a
+0.033-point improvement**, not the 0.16-point one report 009's headline
+number implied. That number was real but measured against a construction
+method (MST) we've since replaced; on today's stronger single-start baseline,
+multi-start's *additional* leverage is small. It is still a legitimate, free
+win when spare cores exist — 0.033 points for zero wall-clock cost is worth
+taking — but it is **not**, on the current baseline, the standout lever
+report 009 found it to be, and it does not by itself close the remaining gap.
+Not re-tested at Lazio scale here: Lazio's own seed spread (§0.11's 3-seed
+set) is tighter still (~0.037 %, an order of magnitude below VDA's), which
+predicts an even smaller multi-start lift there than the 0.033 points just
+measured — expected value too low to prioritize a run given the RAM
+constraint on concurrent Lazio-scale processes noted in report 009.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
