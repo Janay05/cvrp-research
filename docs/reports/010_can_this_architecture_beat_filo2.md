@@ -4,9 +4,10 @@ Date: 2026-08-26 (updated 2026-09-02, §0.10). Status: **VERDICT WITHDRAWN — s
 §0.** Original verdict was "no, dead end"; a later measurement in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
 conclusion drawn from them in §6 does not. **§0.10 supersedes §0.9's "parity,
-not a win": a real Stage 5 time-budget bug, once fixed, gives a measured,
-multi-seed win on both cost (0.0042 %, within noise) and wall clock (14.5 %
-faster) at Lazio.**
+not a win" on the *time* axis only: a real Stage 5 time-budget bug, once fixed,
+gives a measured, multi-seed 14.5 % wall-clock win at Lazio while cost stays at
+parity (mean 0.0042 % *worse*, sign flips seed-to-seed — a tie, not a cost
+win).**
 
 ---
 
@@ -429,20 +430,34 @@ all verified feasible:**
 | 3 | 3,159,130,636 | 252.2 s | 3,159,377,689 | 295 s |
 | **mean** | **3,159,257,143** | **257.5 s** | **3,159,124,782** | **301.3 s** |
 
-**Gap: 0.0042 % — inside seed noise — and 43.8 s / 14.5 % faster wall clock,
-across 3 seeds, not 1.** Stage 4 & 5 dropped from 88.7 s to 44.2 s (now landing
-right at its 45 s budget) with no cost regression (the fix only changes *when*
-the SA loop's clock starts, not what it searches).
+**Cost: a tie. Wall clock: 43.8 s / 14.5 % faster, across 3 seeds, not 1.**
+Stage 4 & 5 dropped from 88.7 s to 44.2 s (now landing right at its 45 s budget)
+with no cost regression (the fix only changes *when* the SA loop's clock starts,
+not what it searches).
 
-**This reverses §0.9's "parity, not a win" conclusion.** The original question
-this report opened with — can the architecture beat FILO2 on both time and
-cost — now has a measured, multi-seed, feasibility-verified **yes**, at Lazio,
-at this scale. The gap on cost is within run-to-run noise and the time margin
-is not: 14.5 % is well outside the ~0.04–0.065 % seed spread measured for cost.
-The §6 "dead end" verdict, already withdrawn in §0, stays withdrawn — this
-closes the open item §0.8 left ("still behind on cost... wall-clock wins, not
-compute-per-core wins") on the cost side too, though the compute-per-core
-caveat (4 cores vs FILO2's 1) remains true and unaddressed.
+Read the two axes separately, because they are not the same kind of result:
+
+- **Cost — statistically indistinguishable, and if anything marginally against
+  us.** The mean is 0.0042 % *higher* (worse) than FILO2's. The per-seed sign
+  flips: we win seed 1 by 447 k and seed 3 by 247 k, and lose seed 2 by
+  1,091 k. A difference whose sign depends on the seed, at a magnitude an order
+  of magnitude below the ~0.04–0.065 % seed spread, is a tie. **This is not a
+  cost win and must not be reported as one.**
+- **Wall clock — a real win, with no distributional overlap.** Our *slowest*
+  seed (262.9 s) is faster than FILO2's *fastest* (294 s). Every one of our
+  runs beats every one of theirs. 14.5 % is far outside anything noise
+  explains.
+
+**This reverses §0.9's "parity, not a win" conclusion on the time axis, and
+only there.** The original question this report opened with — can the
+architecture beat FILO2 on both time and cost — still has **no** measured
+*yes*. What §0.10 establishes is the weaker (but real, and previously
+unmeasured) claim: at Lazio, at this scale, we now match FILO2 on cost while
+finishing meaningfully sooner. The §6 "dead end" verdict, already withdrawn in
+§0, stays withdrawn. But the open item §0.8 left ("still behind on cost...
+wall-clock wins, not compute-per-core wins") is closed only on the *time* side:
+cost went from behind to level, not from behind to ahead, and the
+compute-per-core caveat (4 cores vs FILO2's 1) remains true and unaddressed.
 
 **Known open item, not yet acted on:** `--stage3-ms` (36.9 s observed vs 12 s
 nominal) turned out to be a *per-color-class* budget, not a per-stage total
