@@ -1,0 +1,61 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Lazio.vrp (n=999999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=500, 28 threads)...
+Running Stage 0 with P=4 chunks...
+Setting up workers...
+Launching threads...
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 3 Stage 1 starting
+Worker 3 constructing chunk 3
+Worker 2 Stage 1 starting
+Worker 2 constructing chunk 2
+Worker 0 Stage 1 finished
+Worker 3 Stage 1 finished
+Worker 2 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 3 Stage 2 starting
+Worker 3 ILS chunk 3
+Worker 1 ILS chunk 1
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 2 Stage 2 starting
+Worker 2 ILS chunk 2
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 76696.9 ms | Stage 2: 41741.1 ms
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 75422.3 ms | Stage 2: 41749.5 ms
+Worker 2 Stage 2 finished
+Worker 2 Stage 1: 76467.2 ms | Stage 2: 41771 ms
+Worker 3 Stage 2 finished
+Worker 3 Stage 1: 75655.4 ms | Stage 2: 41773.7 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 3160138488
+Running Stage 3 Healing...
+Healing chunk pair (2,3)
+Healing chunk pair (0,1)
+Healing chunk pair (0,2)
+Healing chunk pair (1,3)
+Healing chunk pair (0,3)
+Healing chunk pair (1,2)
+Incremental Cost Bookkeeping: 3160122184
+Scratch Computed Final cost: 3160122184
+Cost AFTER Stage 3 Healing: 3160122184
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 45024.1 ms
+SA time budget reached! Exiting loop...
+Final cost: 3159048872
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 44654.8 ms
+Stage 1 & 2 (Parallel Construction/ILS): 118725 ms
+Stage 3 (Parallel Healing): 12377.2 ms
+Stage 4 & 5 (Cleanup/Polish): 40280.4 ms
+Total time: 216037 ms
+Total distance evaluations: 0
