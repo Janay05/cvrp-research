@@ -1,0 +1,62 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Valle-D-Aosta.vrp (n=19999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=1000, 28 threads)...
+Running Stage 0 with P=2 chunks...
+Setting up workers...
+Launching threads...
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 0 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 5641.33 ms | Stage 2: 28608.1 ms
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 5948.27 ms | Stage 2: 28609.7 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 21779053
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Incremental Cost Bookkeeping: 21778734
+Scratch Computed Final cost: 21778734
+Cost AFTER Stage 3 Healing: 21778734
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 621.2 ms
+SA Iter: 100, elapsed: 2972.0 ms
+SA Iter: 200, elapsed: 5369.4 ms
+SA Iter: 300, elapsed: 7753.4 ms
+SA Iter: 400, elapsed: 10091.9 ms
+SA Iter: 500, elapsed: 12563.6 ms
+SA Iter: 600, elapsed: 14936.7 ms
+SA Iter: 700, elapsed: 17437.2 ms
+SA Iter: 800, elapsed: 19872.3 ms
+SA Iter: 900, elapsed: 22144.7 ms
+SA Iter: 1000, elapsed: 24367.5 ms
+SA Iter: 1100, elapsed: 26556.6 ms
+SA Iter: 1200, elapsed: 28885.9 ms
+SA Iter: 1300, elapsed: 31428.4 ms
+SA Iter: 1400, elapsed: 33615.6 ms
+SA Iter: 1500, elapsed: 35973.7 ms
+SA Iter: 1600, elapsed: 38174.4 ms
+SA Iter: 1700, elapsed: 40426.7 ms
+SA Iter: 1800, elapsed: 42735.3 ms
+SA Iter: 1900, elapsed: 45175.3 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 21776373
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 1221.6 ms
+Stage 1 & 2 (Parallel Construction/ILS): 34614.8 ms
+Stage 3 (Parallel Healing): 1073.72 ms
+Stage 4 & 5 (Cleanup/Polish): 41133.7 ms
+Total time: 78043.9 ms
+Total distance evaluations: 0

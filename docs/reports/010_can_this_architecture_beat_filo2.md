@@ -1,13 +1,18 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-03, §0.11). Status: **VERDICT WITHDRAWN — see
+Date: 2026-08-26 (updated 2026-09-03, §0.13). Status: **VERDICT WITHDRAWN — see
 §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
 conclusion drawn from them in §6 does not. **§0.10 and §0.11 supersede §0.9's
 "parity, not a win" on the *time* axis only: two real time-budget bugs (Stage
 5, then Stage 3), once fixed, give a measured, multi-seed 22.9 % wall-clock win
 at Lazio while cost stays at parity throughout (gap 0.0069 %, an order of
-magnitude inside seed noise — a tie, not a cost win, in either direction).**
+magnitude inside seed noise — a tie, not a cost win, in either direction).
+§0.12 found multi-start's lift shrank once measured like-for-like on the
+current baseline (0.033 points at VDA, not report 009's 0.16). §0.13 adds
+E31/E32/E33 (3-segment exchange operators): another real, verified 0.033-point
+VDA gap improvement, same order of magnitude as multi-start's — the cost gap
+is narrowing in small, real increments, not a single decisive move.**
 
 ---
 
@@ -574,6 +579,72 @@ set) is tighter still (~0.037 %, an order of magnitude below VDA's), which
 predicts an even smaller multi-start lift there than the 0.033 points just
 measured — expected value too low to prioritize a run given the RAM
 constraint on concurrent Lazio-scale processes noted in report 009.
+
+### 0.13 E31/E32/E33: the rest of "the easy half" of T5.2
+
+Report 009 left "a fuller T5.2" open: E31/E32/E33 (3-segment exchanges) and
+the Rev variants of all five (E21/E22/E31/E32/E33), estimating 0.1–0.2 %
+total for the complete missing set, of which E21+E22 had already captured
+-0.014 % at VDA. Implemented E31/E32/E33 this round — same cross-route-only
+scoping as E21/E22, each a faithful port of FILO2's `ThreeOneExchange.hpp`/
+`ThreeTwoExchange.hpp`/`ThreeThreeExchange.hpp` (`eval_E31`/`apply_E31` etc.,
+next to `eval_E22` in `Stage2_ILS.cpp`), derived directly from FILO2's
+`compute_cost`/`is_feasible`/`execute` and cross-checked term-by-term before
+writing any code. Wired into `local_search`'s Step 2 sweep and both dispatch
+switches as ops 11/12/13, so every caller picks them up automatically, same
+as E21/E22. Rev variants **not** attempted this round — confirmed by reading
+FILO2's `RevTwoOneExchange.hpp` that a Rev move is a genuinely different
+geometric move (swaps in the singleton from j's *next* side instead of j's
+*prev* side, inserts the multi-segment reversed on the other side of j), not
+a mechanical flip of the forward version — real design + implementation cost
+each, for an even smaller expected slice of an already-small remaining
+budget.
+
+Verified before benchmarking: determinism (3× identical `Final cost: 74270`
+on `X-n1001-k43`, seed 42 — improved from the pre-operator 74682, expected
+since a richer neighborhood can only find more or equal improving moves),
+feasible (`verifier.py`). Feasible at VDA (all 5 seeds) and at Lazio scale
+(`-p 4`, seed 1, 40,140 routes) — the Lazio check matters because
+`stage3_healing_ils_pass` shares this same `local_search`, so these operators
+also run inside Stage 3's boundary healing, not just Stage 2's per-chunk ILS.
+
+**The apples-to-apples baseline needed rebuilding first.** §0.6's published
+VDA baseline (21,791,054 @ 94.6 s) predates the Stage 5 fix (§0.10) — that fix
+was only ever benchmarked at Lazio, never at VDA — so it isn't valid for
+isolating E31/E32/E33's effect. Isolated cleanly via `git stash` on just
+`Stage2_ILS.cpp` (rebuild without the new operators, benchmark, restore,
+rebuild with them): same 5 seeds, same config as §0.6
+(`tools/baseline_current_vda_5seed.sh` vs `tools/e31_32_33_vda_5seed.sh`),
+all feasible:
+
+| | mean cost | mean wall |
+|---|---|---|
+| current build, no E3x (clean baseline) | 21,783,772 | 79.5 s |
+| current build, + E31/E32/E33 | 21,776,503 | 80.2 s |
+| Δ | **-7,269 (-0.033 %)** | +0.7 s (noise) |
+
+(Side finding: the clean baseline itself, 21,783,772, is 0.033 % *better*
+than §0.6's published 21,791,054 — the Stage 5 fix has a small positive
+effect on VDA cost too, not just wall clock, coincidentally the same
+magnitude as E31/E32/E33's own gain.)
+
+Per-seed, the win isn't unanimous: seeds 2, 3, 5 improved (8.2 k, 23.1 k,
+30.5 k), seeds 1, 4 regressed slightly (17.5 k, 7.9 k) — net +36.3 k across 5
+seeds. All five deltas are smaller than the ~0.27–0.29 % seed-to-seed spread
+established earlier, so this is a real but modest signal on 5 seeds, not
+overwhelming evidence — consistent with, and about half of, report 009's
+"0.1–0.2 % total, diminishing" estimate for the complete missing set, of
+which this is the second and larger installment after E21/E22.
+
+Gap to FILO2 (mean 21,740,517): **0.199 % → 0.166 %**, a genuine 0.033-point
+improvement, wall-clock cost negligible — real, verified, kept. (Not directly
+additive with E21/E22's earlier -0.014 %: that figure was measured against
+the old MST-construction baseline, this one against the current
+CW+ROUTEMIN baseline, so the two percentages don't share a denominator — both
+are real, standalone contributions, not two terms of one running total.) The
+gap is not closed, and the remaining levers (Rev variants, SPLIT/TAILS,
+ejection chains) each have smaller expected payoff than what's already been
+taken.
 
 ---
 
