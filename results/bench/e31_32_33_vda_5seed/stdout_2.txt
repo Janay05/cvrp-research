@@ -1,0 +1,61 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Valle-D-Aosta.vrp (n=19999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=1000, 28 threads)...
+Running Stage 0 with P=2 chunks...
+Setting up workers...
+Launching threads...
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 6277.86 ms | Stage 2: 28807.7 ms
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 5677.55 ms | Stage 2: 28809.2 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 21779915
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Incremental Cost Bookkeeping: 21779581
+Scratch Computed Final cost: 21779581
+Cost AFTER Stage 3 Healing: 21779581
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 644.3 ms
+SA Iter: 100, elapsed: 3413.2 ms
+SA Iter: 200, elapsed: 5879.3 ms
+SA Iter: 300, elapsed: 8313.6 ms
+SA Iter: 400, elapsed: 10918.9 ms
+SA Iter: 500, elapsed: 13476.5 ms
+SA Iter: 600, elapsed: 15983.8 ms
+SA Iter: 700, elapsed: 18395.8 ms
+SA Iter: 800, elapsed: 21046.7 ms
+SA Iter: 900, elapsed: 23301.8 ms
+SA Iter: 1000, elapsed: 25568.3 ms
+SA Iter: 1100, elapsed: 28139.5 ms
+SA Iter: 1200, elapsed: 30784.4 ms
+SA Iter: 1300, elapsed: 33412.9 ms
+SA Iter: 1400, elapsed: 35736.8 ms
+SA Iter: 1500, elapsed: 38274.7 ms
+SA Iter: 1600, elapsed: 40706.2 ms
+SA Iter: 1700, elapsed: 43418.9 ms
+SA Iter: 1800, elapsed: 45974.5 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 21772608
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 1210.34 ms
+Stage 1 & 2 (Parallel Construction/ILS): 35128.4 ms
+Stage 3 (Parallel Healing): 1047.16 ms
+Stage 4 & 5 (Cleanup/Polish): 44121.3 ms
+Total time: 81507.2 ms
+Total distance evaluations: 0
