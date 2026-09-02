@@ -153,6 +153,25 @@ void run_stage3_healing(Solution& globalSolution,
         color_classes[edge_color[e]].push_back(edge_list[e]);
     }
 
+    // Color classes run strictly sequentially (see the arena-reuse comment below), but each
+    // pair's healing pass (stage3_healing_ils_pass, Stage2_ILS.cpp) reads --stage3-ms's value
+    // fresh off this global and treats it as its own full deadline. Left alone, that gives
+    // every one of the (max_color+1) color classes the full requested budget back to back --
+    // report 010 §0.10 measured 36.9s of real Stage 3 wall time against a 12s ask at Lazio (3
+    // color classes from K4's edge-chromatic number). Rescale here so --stage3-ms means "Stage
+    // 3 total", matching --stage2-ms/--stage5-ms's semantics: divide across classes, restore
+    // the original value on every exit path (including exceptions) via RAII so a later stage
+    // reusing this global isn't silently left with the rescaled figure.
+    extern int g_stage3_time_budget_ms;
+    struct BudgetRestore {
+        int& budget;
+        int original;
+        ~BudgetRestore() { budget = original; }
+    } budgetRestore{g_stage3_time_budget_ms, g_stage3_time_budget_ms};
+    if (g_stage3_time_budget_ms > 0) {
+        g_stage3_time_budget_ms = std::max(1, g_stage3_time_budget_ms / (max_color + 1));
+    }
+
     // Pool of arenas, one per thread SLOT within a color class (indexed by t_idx, which
     // ranges 0..class_edges.size()-1 and restarts each class) -- reused across every color
     // class instead of a fresh ThreadArena constructed inside the lambda per pair. A fresh
