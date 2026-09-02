@@ -1,18 +1,19 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-03, §0.13). Status: **VERDICT WITHDRAWN — see
-§0.** Original verdict was "no, dead end"; later measurements in the same
+Date: 2026-08-26 (updated 2026-09-03, §0.14). Status: **VERDICT WITHDRAWN —
+see §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
-conclusion drawn from them in §6 does not. **§0.10 and §0.11 supersede §0.9's
-"parity, not a win" on the *time* axis only: two real time-budget bugs (Stage
-5, then Stage 3), once fixed, give a measured, multi-seed 22.9 % wall-clock win
-at Lazio while cost stays at parity throughout (gap 0.0069 %, an order of
-magnitude inside seed noise — a tie, not a cost win, in either direction).
-§0.12 found multi-start's lift shrank once measured like-for-like on the
-current baseline (0.033 points at VDA, not report 009's 0.16). §0.13 adds
-E31/E32/E33 (3-segment exchange operators): another real, verified 0.033-point
-VDA gap improvement, same order of magnitude as multi-start's — the cost gap
-is narrowing in small, real increments, not a single decisive move.**
+conclusion drawn from them in §6 does not. §0.10/§0.11 (two time-budget bug
+fixes) and §0.13 (E31/E32/E33, a real but modest operator-richness gain) each
+individually verified real, if small, improvements. **§0.14 combines them and
+re-measures Lazio: all 3 seeds now beat FILO2 on cost, not just the mean
+(-0.013 % mean, -0.010 to -0.016 % per seed — smaller than the ~0.04–0.065 %
+seed-to-seed spread established earlier, so call it a likely small win, not
+a certain one) alongside a decisive 27.3 % wall-clock win (219.1 s vs 301.3 s,
+zero overlap between the two solvers' seeds). This is the first point in the
+report where cost points the same direction on every seed measured, not a
+coin flip — a likely win on both axes, where §0.9 started from a loss on cost
+and slower wall clock.**
 
 ---
 
@@ -645,6 +646,56 @@ are real, standalone contributions, not two terms of one running total.) The
 gap is not closed, and the remaining levers (Rev variants, SPLIT/TAILS,
 ejection chains) each have smaller expected payoff than what's already been
 taken.
+
+### 0.14 Lazio, current build: the tie breaks — all 3 seeds now beat FILO2
+
+Every fix and addition in §0.10–§0.13 (Stage 5 fix, Stage 3 fix, E31/E32/E33)
+was verified individually. This re-runs §0.11's exact 3-seed Lazio comparison
+(`--routemin-k 500 --routemin-iters 12000 --stage2-ms 45000 --stage3-ms 12000
+--stage5-ms 45000`) on the current build with everything combined, to see
+whether the accumulated, individually-small VDA-side gains move Lazio's
+result — the instance that had stood at a tie through §0.10 and §0.11.
+
+All 3 seeds feasibility-verified (`verifier.py`):
+
+| seed | ours | FILO2 | Δ | ours wall | FILO2 wall |
+|---|---|---|---|---|---|
+| 1 | 3,158,719,112 | 3,159,235,192 | -516,080 (-0.0163 %) | 219.3 s | 315 s |
+| 2 | 3,158,373,889 | 3,158,761,465 | -387,576 (-0.0123 %) | 222.1 s | 294 s |
+| 3 | 3,159,048,872 | 3,159,377,689 | -328,817 (-0.0104 %) | 216.0 s | 295 s |
+| **mean** | **3,158,713,958** | **3,159,124,782** | **-410,824 (-0.0130 %)** | **219.1 s** | **301.3 s** |
+
+**Every seed is now cheaper than FILO2's matching seed, not just the mean —
+the first time in this report that's been true in one direction across all
+three.** §0.10 and §0.11 both showed the sign flip seed-to-seed (2 wins, 1
+loss either way); here all three agree. That consistency is real signal, but
+calibrate it honestly: the magnitude (0.010–0.016 %) is still *smaller* than
+the ~0.04–0.065 % seed-to-seed spread measured earlier in this report, and
+three seeds is not a large sample — this is evidence of a small real effect,
+not proof of one at a precise magnitude. Call it a **likely small win**, not
+a decisively large one.
+
+Wall clock needs no such hedging: 219.1 s vs 301.3 s, **82.2 s / 27.3 %
+faster**, every one of our seeds beating every one of FILO2's by a wide
+margin (worst of ours, 222.1 s, beats best of theirs, 294 s, by 72 s) — the
+same clean, no-overlap pattern §0.10 and §0.11 already established, now
+wider still. Our own wall clock also kept falling: 298.9 s (§0.9) → 257.5 s
+(§0.10) → 232.4 s (§0.11) → **219.1 s** here — a cumulative 26.7 % reduction
+across the session, from fixes alone (Stage 5, Stage 3) plus E31/E32/E33
+adding negligible overhead.
+
+**Where this leaves the report's opening question.** §0.10/§0.11 established
+cost parity plus a clear time win and explicitly declined to call that a win
+on both axes. This result is different in kind, not just degree: cost is no
+longer a coin-flip-by-seed tie, it now points the same direction on every
+seed measured, alongside a wall-clock margin that was never in question. The
+honest summary is a **likely win on both axes at Lazio, at this scale** — real
+but modest on cost, decisive on time — where §0.9 started from a loss on cost
+(-0.0165 %) and slower wall clock. Whether "likely" graduates to "decisively
+verified" is a question of more seeds, not more engineering; nothing here
+rules out that a larger sample reveals the true cost effect is closer to
+zero, but nothing in five separate feasibility-verified measurements (VDA ×2,
+Lazio ×3) has pointed against the accumulated changes either.
 
 ---
 
