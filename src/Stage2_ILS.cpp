@@ -932,6 +932,315 @@ namespace {
         invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, ppp_j);
     }
 
+    // Rev variants (report 010 SS0.13's open item). Confirmed by reading FILO2's
+    // RevTwoOneExchange.hpp etc. that these are genuinely different moves, not a mechanical
+    // flip of the forward version: the "singleton"/"other segment" is taken from j's *next*
+    // side instead of j's *prev* side, and the i-side segment is inserted onto j's route
+    // REVERSED (tail-first) rather than in original order. Only the reverse_both_strings=false
+    // instantiation is ported for E22_rev/E32_rev/E33_rev (FILO2 also enables a =true variant
+    // for each as a distinct operator, which additionally reverses the j-side segment's
+    // insertion onto i's route -- out of scope here, same reasoning as skipping these in the
+    // first pass: bounded scope over unbounded operator coverage).
+
+    // E21_rev -- reversed variant of E21: swaps the 2-segment (p_i, i) -- inserted onto j's
+    // route REVERSED as (i, p_i), directly after j -- with the singleton s_j = succ(j) (not
+    // pred(j) as E21 uses), which lands in the gap the 2-segment left on i's route.
+    Cost eval_E21_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+
+        NodeId p_i = sol.pred[i];
+        if (p_i == 0) return 0; // need a real 2-segment (p_i,i)
+        NodeId s_j = sol.succ[j];
+        if (s_j == 0) return 0; // need a real singleton on j's next side
+
+        if (sol.routeLoad[r_j] - inst.demand[s_j] + inst.demand[p_i] + inst.demand[i] > inst.Q) return 0;
+        if (sol.routeLoad[r_i] + inst.demand[s_j] - inst.demand[p_i] - inst.demand[i] > inst.Q) return 0;
+
+        NodeId s_i = sol.succ[i];
+        NodeId pp_i = sol.pred[p_i];
+        NodeId ss_j = sol.succ[s_j];
+
+        Cost rem = -sol.costToPred[p_i] - curEdgeCost(sol, inst, i, s_i) - sol.costToPred[s_j] - curEdgeCost(sol, inst, s_j, ss_j);
+        Cost add = dist(inst, ss_j, p_i) + dist(inst, i, j) + dist(inst, pp_i, s_j) + dist(inst, s_j, s_i);
+        return add + rem;
+    }
+
+    void apply_E21_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                   PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_E21_rev";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], pp_i = sol.pred[p_i];
+        NodeId s_j = sol.succ[j], ss_j = sol.succ[s_j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, s_j, arena, inst);
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, p_i, arena, inst);
+        // iRoute now: pp_i -> s_i. jRoute now: j -> ss_j.
+
+        insert_customer(sol, s_j, pp_i, s_i, r_i, arena, inst);
+
+        insert_customer(sol, i, j, ss_j, r_j, arena, inst);
+        insert_customer(sol, p_i, i, ss_j, r_j, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
+        invalidate_svc(cache, i, j, pp_i, s_i, ss_j, s_j, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+    }
+
+    // E22_rev -- reversed variant of E22 (reverse_both_strings=false): the i-side 2-segment
+    // (p_i,i) is inserted onto j's route reversed, as (i,p_i); the j-side 2-segment (s_j,ss_j
+    // = succ(j), succ(succ(j))) is taken from j's *next* side and inserted onto i's route
+    // in its original order.
+    Cost eval_E22_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+
+        NodeId p_i = sol.pred[i];
+        if (p_i == 0) return 0;
+        NodeId s_j = sol.succ[j];
+        if (s_j == 0) return 0;
+        NodeId ss_j = sol.succ[s_j];
+        if (ss_j == 0) return 0; // need a real 2-segment (s_j,ss_j)
+
+        Cost dem2i = inst.demand[p_i] + inst.demand[i];
+        Cost dem2j = inst.demand[s_j] + inst.demand[ss_j];
+        if (sol.routeLoad[r_j] - dem2j + dem2i > inst.Q) return 0;
+        if (sol.routeLoad[r_i] + dem2j - dem2i > inst.Q) return 0;
+
+        NodeId s_i = sol.succ[i];
+        NodeId pp_i = sol.pred[p_i];
+        NodeId sss_j = sol.succ[ss_j];
+
+        Cost rem = -sol.costToPred[p_i] - curEdgeCost(sol, inst, i, s_i) - sol.costToPred[s_j] - curEdgeCost(sol, inst, ss_j, sss_j);
+        Cost add = dist(inst, sss_j, p_i) + dist(inst, i, j) + dist(inst, pp_i, s_j) + dist(inst, ss_j, s_i);
+        return add + rem;
+    }
+
+    void apply_E22_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                   PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_E22_rev";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], pp_i = sol.pred[p_i];
+        NodeId s_j = sol.succ[j], ss_j = sol.succ[s_j], sss_j = sol.succ[ss_j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, p_i, arena, inst);
+        remove_customer(sol, s_j, arena, inst);
+        remove_customer(sol, ss_j, arena, inst);
+        // iRoute now: pp_i -> s_i. jRoute now: j -> sss_j.
+
+        insert_customer(sol, i, j, sss_j, r_j, arena, inst);
+        insert_customer(sol, p_i, i, sss_j, r_j, arena, inst);
+
+        insert_customer(sol, s_j, pp_i, s_i, r_i, arena, inst);
+        insert_customer(sol, ss_j, s_j, s_i, r_i, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
+        invalidate_svc(cache, i, j, pp_i, s_i, sss_j, s_j, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_i);
+        cache.insert(ss_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, ss_j);
+    }
+
+    // E31_rev -- reversed variant of E31: i-side 3-segment (pp_i,p_i,i) inserted onto j's
+    // route reversed as (i,p_i,pp_i); singleton s_j = succ(j) fills the gap on i's route.
+    Cost eval_E31_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+
+        NodeId p_i = sol.pred[i];
+        if (p_i == 0) return 0;
+        NodeId pp_i = sol.pred[p_i];
+        if (pp_i == 0) return 0; // need a real 3-segment (pp_i,p_i,i)
+        NodeId s_j = sol.succ[j];
+        if (s_j == 0) return 0;
+
+        Cost dem3i = inst.demand[pp_i] + inst.demand[p_i] + inst.demand[i];
+        if (sol.routeLoad[r_j] - inst.demand[s_j] + dem3i > inst.Q) return 0;
+        if (sol.routeLoad[r_i] + inst.demand[s_j] - dem3i > inst.Q) return 0;
+
+        NodeId s_i = sol.succ[i];
+        NodeId ppp_i = sol.pred[pp_i];
+        NodeId ss_j = sol.succ[s_j];
+
+        Cost rem = -sol.costToPred[pp_i] - curEdgeCost(sol, inst, i, s_i) - sol.costToPred[s_j] - curEdgeCost(sol, inst, s_j, ss_j);
+        Cost add = dist(inst, ss_j, pp_i) + dist(inst, i, j) + dist(inst, ppp_i, s_j) + dist(inst, s_j, s_i);
+        return add + rem;
+    }
+
+    void apply_E31_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                   PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_E31_rev";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], pp_i = sol.pred[p_i], ppp_i = sol.pred[pp_i];
+        NodeId s_j = sol.succ[j], ss_j = sol.succ[s_j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, s_j, arena, inst);
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, p_i, arena, inst);
+        remove_customer(sol, pp_i, arena, inst);
+        // iRoute now: ppp_i -> s_i. jRoute now: j -> ss_j.
+
+        insert_customer(sol, s_j, ppp_i, s_i, r_i, arena, inst);
+
+        insert_customer(sol, i, j, ss_j, r_j, arena, inst);
+        insert_customer(sol, p_i, i, ss_j, r_j, arena, inst);
+        insert_customer(sol, pp_i, p_i, ss_j, r_j, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
+        invalidate_svc(cache, i, j, ppp_i, s_i, ss_j, s_j, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_i);
+        cache.insert(pp_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, pp_i);
+    }
+
+    // E32_rev -- reversed variant of E32 (reverse_both_strings=false): i-side 3-segment
+    // reversed onto j's route; j-side 2-segment (s_j,ss_j = succ(j),succ(succ(j))) in
+    // original order onto i's route.
+    Cost eval_E32_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+
+        NodeId p_i = sol.pred[i];
+        if (p_i == 0) return 0;
+        NodeId pp_i = sol.pred[p_i];
+        if (pp_i == 0) return 0;
+        NodeId s_j = sol.succ[j];
+        if (s_j == 0) return 0;
+        NodeId ss_j = sol.succ[s_j];
+        if (ss_j == 0) return 0;
+
+        Cost dem3i = inst.demand[pp_i] + inst.demand[p_i] + inst.demand[i];
+        Cost dem2j = inst.demand[s_j] + inst.demand[ss_j];
+        if (sol.routeLoad[r_j] - dem2j + dem3i > inst.Q) return 0;
+        if (sol.routeLoad[r_i] + dem2j - dem3i > inst.Q) return 0;
+
+        NodeId s_i = sol.succ[i];
+        NodeId ppp_i = sol.pred[pp_i];
+        NodeId sss_j = sol.succ[ss_j];
+
+        Cost rem = -sol.costToPred[pp_i] - curEdgeCost(sol, inst, i, s_i) - sol.costToPred[s_j] - curEdgeCost(sol, inst, ss_j, sss_j);
+        Cost add = dist(inst, sss_j, pp_i) + dist(inst, i, j) + dist(inst, ppp_i, s_j) + dist(inst, ss_j, s_i);
+        return add + rem;
+    }
+
+    void apply_E32_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                   PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_E32_rev";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], pp_i = sol.pred[p_i], ppp_i = sol.pred[pp_i];
+        NodeId s_j = sol.succ[j], ss_j = sol.succ[s_j], sss_j = sol.succ[ss_j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, p_i, arena, inst);
+        remove_customer(sol, pp_i, arena, inst);
+        remove_customer(sol, s_j, arena, inst);
+        remove_customer(sol, ss_j, arena, inst);
+        // iRoute now: ppp_i -> s_i. jRoute now: j -> sss_j.
+
+        insert_customer(sol, i, j, sss_j, r_j, arena, inst);
+        insert_customer(sol, p_i, i, sss_j, r_j, arena, inst);
+        insert_customer(sol, pp_i, p_i, sss_j, r_j, arena, inst);
+
+        insert_customer(sol, s_j, ppp_i, s_i, r_i, arena, inst);
+        insert_customer(sol, ss_j, s_j, s_i, r_i, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
+        invalidate_svc(cache, i, j, ppp_i, s_i, sss_j, s_j, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_i);
+        cache.insert(pp_i);
+        cache.insert(ss_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, pp_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, ss_j);
+    }
+
+    // E33_rev -- reversed variant of E33 (reverse_both_strings=false): i-side 3-segment
+    // reversed onto j's route; j-side 3-segment (s_j,ss_j,sss_j = succ(j)..succ^3(j)) in
+    // original order onto i's route.
+    Cost eval_E33_rev(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+
+        NodeId p_i = sol.pred[i];
+        if (p_i == 0) return 0;
+        NodeId pp_i = sol.pred[p_i];
+        if (pp_i == 0) return 0;
+        NodeId s_j = sol.succ[j];
+        if (s_j == 0) return 0;
+        NodeId ss_j = sol.succ[s_j];
+        if (ss_j == 0) return 0;
+        NodeId sss_j = sol.succ[ss_j];
+        if (sss_j == 0) return 0;
+
+        Cost dem3i = inst.demand[pp_i] + inst.demand[p_i] + inst.demand[i];
+        Cost dem3j = inst.demand[s_j] + inst.demand[ss_j] + inst.demand[sss_j];
+        if (sol.routeLoad[r_j] - dem3j + dem3i > inst.Q) return 0;
+        if (sol.routeLoad[r_i] + dem3j - dem3i > inst.Q) return 0;
+
+        NodeId s_i = sol.succ[i];
+        NodeId ppp_i = sol.pred[pp_i];
+        NodeId ssss_j = sol.succ[sss_j];
+
+        Cost rem = -sol.costToPred[pp_i] - curEdgeCost(sol, inst, i, s_i) - sol.costToPred[s_j] - curEdgeCost(sol, inst, sss_j, ssss_j);
+        Cost add = dist(inst, ssss_j, pp_i) + dist(inst, i, j) + dist(inst, ppp_i, s_j) + dist(inst, sss_j, s_i);
+        return add + rem;
+    }
+
+    void apply_E33_rev(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, SVCCache& cache,
+                   PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_E33_rev";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], pp_i = sol.pred[p_i], ppp_i = sol.pred[pp_i];
+        NodeId s_j = sol.succ[j], ss_j = sol.succ[s_j], sss_j = sol.succ[ss_j], ssss_j = sol.succ[sss_j];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, p_i, arena, inst);
+        remove_customer(sol, pp_i, arena, inst);
+        remove_customer(sol, s_j, arena, inst);
+        remove_customer(sol, ss_j, arena, inst);
+        remove_customer(sol, sss_j, arena, inst);
+        // iRoute now: ppp_i -> s_i. jRoute now: j -> ssss_j.
+
+        insert_customer(sol, i, j, ssss_j, r_j, arena, inst);
+        insert_customer(sol, p_i, i, ssss_j, r_j, arena, inst);
+        insert_customer(sol, pp_i, p_i, ssss_j, r_j, arena, inst);
+
+        insert_customer(sol, s_j, ppp_i, s_i, r_i, arena, inst);
+        insert_customer(sol, ss_j, s_j, s_i, r_i, arena, inst);
+        insert_customer(sol, sss_j, ss_j, s_i, r_i, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+
+        invalidate_svc(cache, i, j, ppp_i, s_i, ssss_j, s_j, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_i);
+        cache.insert(pp_i);
+        cache.insert(ss_j);
+        cache.insert(sss_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, pp_i);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, ss_j);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, sss_j);
+    }
+
     Cost eval_swap(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
         if (i == 0 || j == 0 || i == j) return 0;
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
@@ -1475,6 +1784,21 @@ namespace {
                     Cost delta_E33 = eval_E33(sol, inst, i, j);
                     if (delta_E33 < pairDelta) { pairDelta = delta_E33; pairOp = 13; }
 
+                    Cost delta_E21_rev = eval_E21_rev(sol, inst, i, j);
+                    if (delta_E21_rev < pairDelta) { pairDelta = delta_E21_rev; pairOp = 14; }
+
+                    Cost delta_E22_rev = eval_E22_rev(sol, inst, i, j);
+                    if (delta_E22_rev < pairDelta) { pairDelta = delta_E22_rev; pairOp = 15; }
+
+                    Cost delta_E31_rev = eval_E31_rev(sol, inst, i, j);
+                    if (delta_E31_rev < pairDelta) { pairDelta = delta_E31_rev; pairOp = 16; }
+
+                    Cost delta_E32_rev = eval_E32_rev(sol, inst, i, j);
+                    if (delta_E32_rev < pairDelta) { pairDelta = delta_E32_rev; pairOp = 17; }
+
+                    Cost delta_E33_rev = eval_E33_rev(sol, inst, i, j);
+                    if (delta_E33_rev < pairDelta) { pairDelta = delta_E33_rev; pairOp = 18; }
+
                     Cost delta_2opt = eval_2opt(sol, inst, i, j);
                     if (delta_2opt < pairDelta) { pairDelta = delta_2opt; pairOp = 2; }
 
@@ -1528,6 +1852,11 @@ namespace {
                 else if (bestOp == 11) verify_delta = eval_E31(sol, inst, i, best_j);
                 else if (bestOp == 12) verify_delta = eval_E32(sol, inst, i, best_j);
                 else if (bestOp == 13) verify_delta = eval_E33(sol, inst, i, best_j);
+                else if (bestOp == 14) verify_delta = eval_E21_rev(sol, inst, i, best_j);
+                else if (bestOp == 15) verify_delta = eval_E22_rev(sol, inst, i, best_j);
+                else if (bestOp == 16) verify_delta = eval_E31_rev(sol, inst, i, best_j);
+                else if (bestOp == 17) verify_delta = eval_E32_rev(sol, inst, i, best_j);
+                else if (bestOp == 18) verify_delta = eval_E33_rev(sol, inst, i, best_j);
 
                 if (verify_delta < -1e-6) {
                     int old_r_i = sol.routeOf[i];
@@ -1547,6 +1876,11 @@ namespace {
                     else if (bestOp == 11) apply_E31(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
                     else if (bestOp == 12) apply_E32(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
                     else if (bestOp == 13) apply_E33(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 14) apply_E21_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 15) apply_E22_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 16) apply_E31_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 17) apply_E32_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 18) apply_E33_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
 
                     if (old_r_i != -1) update_route_info(sol, old_r_i, inst);
                     if (old_r_j != -1 && old_r_j != old_r_i) update_route_info(sol, old_r_j, inst);

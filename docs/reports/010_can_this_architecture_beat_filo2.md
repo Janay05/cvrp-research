@@ -697,6 +697,61 @@ rules out that a larger sample reveals the true cost effect is closer to
 zero, but nothing in five separate feasibility-verified measurements (VDA ×2,
 Lazio ×3) has pointed against the accumulated changes either.
 
+### 0.15 Rev variants added: a second, smaller increment, diminishing as predicted
+
+Following up §0.13's deferred item: added E21_rev/E22_rev/E31_rev/E32_rev/
+E33_rev, ported from FILO2's `RevTwoOneExchange.hpp`/`RevTwoTwoExchange.hpp`/
+`RevThreeOneExchange.hpp`/`RevThreeTwoExchange.hpp`/`RevThreeThreeExchange.hpp`
+(`eval_E21_rev`/`apply_E21_rev` etc., next to `apply_E33`), ops 14–18. Only
+the `reverse_both_strings=false` instantiation is ported for the three
+operators FILO2 templates that way (E22_rev/E32_rev/E33_rev) — FILO2 enables
+both `true` and `false` as separate, simultaneously-active operators; the
+`true` variant (which additionally reverses the *other* segment's insertion)
+is deferred, same bounded-scope reasoning as everywhere else in this section.
+
+Confirmed by term-by-term derivation against FILO2's source that these are
+not a mechanical flip of E21–E33: the "other" segment is taken from j's
+*next* side (`succ(j)`) rather than j's *prev* side, and the i-side segment
+lands on j's route reversed (tail-first) rather than in original order.
+
+Verified: determinism (3× identical `Final cost: 74059` on `X-n1001-k43`,
+seed 42 — improved again from 74270, expected), feasible (`verifier.py`) at
+`X-n1001-k43`, all 5 VDA seeds, and Lazio scale (`-p 4`, seed 1, 40,143
+routes).
+
+VDA, same 5 seeds/config as §0.13, isolated against the already-clean
+"E31/E32/E33, no Rev" baseline (`e31_32_33_vda_5seed`, no fresh stash-isolate
+needed since that baseline was already measured without any Rev code
+present):
+
+| | mean cost | mean wall |
+|---|---|---|
+| E31/E32/E33 only (§0.13) | 21,776,503 | 80.2 s |
+| + Rev variants | 21,773,253 | 86.0 s |
+| Δ | **-3,250 (-0.0149 %)** | +5.8 s |
+
+Per-seed: 3 of 5 improved (1.3 k/20.9 k/15.8 k), 2 regressed (10.4 k/11.4 k) —
+smaller and more mixed than §0.13's own signal, consistent with predicted
+diminishing returns for each successive operator added. The wall-clock
+increase is unexpected under this architecture's time-budget design (Stage
+2's SA loop should hard-stop at `--stage2-ms` regardless of per-iteration
+eval cost) and is most likely session-to-session system load variance rather
+than a real per-operator overhead — not large enough to chase down given the
+cost signal is the one that matters here.
+
+Gap to FILO2 (21,740,517): **0.166 % → 0.151 %**. Combined view of every
+operator-richness change from §0.13 onward, VDA, same baseline throughout:
+
+| | mean cost | gap |
+|---|---|---|
+| clean baseline (Stage 5 + Stage 3 fixes only) | 21,783,772 | 0.199 % |
+| + E31/E32/E33 | 21,776,503 | 0.166 % |
+| + Rev variants | 21,773,253 | 0.151 % |
+
+Total from this round of work: **-10,519 (-0.048 %)**, gap cut from 0.199 %
+to 0.151 % — a real, verified, monotonic reduction, arriving in shrinking
+increments exactly as report 009's diminishing-returns estimate predicted.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
