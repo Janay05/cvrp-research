@@ -1,0 +1,60 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Valle-D-Aosta.vrp (n=19999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=1000, 28 threads)...
+Running Stage 0 with P=2 chunks...
+Setting up workers...
+Launching threads...
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 0 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 7017.34 ms | Stage 2: 31010.6 ms
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 6212.9 ms | Stage 2: 31016.1 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 21807021
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Incremental Cost Bookkeeping: 21806633
+Scratch Computed Final cost: 21806633
+Cost AFTER Stage 3 Healing: 21806633
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 678.7 ms
+SA Iter: 100, elapsed: 3440.0 ms
+SA Iter: 200, elapsed: 5987.8 ms
+SA Iter: 300, elapsed: 8581.6 ms
+SA Iter: 400, elapsed: 11211.3 ms
+SA Iter: 500, elapsed: 13762.4 ms
+SA Iter: 600, elapsed: 16320.3 ms
+SA Iter: 700, elapsed: 18901.6 ms
+SA Iter: 800, elapsed: 21431.1 ms
+SA Iter: 900, elapsed: 23977.7 ms
+SA Iter: 1000, elapsed: 26233.7 ms
+SA Iter: 1100, elapsed: 28799.6 ms
+SA Iter: 1200, elapsed: 31456.2 ms
+SA Iter: 1300, elapsed: 34111.8 ms
+SA Iter: 1400, elapsed: 36807.6 ms
+SA Iter: 1500, elapsed: 39501.9 ms
+SA Iter: 1600, elapsed: 41965.4 ms
+SA Iter: 1700, elapsed: 44456.4 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 21804274
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 1259.19 ms
+Stage 1 & 2 (Parallel Construction/ILS): 38124.7 ms
+Stage 3 (Parallel Healing): 1045.09 ms
+Stage 4 & 5 (Cleanup/Polish): 46071.8 ms
+Total time: 86500.8 ms
+Total distance evaluations: 0
