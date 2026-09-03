@@ -1,0 +1,60 @@
+Pre-processing the instance.
+Progress: 5%
+Progress: 11%
+Progress: 17%
+Progress: 22%
+Progress: 28%
+Progress: 34%
+Progress: 40%
+Progress: 46%
+Progress: 51%
+Progress: 57%
+Progress: 63%
+Progress: 69%
+Progress: 75%
+Progress: 81%
+Progress: 86%
+Progress: 92%
+Progress: 98%
+Done in 192 seconds.
+
+Running CLARKE&WRIGHT to generate an initial solution.
+Progress: 85.0646%, Solution cost: 4.17411e+09 
+Done in 9 seconds.
+Initial solution: obj = 3.17777e+09, n. of routes = 40252.
+
+Setting up MOVEGENERATORS data structures.
+Done in 3 seconds.
+Using at most 29431730 move-generators out of 1000000000000 total arcs (approx. 0.00294%)
+
+Computing a greedy upper bound on the n. of routes.
+Done in 5161 milliseconds.
+Around 39979 routes should do the job.
+
+Running ROUTEMIN heuristic for at most 1000 iterations.
+Starting solution: obj = 3.1778e+09, n. of routes = 40252.
+
+[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  [0m
+                                                        
+  19   3176224522    40235   19300.00     0.04     0.88 
+Final solution: obj = 3167564765, n. routes = 40160
+Done in 2 seconds.
+
+Shaking LB = 1099.52411
+Shaking UB = 2492.254649
+Simulated annealing temperature goes from 5713.075214 to 57.13075214.
+
+Running COREOPT for 5 seconds.
+
+[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  [0m
+                                                                                                                         
+ 40.02         2292   3166580910    40168      1140.00         3.00       134.08       700.40    0.25    14.00   904.63 
+ 80.04         4545   3165914516    40165      1133.00         1.00       135.34       696.90    0.26    14.00   143.24 
+
+Best solution found:
+obj = 3165686350, n. routes = 40163
+
+Run completed in 220 seconds 
+Results stored in
+ - results/bench/filo2_lazio_final_10seed/Lazio.vrp_seed-9.out
+ - results/bench/filo2_lazio_final_10seed/Lazio.vrp_seed-9.vrp.sol
