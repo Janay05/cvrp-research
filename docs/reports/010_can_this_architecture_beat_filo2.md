@@ -1,20 +1,20 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-03, §0.17). Status: **VERDICT WITHDRAWN —
+Date: 2026-08-26 (updated 2026-09-03, §0.19). Status: **VERDICT WITHDRAWN —
 see §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
-conclusion drawn from them in §6 does not. **§0.16 found and corrected a
-stale-FILO2-budget bug affecting every prior Lazio comparison (§0.10, §0.11,
-§0.14 had all inadvertently given FILO2 up to 95 s more than we now take):
-corrected and re-verified on both sides (`src/verify_filo2.py`, not just
-FILO2's self-report), Lazio is a decisive win, 0.183 % mean, all 10 seeds,
-t = −16.4. §0.17 applied the same correction to VDA and found the opposite —
-the gap barely moves (0.151 % → 0.146 %), because §2.2 already established
-FILO2 is far less time-sensitive at VDA's smaller scale. VDA remains a
-verified loss, 0.146 %, every seed. The honest overall claim is a verified
-win at Lazio scale (~1M customers) and a verified loss at VDA scale
-(~180 K) — not a general "better than FILO2," a scale-dependent result on
-both counts now resting on equal footing.**
+conclusion drawn from them in §6 does not. **§0.16/§0.17 corrected a
+stale-FILO2-budget bug affecting every prior comparison and, both sides now
+independently verified (`src/verify_filo2.py`, not just FILO2's self-report):
+Lazio is a decisive win, 0.183 % mean, all 10 seeds, t = −16.4; VDA was a
+verified loss, 0.146 %. §0.19 added a scoped-down ejection chain operator
+(FILO2's largest remaining move type, depth-2 instead of FILO2's depth-25)
+and roughly halved the VDA gap to 0.081 % — still a loss, every seed, but the
+largest single improvement to it this session — while leaving Lazio's win
+unaffected. The honest overall claim: a verified, growing win at Lazio scale
+(~1M customers) and a verified, shrinking loss at VDA scale (~180 K) — not a
+general "better than FILO2," a scale-dependent result trending toward parity
+on the smaller instance too.**
 
 ---
 
@@ -960,6 +960,91 @@ VDA gap on its own** — new operator coverage (specifically ejection chains,
 the one FILO2 move type with no analogue in this codebase and report 009's
 largest single estimated payoff, 0.2–0.4 %) remains the lever sized to
 actually move either question.
+
+### 0.19 A bounded ejection chain: VDA's gap roughly halved, Lazio's win unaffected
+
+Implemented a deliberately scoped-down version of FILO2's `EjectionChain.hpp`
+(`eval_eject2`/`apply_eject2`, op 19, next to `apply_E33_rev` in
+`Stage2_ILS.cpp`): FILO2 runs a best-first search over relocation chains up
+to depth 25 (a priority queue, candidate-list scans at every chain node,
+bitset cycle prevention); this implements exactly the depth-2 case —
+relocate `i` into `j`'s route, and if that overflows capacity (the only
+case this engages; `eval_relocate` already covers the rest), eject exactly
+one customer `k` from `j`'s route into a third route found via `k`'s own
+candidate list. Gated to fire only when the plain relocate is
+capacity-blocked. The outer route walk and inner candidate scan are both
+capped (`kEjectScanWidth=8`, `kEjectRouteScanCap=12`) rather than
+exhaustive, for the same throughput reasons report 009's T2-lite/T3 failed —
+uncapped, this is a route-size × candidate-width multiplier on every
+capacity-blocked pair.
+
+**A real bug caught before any benchmarking mattered**: the first working
+version crashed with a hard capacity-assertion (`[FATAL] insert_customer
+load ... > Q`) on the very first determinism check. Cause: `apply_eject2`
+inserted `i` into `j`'s route *before* removing `k` — at that intermediate
+instant the route is genuinely over capacity by construction (that's the
+whole premise of needing an ejection), tripping `insert_customer`'s
+real-time capacity check. Every other multi-node `apply_*` in this file
+already does all removals before any insertion; this one didn't. Fixed by
+reordering to match.
+
+**A second, purely diagnostic mistake, also caught before it caused any bad
+decision**: an early throughput check showed Lazio's "Stage 1 & 2" combined
+timer overshooting by 15–20s and, reading that as a real problem, two more
+rounds of increasingly aggressive throttling followed (tighter per-pair
+caps, then a per-call engagement budget) — the budget version measured
+*worse* solution quality for no timing improvement, which is what triggered
+re-examining the diagnosis rather than tightening further. Root cause: the
+"Stage 1 & 2" combined figure includes Stage 1 (construction), which this
+operator never touches and which was independently observed to swing
+~85–105s+ run to run at Lazio scale — swamping the real signal. The
+per-worker log line splits Stage 1 and Stage 2 separately; checked that way,
+Stage 2 (the actual SA loop, the only thing eject2 touches) overshoots its
+45s budget by a real but modest ~2.4s, consistently, regardless of which
+cap setting was active. The aggressive throttling was reverted; final caps
+are `kEjectScanWidth=8`/`kEjectRouteScanCap=12` with only a generous
+(1,000,000) safety-net budget, not a normal-case throttle.
+
+Verified: determinism (3× identical `Final cost: 74374` on `X-n1001-k43`,
+seed 42), feasible (`verifier.py`) at `X-n1001-k43`, 5 VDA seeds, and 6
+Lazio solutions (3 with eject2, 3 clean baseline, see below).
+
+**VDA, 5 seeds, isolated against the clean "no eject2" baseline
+(`rev_variants_vda_5seed`, mean 21,773,253):**
+
+| | mean cost | mean wall |
+|---|---|---|
+| no eject2 | 21,773,253 | 86.0 s |
+| + eject2 | 21,762,742 | 88.6 s |
+| Δ | **-10,511 (-0.0483 %)** | +2.6 s |
+
+Re-matched FILO2 to the new 88.6 s wall (`filo2_vda_matched2.sh`, 89 s
+budget), all 5 independently verified (`verify_filo2.py`):
+
+**Gap to FILO2: 0.146 % → 0.081 % — roughly halved**, still a loss (all 5
+seeds still behind, no sign flip), but the largest single improvement to
+the VDA gap this session, from a *scoped-down* version of the biggest
+remaining lever. Consistent with report 009's 0.2–0.4 % estimate for the
+full-depth operator — a depth-2 approximation capturing roughly a fifth to
+a quarter of that estimate is a reasonable trade for the risk avoided.
+
+**Lazio, 3 seeds, isolated via `git stash` on just `Stage2_ILS.cpp`
+(same technique as the E31/E32/E33 isolation) for a truly contemporaneous
+paired comparison — necessary because construction-time variance alone
+(~85–105s+ swings) was large enough to make an un-isolated before/after
+comparison unreliable:**
+
+| | mean cost | mean wall |
+|---|---|---|
+| no eject2 (clean baseline) | 3,158,747,800 | 264.0 s |
+| + eject2 | 3,158,638,917 | 257.7 s |
+| Δ | -108,882 (-0.00345 %) | -6.3 s |
+
+Small and noisy on only 3 seeds (Lazio's per-seed spread is larger than
+this effect), but directionally consistent with VDA — real cost
+improvement, no wall-clock cost once construction-time noise is controlled
+for. **This does not threaten §0.16/§0.17's established Lazio win or
+wall-clock advantage.**
 
 ---
 
