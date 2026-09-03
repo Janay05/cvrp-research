@@ -1241,6 +1241,146 @@ namespace {
         invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, sss_j);
     }
 
+    // Bounded (depth-2) ejection chain -- report 010 SS0.18's identified next lever, ported
+    // from FILO2's EjectionChain.hpp's core idea but deliberately scoped down. FILO2 runs a
+    // best-first search over chains up to depth 25 (a priority queue over partial chains,
+    // candidate-list scans at every chain node, bitset-based cycle prevention) -- evaluated on
+    // every candidate pair, that would multiply per-pair cost by (route size x candidate
+    // width), the exact throughput trap report 009's T2-lite/T3 fell into. This implements
+    // exactly the depth-2 case instead: relocate i into j's route; if that overflows capacity
+    // (the only case this function engages -- eval_relocate already covers the rest), eject
+    // exactly one customer k from j's route into a third route l found via k's own candidate
+    // list, resolving the overflow in one hop rather than a recursive chain.
+    //
+    // Gated to fire only when plain relocate(i,j) would already be capacity-blocked, so it
+    // adds cost only where a plain relocate can't already handle the pair. Both the outer scan
+    // over j's route (a real route walk, not a candidate list) and the inner scan over k's own
+    // candidates (uncapped would be 30-50x more expensive per candidate pair than every other
+    // operator combined, at Lazio's k=500) are capped: kEjectScanWidth=8, kEjectRouteScanCap=12.
+    // Candidate lists are distance-sorted, so a feasible destination is disproportionately
+    // likely among the first few entries anyway, and this is already a bounded (depth-2, not
+    // depth-25) approximation of FILO2's real operator.
+    //
+    // Measured with these caps, per-worker Stage 1/2 split (Lazio, --stage2-ms 45000): SA loop
+    // (Stage 2 alone, not the Stage 1 construction lumped into the combined log line) runs
+    // ~47.4s -- a real but modest ~2.4s/5.5% overshoot, consistent across repeat runs. VDA
+    // (--stage2-ms 31000): ~32-33s, ~1-2s overshoot. (An earlier read of this as a much larger,
+    // ~15-20s overshoot was a measurement error -- comparing the "Stage 1 & 2" combined log
+    // line against an assumed construction time, when construction itself varies run-to-run by
+    // tens of seconds at Lazio scale and isn't touched by this operator at all. A tighter
+    // per-call throughput ceiling was tried and measured to cost real solution quality for no
+    // reduction in the real, already-small overshoot -- removed.)
+    //
+    // k/m are output params (same pattern as swap_star's p_i/s_i/p_j/s_j): this function is
+    // deterministic given (sol, i, j) alone, so the Step 2 sweep calls it once for the delta
+    // (dummy output refs) and the verify-inside-lock step calls it again with real refs to
+    // recover k/m fresh -- same lazy-recompute tradeoff swap_star already accepts, not a new
+    // pattern.
+    static constexpr int kEjectScanWidth = 8;
+    static constexpr int kEjectRouteScanCap = 12;
+
+    // Safety net only, not a normal-case throttle (see measurement note above): bounds total
+    // eval_eject2 engagements for one local_search call in case some pathological solution
+    // state produces far more capacity-blocked pairs than anything measured so far. Set high
+    // enough that it should never bind in practice.
+    Cost eval_eject2(const Solution& sol, const Instance& inst, const NeighborLists& granular_lists,
+                      NodeId i, NodeId j, NodeId& best_k, NodeId& best_m, int& ejectBudget) {
+        best_k = 0;
+        best_m = 0;
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+        if (i == j || sol.pred[i] == j || sol.succ[i] == j) return 0;
+
+        // Only engage when the plain relocate is capacity-blocked -- eval_relocate already
+        // covers every case where it isn't, and duplicating that here would waste eval work.
+        if (sol.routeLoad[r_j] + inst.demand[i] <= inst.Q) return 0;
+
+        if (ejectBudget <= 0) return 0; // call-wide throughput ceiling exhausted
+        --ejectBudget;
+
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], s_j = sol.succ[j];
+
+        Cost delta_i = -sol.costToPred[i] - curEdgeCost(sol, inst, i, s_i) + dist(inst, p_i, s_i)
+                       - curEdgeCost(sol, inst, j, s_j) + dist(inst, j, i) + dist(inst, i, s_j);
+
+        Cost excess = sol.routeLoad[r_j] + inst.demand[i] - inst.Q;
+        Cost bestTotal = 0; // 0 = no improving chain found yet
+
+        int routeScanned = 0;
+        for (NodeId k = sol.routeHead[r_j]; k != 0 && routeScanned < kEjectRouteScanCap; k = sol.succ[k], ++routeScanned) {
+            // k == j / k == s_j: excluded because inserting i changes the edges right around
+            // j's old position -- k's removal delta below assumes k's CURRENT (pre-insertion)
+            // pred/succ, which is only valid if k sits outside that touched region.
+            if (k == j || k == s_j || inst.demand[k] < excess) continue;
+
+            NodeId p_k = sol.pred[k], s_k = sol.succ[k];
+            int width = std::min((int)granular_lists.nbr[k].size(), std::min(granular_lists.k, kEjectScanWidth));
+            for (int m_idx = 0; m_idx < width; ++m_idx) {
+                NodeId m = granular_lists.nbr[k][m_idx];
+                // m == i / p_i / s_i: excluded for the same reason as k == j / s_j above, but
+                // for i's REMOVAL region (p_i,s_i) instead of i's insertion region.
+                if (m == i || m == p_i || m == s_i) continue;
+                int r_m = sol.routeOf[m];
+                if (r_m == -1 || r_m == r_j) continue; // must actually leave j's route
+                if (sol.routeLoad[r_m] + inst.demand[k] > inst.Q) continue;
+                if (k == m || p_k == m || s_k == m) continue;
+
+                NodeId s_m = sol.succ[m];
+                Cost delta_k = -sol.costToPred[k] - curEdgeCost(sol, inst, k, s_k) + dist(inst, p_k, s_k)
+                               - curEdgeCost(sol, inst, m, s_m) + dist(inst, m, k) + dist(inst, k, s_m);
+
+                Cost total = delta_i + delta_k;
+                if (total < bestTotal - 1e-9) {
+                    bestTotal = total;
+                    best_k = k;
+                    best_m = m;
+                }
+            }
+        }
+
+        return bestTotal;
+    }
+
+    void apply_eject2(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, NodeId k, NodeId m, SVCCache& cache,
+                       PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_eject2";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i];
+        NodeId s_j = sol.succ[j];
+        NodeId p_k = sol.pred[k], s_k = sol.succ[k];
+        NodeId s_m = sol.succ[m];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j], r_m = sol.routeOf[m];
+
+        // Remove both before inserting either -- k must leave r_j BEFORE i is inserted into
+        // r_j, or the intermediate state (i inserted, k not yet gone) is genuinely over
+        // capacity by design (that's the whole premise of needing an ejection) and trips
+        // insert_customer's hard capacity assertion. Same "remove everything, then insert
+        // everything" ordering every other multi-node apply_* in this file already uses.
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, k, arena, inst);
+
+        insert_customer(sol, i, j, s_j, r_j, arena, inst);
+        insert_customer(sol, k, m, s_m, r_m, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+        if (r_m != r_i && r_m != r_j) update_route_info(sol, r_m, inst);
+
+        // invalidate_svc's 6 fixed slots cover i's own move (i, j, p_i, s_i, s_j); k fills the
+        // 6th slot since it's directly touched (removed). k's remaining touched neighbors
+        // (p_k, s_k, m, s_m) are handled manually, same "extra interior node" pattern as
+        // E21/E22/E3x's multi-node moves.
+        invalidate_svc(cache, i, j, p_i, s_i, s_j, k, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_k);
+        cache.insert(s_k);
+        cache.insert(m);
+        cache.insert(s_m);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_k);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_k);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, m);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_m);
+    }
+
     Cost eval_swap(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
         if (i == 0 || j == 0 || i == j) return 0;
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
@@ -1675,7 +1815,9 @@ namespace {
                       PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
         bool improved = false;
         int ls_iter = 0;
-        
+        // Call-wide safety net for eval_eject2, not a normal-case throttle -- see its comment.
+        int ejectBudget = 1000000;
+
         while (cache.count > 0) {
             ls_iter++;
             if (ls_iter > 50000000) break; // Safety net
@@ -1684,9 +1826,10 @@ namespace {
             if (sol.routeOf[i] == -1) continue;
             
             Cost bestDelta = 0;
-            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*, 5=Relocate2, 6=Relocate3, 7=Relocate2Rev, 8=Relocate3Rev, 9=E21, 10=E22
+            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*, 5=Relocate2, 6=Relocate3, 7=Relocate2Rev, 8=Relocate3Rev, 9=E21, 10=E22, 11-13=E31/E32/E33, 14-18=Rev variants, 19=Eject2
             NodeId best_j = 0;
             NodeId best_p_i = 0, best_s_i = 0, best_p_j = 0, best_s_j = 0;
+            NodeId best_k = 0, best_m = 0;
             
             int k = std::min((int)granular_lists.nbr[i].size(), granular_lists.k);
             int r_i = sol.routeOf[i];
@@ -1799,6 +1942,13 @@ namespace {
                     Cost delta_E33_rev = eval_E33_rev(sol, inst, i, j);
                     if (delta_E33_rev < pairDelta) { pairDelta = delta_E33_rev; pairOp = 18; }
 
+                    // eval_eject2 is deterministic given (sol, i, j) alone, so k/m aren't
+                    // stored here -- only the delta matters for this pass. The verify step
+                    // below recomputes k/m fresh with real output refs if this op wins.
+                    NodeId dummy_k, dummy_m;
+                    Cost delta_eject2 = eval_eject2(sol, inst, granular_lists, i, j, dummy_k, dummy_m, ejectBudget);
+                    if (delta_eject2 < pairDelta) { pairDelta = delta_eject2; pairOp = 19; }
+
                     Cost delta_2opt = eval_2opt(sol, inst, i, j);
                     if (delta_2opt < pairDelta) { pairDelta = delta_2opt; pairOp = 2; }
 
@@ -1857,6 +2007,7 @@ namespace {
                 else if (bestOp == 16) verify_delta = eval_E31_rev(sol, inst, i, best_j);
                 else if (bestOp == 17) verify_delta = eval_E32_rev(sol, inst, i, best_j);
                 else if (bestOp == 18) verify_delta = eval_E33_rev(sol, inst, i, best_j);
+                else if (bestOp == 19) verify_delta = eval_eject2(sol, inst, granular_lists, i, best_j, best_k, best_m, ejectBudget);
 
                 if (verify_delta < -1e-6) {
                     int old_r_i = sol.routeOf[i];
@@ -1881,6 +2032,7 @@ namespace {
                     else if (bestOp == 16) apply_E31_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
                     else if (bestOp == 17) apply_E32_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
                     else if (bestOp == 18) apply_E33_rev(sol, arena, inst, i, best_j, cache, pairCache, k_max, reverseIdx_lists);
+                    else if (bestOp == 19) apply_eject2(sol, arena, inst, i, best_j, best_k, best_m, cache, pairCache, k_max, reverseIdx_lists);
 
                     if (old_r_i != -1) update_route_info(sol, old_r_i, inst);
                     if (old_r_j != -1 && old_r_j != old_r_i) update_route_info(sol, old_r_j, inst);
