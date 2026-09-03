@@ -910,6 +910,30 @@ specific operator set's fit to large-vs-small neighborhoods) is an open
 question this report has not investigated and should not be guessed at
 without further evidence.
 
+**Addendum: does the Lazio win survive if FILO2 is given *more* time than
+us, not matched time?** §0.16's FILO2 budget (220 s) was actually slightly
+*under* our own mean (230.5 s), so that result is "win at matched time," not
+quite "win despite taking less time." Checked the sharper version directly:
+two seeds have an independently-verifiable FILO2 solution at its old,
+longer 294–295 s budget (65 s / ~22 % more than we now take) —
+`results/bench/lazio_multiseed_final/filo2/`, verified feasible and
+cost-matching via `verify_filo2.py` for this addendum, not previously
+checked:
+
+| seed | ours (~229 s) | FILO2 (294–295 s, +65 s) | we win by | we're faster by |
+|---|---|---|---|---|
+| 2 | 3,158,704,359 | 3,158,761,465 | 57,106 (0.0018 %) | 65.8 s (22.4 %) |
+| 3 | 3,158,421,658 | 3,159,377,689 | 956,031 (0.0303 %) | 64.6 s (21.9 %) |
+
+Both seeds: we win on cost **and** take meaningfully less time, even when
+FILO2 gets a 65 s head start. Honest caveat: these two margins are smaller
+than §0.16's 0.183 % mean, and seed 2's (0.0018 %) sits inside the
+~0.04–0.065 % noise band on its own — with n=2 at this specific budget this
+is a directional confirmation, not a second statistically independent proof
+at the same magnitude as §0.16's 10-seed, t = −16.4 result. Seed 1's
+equivalent (315 s) FILO2 solution was not reproducible from the repo (§0.6
+note) so could not be checked the same way.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
