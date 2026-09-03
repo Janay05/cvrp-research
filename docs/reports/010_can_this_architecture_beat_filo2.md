@@ -934,6 +934,33 @@ at the same magnitude as §0.16's 10-seed, t = −16.4 result. Seed 1's
 equivalent (315 s) FILO2 solution was not reproducible from the repo (§0.6
 note) so could not be checked the same way.
 
+### 0.18 Re-checking §2.2's "no time headroom" finding on the current, richer operator set
+
+§2.2 found more time doesn't help — but that was measured with the original
+9-operator set, before E21/E22/E31/E32/E33 and the Rev variants existed. A
+richer neighborhood might have more for extra time to find. Re-tested,
+single seed each, feasibility-verified:
+
+| | budget change | wall change | cost gain |
+|---|---|---|---|
+| Lazio (seed 1) | Stage2/5 45s→90s | 228s→333s (+46 %) | 0.0135 % |
+| VDA (seed 1) | Stage2 31s→62s, Stage5 46s→92s | 86s→163s (+90 %) | 0.0835 % |
+
+Real headroom now exists that didn't before — confirms the richer operator
+set changed the time-sensitivity picture, at both scales, more so at VDA.
+But it doesn't translate directly into a bigger fair-comparison margin:
+FILO2 is confirmed converged by ~86–102 s at VDA (§0.17), so using 163 s of
+our own time isn't "equal wall clock" anymore, it's "we win if allowed 2×
+the clock" — a different, weaker claim than everything else in this report.
+The legitimate slice is only the gap between our current wall and FILO2's
+own convergence ceiling (~16 s at VDA) — by rough linear scaling, worth on
+the order of 0.02 %, real but small. **Conclusion: this is a genuine,
+verified minor lever, not a fix for either the noise-margin question or the
+VDA gap on its own** — new operator coverage (specifically ejection chains,
+the one FILO2 move type with no analogue in this codebase and report 009's
+largest single estimated payoff, 0.2–0.4 %) remains the lever sized to
+actually move either question.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
