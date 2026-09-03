@@ -1,19 +1,20 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-03, §0.16). Status: **VERDICT WITHDRAWN —
+Date: 2026-08-26 (updated 2026-09-03, §0.17). Status: **VERDICT WITHDRAWN —
 see §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
-conclusion drawn from them in §6 does not. §0.10–§0.15 (two time-budget bug
-fixes, then two rounds of segment-exchange operators) each individually
-verified real, if progressively smaller, improvements, and §0.14's 3-seed
-check found a small but consistent cost edge. **§0.16 supersedes §0.14: every
-prior Lazio-vs-FILO2 cost table in this report (§0.10, §0.11, §0.14) was
-inadvertently generous to FILO2 by up to 95 s, because it reused an
-`--optimization-seconds` budget matching our OLD, pre-fix wall clock instead
-of our current one. Corrected to genuinely equal time (10 seeds, the largest
-sample in this report): every seed beats FILO2 by 0.13–0.24 % — a decisive
-0.183 % mean win, an order of magnitude outside the ~0.04–0.065 % noise band,
-with zero sign flips. This is the clear win: not "likely," not "small."**
+conclusion drawn from them in §6 does not. **§0.16 found and corrected a
+stale-FILO2-budget bug affecting every prior Lazio comparison (§0.10, §0.11,
+§0.14 had all inadvertently given FILO2 up to 95 s more than we now take):
+corrected and re-verified on both sides (`src/verify_filo2.py`, not just
+FILO2's self-report), Lazio is a decisive win, 0.183 % mean, all 10 seeds,
+t = −16.4. §0.17 applied the same correction to VDA and found the opposite —
+the gap barely moves (0.151 % → 0.146 %), because §2.2 already established
+FILO2 is far less time-sensitive at VDA's smaller scale. VDA remains a
+verified loss, 0.146 %, every seed. The honest overall claim is a verified
+win at Lazio scale (~1M customers) and a verified loss at VDA scale
+(~180 K) — not a general "better than FILO2," a scale-dependent result on
+both counts now resting on equal footing.**
 
 ---
 
@@ -855,6 +856,59 @@ result is now verified the same way ours is, not merely trusted.
 noise" claim**: paired t-test on the 10 per-seed (ours − FILO2) differences,
 mean −5,793,985, stdev 1,116,678, **t = −16.4** (df 9) — not a borderline
 result by any reasonable significance threshold.
+
+### 0.17 VDA corrected the same way — and this time the gap barely moves. VDA remains a loss.
+
+§0.16 found the Lazio FILO2 baseline (292–315 s) was stale relative to our
+current, much faster wall clock. Every VDA comparison in §0.6–§0.15 has the
+exact same structural issue: FILO2's published VDA number (21,740,517) was
+run at **`--optimization-seconds 102`**, while our current build (E31/E32/
+E33 + Rev variants) runs VDA in **~86 s**, not 102 s. Re-ran FILO2 at 86 s,
+same 5 seeds, same invocation pattern as every other FILO2 VDA run in this
+report (`tools/filo2_vda_matched.sh`), all 5 independently verified feasible
+and cost-matching (`src/verify_filo2.py`):
+
+| seed | ours | FILO2 (86 s) | gap |
+|---|---|---|---|
+| 1 | 21,804,274 | 21,744,223 | +0.276 % |
+| 2 | 21,771,325 | 21,736,423 | +0.161 % |
+| 3 | 21,765,350 | 21,757,348 | +0.037 % |
+| 4 | 21,767,398 | 21,735,977 | +0.145 % |
+| 5 | 21,757,918 | 21,733,333 | +0.113 % |
+| **mean** | **21,773,253** | **21,741,461** | **+0.146 %** |
+
+**Unlike Lazio, this barely moves the number**: 0.151 % (stale 102 s
+baseline) → 0.146 % (corrected 86 s baseline) — a 0.005-point shift, noise-
+level, not the 0.17-point swing §0.16 found at Lazio. **We remain behind at
+VDA, by essentially the same margin as previously reported, every seed
+still on the losing side (no sign flips).**
+
+This is not a null result — it is a real, useful confirmation. §2.2 (this
+report, VDA scale) found FILO2 near-converged by ~100 s, 4.6× more time
+buying only 0.1 %. §0.16 found the opposite at Lazio: FILO2 still had real,
+usable headroom in the 90–100 s range at that scale. Correcting VDA and
+finding *no* meaningful shift is exactly what that VDA-vs-Lazio
+time-sensitivity difference predicts — it is independent confirmation that
+§2.2's original finding was right, not an oversight parallel to the one
+§0.16 caught. The Lazio correction mattered because FILO2 was genuinely
+time-starved there at the stale budget; the VDA "correction" barely matters
+because FILO2 was already near its ceiling at 86 s just as much as at 102 s.
+
+**The honest combined picture, scale by scale, both now genuinely
+equal-time and both-sides-verified:**
+
+| instance | scale | result |
+|---|---|---|
+| Lazio | ~1M customers | **win**, 0.183 % mean, all 10 seeds, t = −16.4 |
+| VDA | ~180 K customers | **loss**, 0.146 % mean, all 5 seeds |
+
+This is not "a better algorithm than FILO2" as a general claim — it is a
+verified win at one tested scale and a verified loss at another, both now
+resting on the same equal-time, both-sides-independently-verified footing.
+Whatever is driving the difference (instance size, customer density, the
+specific operator set's fit to large-vs-small neighborhoods) is an open
+question this report has not investigated and should not be guessed at
+without further evidence.
 
 ---
 
