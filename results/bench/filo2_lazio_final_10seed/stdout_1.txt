@@ -1,0 +1,59 @@
+Pre-processing the instance.
+Progress: 5%
+Progress: 11%
+Progress: 17%
+Progress: 23%
+Progress: 28%
+Progress: 34%
+Progress: 40%
+Progress: 46%
+Progress: 52%
+Progress: 57%
+Progress: 63%
+Progress: 69%
+Progress: 75%
+Progress: 81%
+Progress: 86%
+Progress: 92%
+Progress: 98%
+Done in 194 seconds.
+
+Running CLARKE&WRIGHT to generate an initial solution.
+Progress: 86.1286%, Solution cost: 4.06108e+09 
+Done in 9 seconds.
+Initial solution: obj = 3.17777e+09, n. of routes = 40252.
+
+Setting up MOVEGENERATORS data structures.
+Done in 3 seconds.
+Using at most 29431730 move-generators out of 1000000000000 total arcs (approx. 0.00294%)
+
+Computing a greedy upper bound on the n. of routes.
+Done in 5346 milliseconds.
+Around 39979 routes should do the job.
+
+Running ROUTEMIN heuristic for at most 1000 iterations.
+Starting solution: obj = 3.1778e+09, n. of routes = 40252.
+
+[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  [0m
+                                                        
+  24   3174444521    40231   24400.00     0.03     0.80 
+Final solution: obj = 3167364278, n. routes = 40160
+Done in 2 seconds.
+
+Shaking LB = 1099.454517
+Shaking UB = 2492.096905
+Simulated annealing temperature goes from 5707.671613 to 57.07671613.
+
+Running COREOPT for 3 seconds.
+
+[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  [0m
+                                                                                                                         
+ 66.70         2251   3166475688    40169      1119.00         1.00       116.14       729.24    0.25    14.00   264.52 
+
+Best solution found:
+obj = 3166192457, n. routes = 40169
+
+Run completed in 220 seconds 
+Results stored in
+ - results/bench/filo2_lazio_final_10seed/Lazio.vrp_seed-1.out
+ - results/bench/filo2_lazio_final_10seed/Lazio.vrp_seed-1.vrp.sol

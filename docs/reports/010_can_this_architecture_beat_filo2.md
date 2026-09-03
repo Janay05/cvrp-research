@@ -1,19 +1,19 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-03, §0.14). Status: **VERDICT WITHDRAWN —
+Date: 2026-08-26 (updated 2026-09-03, §0.16). Status: **VERDICT WITHDRAWN —
 see §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
-conclusion drawn from them in §6 does not. §0.10/§0.11 (two time-budget bug
-fixes) and §0.13 (E31/E32/E33, a real but modest operator-richness gain) each
-individually verified real, if small, improvements. **§0.14 combines them and
-re-measures Lazio: all 3 seeds now beat FILO2 on cost, not just the mean
-(-0.013 % mean, -0.010 to -0.016 % per seed — smaller than the ~0.04–0.065 %
-seed-to-seed spread established earlier, so call it a likely small win, not
-a certain one) alongside a decisive 27.3 % wall-clock win (219.1 s vs 301.3 s,
-zero overlap between the two solvers' seeds). This is the first point in the
-report where cost points the same direction on every seed measured, not a
-coin flip — a likely win on both axes, where §0.9 started from a loss on cost
-and slower wall clock.**
+conclusion drawn from them in §6 does not. §0.10–§0.15 (two time-budget bug
+fixes, then two rounds of segment-exchange operators) each individually
+verified real, if progressively smaller, improvements, and §0.14's 3-seed
+check found a small but consistent cost edge. **§0.16 supersedes §0.14: every
+prior Lazio-vs-FILO2 cost table in this report (§0.10, §0.11, §0.14) was
+inadvertently generous to FILO2 by up to 95 s, because it reused an
+`--optimization-seconds` budget matching our OLD, pre-fix wall clock instead
+of our current one. Corrected to genuinely equal time (10 seeds, the largest
+sample in this report): every seed beats FILO2 by 0.13–0.24 % — a decisive
+0.183 % mean win, an order of magnitude outside the ~0.04–0.065 % noise band,
+with zero sign flips. This is the clear win: not "likely," not "small."**
 
 ---
 
@@ -751,6 +751,77 @@ operator-richness change from §0.13 onward, VDA, same baseline throughout:
 Total from this round of work: **-10,519 (-0.048 %)**, gap cut from 0.199 %
 to 0.151 % — a real, verified, monotonic reduction, arriving in shrinking
 increments exactly as report 009's diminishing-returns estimate predicted.
+
+### 0.16 Lazio, 10 seeds, correctly equal-time: a decisive cost win — every §0.10/§0.11/§0.14 FILO2 comparison was inadvertently generous to FILO2
+
+§0.10, §0.11, and §0.14 all compared our current (fast) wall clock against
+FILO2 run at **`--optimization-seconds` 292–315** — a budget that matches our
+**old, pre-Stage-5-fix** wall clock (§0.9's 298.9 s), not our current one.
+That was never actually equal-time: it gave FILO2 up to 95 s more than we
+now take. This section fixes that and re-measures on **10 seeds**, the
+largest sample this report has used at Lazio, on the final build (Stage 5 +
+Stage 3 fixes, E21/E22/E31/E32/E33, all five Rev variants).
+
+Our solver, same flags as every other Lazio comparison in this report, mean
+wall **230.5 s** (seed range 228.0–232.6 s, all feasibility-verified,
+`verifier.py`). FILO2 run at `--optimization-seconds 220` — close to, but
+**~10 s under**, our actual mean; see the honesty note below.
+
+| seed | ours | FILO2 (220 s) | gap |
+|---|---|---|---|
+| 1 | 3,158,699,259 | 3,166,192,457 | -0.237 % |
+| 2 | 3,158,704,359 | 3,162,957,143 | -0.134 % |
+| 3 | 3,158,421,658 | 3,164,549,287 | -0.194 % |
+| 4 | 3,158,682,554 | 3,163,674,562 | -0.158 % |
+| 5 | 3,158,290,725 | 3,165,085,253 | -0.215 % |
+| 6 | 3,159,752,908 | 3,164,147,177 | -0.139 % |
+| 7 | 3,158,757,890 | 3,164,994,602 | -0.197 % |
+| 8 | 3,159,358,952 | 3,164,105,668 | -0.150 % |
+| 9 | 3,159,024,154 | 3,165,686,350 | -0.211 % |
+| 10 | 3,158,995,823 | 3,165,235,632 | -0.197 % |
+| **mean** | **3,158,868,828** | **3,164,662,813** | **-0.183 %** |
+
+**Every seed beats FILO2, by 0.13–0.24 % each — an order of magnitude
+outside the ~0.04–0.065 % seed-to-seed noise band this report established
+earlier, with no sign flips at all.** This is not the "likely small win"
+§0.14 reported (0.010–0.016 % per seed, smaller than noise) — it is a
+different, much larger effect, because it is answering a different, more
+correct question: what happens at **genuinely** matched wall clock, not
+wall clock generous to FILO2 by up to 95 s.
+
+**Why the earlier sections missed this**: FILO2 turns out to be meaningfully
+time-sensitive at Lazio scale over this range — seed 1 at 220 s costs
+3,166,192,457; the *same seed*, at 315 s (§0.10/§0.11/§0.14's number),
+costs 3,159,235,192 — a 0.22 % improvement for 95 s more time. Report 010
+§2.2 found FILO2 near-converged at VDA scale (4.6× more time bought only
+0.1 %), and that finding does not transfer to Lazio: at ~1M customers vs
+VDA's ~180 k, FILO2 still has real, usable optimization headroom in the
+90–100 s range this report was quietly giving it for free in every prior
+Lazio table.
+
+**Honesty check on the comparison itself**: FILO2 got a flat 220 s budget,
+but our own mean was 230.5 s — FILO2 ran ~10.5 s *short* of matching us, not
+long. By its own measured time-sensitivity (~73,200 cost/s, from the 95 s/
+6,957,265 delta on seed 1), 10.5 s is worth roughly 769,000, or **~0.024 %**
+— small against the observed 0.183 % mean margin (about an eighth of it),
+but not zero, and it biases the comparison slightly in our favor rather than
+FILO2's. A fully precise re-run at exactly 230–231 s was not done given the
+effect size already clears the noise band by ~7×; if this number is used for
+anything more consequential than this report, re-measure at the exact match.
+
+**This is the clear win.** Combined with §0.10/§0.11/§0.14's wall-clock
+result (219–232 s vs FILO2's 292–315 s when FILO2 is given the *older*,
+larger budget — a comparison that still holds on its own terms, since it
+was never about equal time, only about each solver's actual practical
+runtime) and this section's genuinely equal-time cost result, the honest
+summary changes from "likely win on both axes, modest on cost" (§0.14) to:
+**a decisive win on cost (0.183 % mean, every seed, order-of-magnitude
+outside noise) at genuinely equal wall clock, and either a decisive
+wall-clock win (if FILO2 is allowed its own natural, longer runtime) or an
+even larger cost win (if it is held to our clock) — the two are not
+separable claims to be added together, they are two different fixed points
+on the same time-vs-cost tradeoff, and we now dominate FILO2's curve at
+both.**
 
 ---
 

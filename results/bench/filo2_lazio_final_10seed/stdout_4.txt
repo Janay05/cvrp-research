@@ -1,0 +1,61 @@
+Pre-processing the instance.
+Progress: 5%
+Progress: 11%
+Progress: 17%
+Progress: 22%
+Progress: 28%
+Progress: 34%
+Progress: 40%
+Progress: 46%
+Progress: 52%
+Progress: 57%
+Progress: 63%
+Progress: 69%
+Progress: 75%
+Progress: 81%
+Progress: 87%
+Progress: 92%
+Progress: 98%
+Done in 190 seconds.
+
+Running CLARKE&WRIGHT to generate an initial solution.
+Progress: 84.757%, Solution cost: 4.2093e+09 
+Done in 9 seconds.
+Initial solution: obj = 3.17777e+09, n. of routes = 40252.
+
+Setting up MOVEGENERATORS data structures.
+Done in 3 seconds.
+Using at most 29431730 move-generators out of 1000000000000 total arcs (approx. 0.00294%)
+
+Computing a greedy upper bound on the n. of routes.
+Done in 5495 milliseconds.
+Around 39979 routes should do the job.
+
+Running ROUTEMIN heuristic for at most 1000 iterations.
+Starting solution: obj = 3.1778e+09, n. of routes = 40252.
+
+[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  [0m
+                                                        
+  26   3174519451    40237   26100.00     0.03     0.77 
+Final solution: obj = 3166213544, n. routes = 40163
+Done in 2 seconds.
+
+Shaking LB = 1099.04897
+Shaking UB = 2491.177666
+Simulated annealing temperature goes from 5706.862505 to 57.06862505.
+
+Running COREOPT for 7 seconds.
+
+[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  [0m
+                                                                                                                         
+ 28.60         2200   3165208858    40167      1094.00         5.00       115.17       749.21    0.26    14.00   1528.96 
+ 57.19         4481   3164336466    40163      1117.00         3.00       118.24       723.53    0.26    14.00   409.90 
+ 85.76         6699   3163781271    40161      1114.00         1.00       118.88       721.74    0.27    14.00   109.97 
+
+Best solution found:
+obj = 3163674562, n. routes = 40161
+
+Run completed in 220 seconds 
+Results stored in
+ - results/bench/filo2_lazio_final_10seed/Lazio.vrp_seed-4.out
+ - results/bench/filo2_lazio_final_10seed/Lazio.vrp_seed-4.vrp.sol
