@@ -823,6 +823,39 @@ separable claims to be added together, they are two different fixed points
 on the same time-vs-cost tradeoff, and we now dominate FILO2's curve at
 both.**
 
+**Addendum — closing a real verification gap.** Every FILO2 number in this
+report, including §0.16's, had been taken from FILO2's own self-reported
+`.out` file with no independent check — unlike our own numbers, which
+`verifier.py` recomputes from route data independently every time. FILO2
+also writes a full route file (`Solution::store_to_file`, `<instance>_seed-
+N.vrp.sol`), so this was checkable and had simply never been checked. Wrote
+`src/verify_filo2.py` to do so: parse the `.vrp.sol` routes, recompute total
+distance and capacity from the `.vrp` file independently, and compare to the
+`.out` file's self-reported cost.
+
+First attempt found ~45 % of routes (seed 1: 17,940 of 40,169) "violating"
+capacity by up to 62 %, which would mean FILO2 was reporting cost for
+infeasible routes — surprising enough to demand a cause before concluding
+anything. Root cause, found by reading FILO2's `Parser.cpp`: it reads each
+line's node-id token and **discards it**, storing coordinates/demands
+positionally by 0-indexed read order instead
+(`data.demands[i] = ...`, not `data.demands[vertex_index] = ...`) — and
+`Solution::store_to_file` writes that same 0-indexed internal id straight to
+the `.sol` file. A `.sol` id of X is file node id X+1, not X. (A same-id
+lookup "succeeded" on ad hoc spot checks purely by coincidence, at ~1M
+nodes — only the aggregate capacity-violation rate exposed the bug.) Fixed
+the +1 offset and re-ran on all 10 seeds:
+
+**All 10: feasible (every customer visited exactly once, no capacity
+violations), and FILO2's self-reported cost matches the independent
+recomputation exactly, to the integer, every time.** FILO2's side of §0.16's
+result is now verified the same way ours is, not merely trusted.
+
+**A statistical check on top of the narrative "order of magnitude outside
+noise" claim**: paired t-test on the 10 per-seed (ours − FILO2) differences,
+mean −5,793,985, stdev 1,116,678, **t = −16.4** (df 9) — not a borderline
+result by any reasonable significance threshold.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
