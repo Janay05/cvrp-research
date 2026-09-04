@@ -1,6 +1,6 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-03, §0.19). Status: **VERDICT WITHDRAWN —
+Date: 2026-08-26 (updated 2026-09-04, §0.20). Status: **VERDICT WITHDRAWN —
 see §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
 conclusion drawn from them in §6 does not. **§0.16/§0.17 corrected a
@@ -11,10 +11,14 @@ verified loss, 0.146 %. §0.19 added a scoped-down ejection chain operator
 (FILO2's largest remaining move type, depth-2 instead of FILO2's depth-25)
 and roughly halved the VDA gap to 0.081 % — still a loss, every seed, but the
 largest single improvement to it this session — while leaving Lazio's win
-unaffected. The honest overall claim: a verified, growing win at Lazio scale
-(~1M customers) and a verified, shrinking loss at VDA scale (~180 K) — not a
-general "better than FILO2," a scale-dependent result trending toward parity
-on the smaller instance too.**
+unaffected. §0.20 tried extending the chain to depth-3 and, unlike depth-2,
+measured it net-negative on both scales (VDA +0.083%, Lazio +0.0116% worse
+mean cost) — a greedy-search-trajectory regression, not a bug; implemented,
+verified-safe, and disabled rather than shipped, same precedent as report
+009's T2-lite. The honest overall claim: a verified, growing win at Lazio
+scale (~1M customers) and a verified, shrinking loss at VDA scale (~180 K)
+— not a general "better than FILO2," a scale-dependent result trending
+toward parity on the smaller instance too.**
 
 ---
 
@@ -1045,6 +1049,63 @@ this effect), but directionally consistent with VDA — real cost
 improvement, no wall-clock cost once construction-time noise is controlled
 for. **This does not threaten §0.16/§0.17's established Lazio win or
 wall-clock advantage.**
+
+### 0.20 Depth-3 extension attempted: verified correct, measured net-negative, disabled
+
+The natural next step after §0.19's depth-2 chain: extend it one hop
+further (`eval_eject3`/`apply_eject3`, next to `apply_eject2`) — if k's own
+destination `m` is *also* capacity-blocked (a case `eval_eject2` has no
+answer for at all, since it only considers destinations that work
+directly), eject a further customer `p` from `m`'s route into a fourth
+route found via `p`'s own candidate list. Designed to keep all four routes
+involved (`i`'s, `j`'s, `m`'s, `p`'s destination) pairwise distinct — this
+eliminates almost every same-route adjacency interaction by construction,
+the main source of complexity in the depth-2 design. Same lesson applied
+from the start this time: all removals before any insertion (the ordering
+bug that crashed §0.19's first version).
+
+Verified: determinism (3× identical `Final cost: 74454` on `X-n1001-k43`
+seed 42 — different from depth-2-only's 74374, as expected, since a richer
+move set changes the search trajectory), feasible (`verifier.py`) at
+`X-n1001-k43`, VDA, and Lazio. No crashes, no capacity violations. Per-worker
+timing showed the real Stage 2 overshoot was negligible at both scales
+(~0.8 s at Lazio, none observed at VDA) — the caps and lessons from §0.19
+carried over cleanly.
+
+**Then the full-sample benchmarks told a different story than the
+single-seed spot checks:**
+
+| | VDA mean (5 seeds) | Lazio mean (3 seeds) |
+|---|---|---|
+| depth-2 only | 21,762,742 | 3,158,638,917 |
+| + depth-3 | 21,780,770 | 3,159,006,223 |
+| Δ | **+18,028 (+0.083 % worse)** | **+367,306 (+0.0116 % worse)** |
+
+All solutions in both sets independently feasibility-verified — this is not
+a correctness bug, every result is a valid, internally-consistent routing.
+It is a real instance of **greedy-search-trajectory divergence**: adding a
+move type changes which move the greedy descent picks at many more points
+along the way (anywhere a candidate pair is capacity-blocked at two levels
+instead of one), and a locally-better delta at each of those decision
+points does not guarantee the run ends in a better final basin. This is the
+same failure category as report 009's T2-lite and T3 — a change that is
+individually sound and verified-correct but net-negative for this
+architecture's specific search dynamics.
+
+**Response: disabled, not deleted, following T2-lite's precedent.**
+`eval_eject3`/`apply_eject3` remain in `Stage2_ILS.cpp`, fully implemented
+and verified-safe, but op 20 is not dispatched from any of `local_search`'s
+three switches — confirmed by re-running the `X-n1001-k43` determinism
+check with the dispatch removed: `Final cost: 74374`, byte-identical to the
+depth-2-only baseline, proving the disable is clean. Available for a future
+session that wants to revisit with different pruning or acceptance logic;
+not part of the active operator set.
+
+**Net effect of this session's ejection-chain work**: depth-2 (§0.19) is
+the version that ships — VDA gap 0.146 % → 0.081 %, Lazio win intact. Depth-3
+was a legitimate, disciplined attempt at more that turned out not to pay
+off, and the report says so plainly rather than either hiding the attempt
+or forcing it in despite the numbers.
 
 ---
 

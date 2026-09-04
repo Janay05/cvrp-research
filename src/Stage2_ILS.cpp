@@ -1381,6 +1381,184 @@ namespace {
         invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_m);
     }
 
+    // Depth-3 ejection chain -- one hop further than eval_eject2. NOT wired into local_search's
+    // dispatch (op 20 is deliberately absent from all three switches below) -- implemented,
+    // verified correct (deterministic, feasible, no crashes once the same remove-before-insert
+    // ordering fix eval_eject2 needed was applied here too), but measured NET NEGATIVE on mean
+    // cost at both scales: VDA 5-seed mean +0.083% worse (21,762,742 -> 21,780,770), Lazio
+    // 3-seed mean +0.0116% worse (3,158,638,917 -> 3,159,006,223), both against the eject2-only
+    // baseline, both feasibility-verified. Not a bug -- a real instance of greedy-search-
+    // trajectory divergence: adding a move type changes which move gets picked at many more
+    // points in the descent, and a locally-better delta at each of those points doesn't
+    // guarantee a better final basin. Same failure mode, same disciplined response as report
+    // 009's T2-lite/T3: left in place (verified-safe, in case a future session wants to revisit
+    // with a different pruning/acceptance strategy) but not activated. See report 010 SS0.20
+    // for the full writeup.
+    //
+    // When k's own destination m is ALSO capacity-blocked (eval_eject2 has no answer for that
+    // case at all, since it only considers m's where inserting k works directly), this tries
+    // ejecting a further customer p from m's route into a fourth route, found via p's own
+    // candidate list, before giving up.
+    //
+    // Deliberately requires all four routes (r_i, r_j, r_m, r_q) to be pairwise distinct -- not
+    // the most general depth-3 chain possible (FILO2's real chains can revisit routes), but it
+    // eliminates almost every same-route adjacency interaction by construction: since no two of
+    // i/j/k/m/p/q can live in the same route unless explicitly checked, the only remaining
+    // same-route interactions are k's removal vs i's insertion (both in r_j, already handled by
+    // eval_eject2's k==j/s_j exclusion) and p's removal vs k's insertion (both in r_m, the one
+    // new exclusion this function adds: p==m/s_m). Everything else that eval_eject2's design
+    // needed to exclude by hand (m vs k's own neighbors, etc.) is ruled out for free once routes
+    // can't overlap. This is the same "trade coverage for tractability" tradeoff as everywhere
+    // else in this operator family.
+    //
+    // Deliberately does NOT re-derive the depth-2 case (m directly feasible) -- eval_eject2
+    // already finds that, and pairDelta in the Step 2 sweep takes whichever op is best, so
+    // there's no need for this function to duplicate that work.
+    //
+    // Caps one notch tighter than eject2's own (kEject3RouteScanCap=4, kEject3ScanWidth=3):
+    // worst case here is eject2's already-capped cost multiplied by a further
+    // routeScan x width, and unlike eject2's single hop, this only even reaches that inner loop
+    // when BOTH the first AND second insertion attempts are capacity-blocked -- compounding
+    // rarity that should keep the realized average cost far below the worst case, but the caps
+    // are set assuming that isn't reliable and worst case is what has to stay bounded.
+    static constexpr int kEject3RouteScanCap = 4;
+    static constexpr int kEject3ScanWidth = 3;
+
+    Cost eval_eject3(const Solution& sol, const Instance& inst, const NeighborLists& granular_lists,
+                      NodeId i, NodeId j, NodeId& best_k, NodeId& best_m, NodeId& best_p, NodeId& best_q,
+                      int& eject3Budget) {
+        best_k = 0;
+        best_m = 0;
+        best_p = 0;
+        best_q = 0;
+        if (i == 0 || j == 0) return 0;
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
+        if (r_i == -1 || r_j == -1 || r_i == r_j) return 0;
+        if (i == j || sol.pred[i] == j || sol.succ[i] == j) return 0;
+        if (sol.routeLoad[r_j] + inst.demand[i] <= inst.Q) return 0;
+
+        if (eject3Budget <= 0) return 0;
+        --eject3Budget;
+
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i], s_j = sol.succ[j];
+
+        Cost delta_i = -sol.costToPred[i] - curEdgeCost(sol, inst, i, s_i) + dist(inst, p_i, s_i)
+                       - curEdgeCost(sol, inst, j, s_j) + dist(inst, j, i) + dist(inst, i, s_j);
+
+        Cost excess = sol.routeLoad[r_j] + inst.demand[i] - inst.Q;
+        Cost bestTotal = 0;
+
+        int routeScanned = 0;
+        for (NodeId k = sol.routeHead[r_j]; k != 0 && routeScanned < kEjectRouteScanCap; k = sol.succ[k], ++routeScanned) {
+            if (k == j || k == s_j || inst.demand[k] < excess) continue;
+
+            NodeId p_k = sol.pred[k], s_k = sol.succ[k];
+            int width = std::min((int)granular_lists.nbr[k].size(), std::min(granular_lists.k, kEjectScanWidth));
+            for (int m_idx = 0; m_idx < width; ++m_idx) {
+                NodeId m = granular_lists.nbr[k][m_idx];
+                if (m == i || m == p_i || m == s_i) continue;
+                int r_m = sol.routeOf[m];
+                if (r_m == -1 || r_m == r_j) continue;
+                if (k == m || p_k == m || s_k == m) continue;
+
+                // Only the case eval_eject2 can't already solve: m's route is ALSO
+                // capacity-blocked once k is added, and m's route must be a route this chain
+                // hasn't touched yet (r_m == r_i is allowed by eval_eject2 but excluded here --
+                // see the route-distinctness comment above).
+                if (sol.routeLoad[r_m] + inst.demand[k] <= inst.Q) continue;
+                if (r_m == r_i) continue;
+
+                NodeId s_m = sol.succ[m];
+                Cost delta_k = -sol.costToPred[k] - curEdgeCost(sol, inst, k, s_k) + dist(inst, p_k, s_k)
+                               - curEdgeCost(sol, inst, m, s_m) + dist(inst, m, k) + dist(inst, k, s_m);
+
+                Cost excess2 = sol.routeLoad[r_m] + inst.demand[k] - inst.Q;
+
+                int routeScanned2 = 0;
+                for (NodeId p = sol.routeHead[r_m]; p != 0 && routeScanned2 < kEject3RouteScanCap; p = sol.succ[p], ++routeScanned2) {
+                    // p == m / s_m: same reasoning as k == j / s_j -- p's removal delta below
+                    // assumes p's current pred/succ, valid only outside k's insertion region.
+                    if (p == m || p == s_m || inst.demand[p] < excess2) continue;
+
+                    NodeId p_p = sol.pred[p], s_p = sol.succ[p];
+                    int width2 = std::min((int)granular_lists.nbr[p].size(), std::min(granular_lists.k, kEject3ScanWidth));
+                    for (int q_idx = 0; q_idx < width2; ++q_idx) {
+                        NodeId q = granular_lists.nbr[p][q_idx];
+                        int r_q = sol.routeOf[q];
+                        // Fourth distinct route required -- see the route-distinctness comment.
+                        if (r_q == -1 || r_q == r_j || r_q == r_m || r_q == r_i) continue;
+                        if (sol.routeLoad[r_q] + inst.demand[p] > inst.Q) continue;
+                        if (p == q || p_p == q || s_p == q) continue;
+
+                        NodeId s_q = sol.succ[q];
+                        Cost delta_p = -sol.costToPred[p] - curEdgeCost(sol, inst, p, s_p) + dist(inst, p_p, s_p)
+                                       - curEdgeCost(sol, inst, q, s_q) + dist(inst, q, p) + dist(inst, p, s_q);
+
+                        Cost total = delta_i + delta_k + delta_p;
+                        if (total < bestTotal - 1e-9) {
+                            bestTotal = total;
+                            best_k = k;
+                            best_m = m;
+                            best_p = p;
+                            best_q = q;
+                        }
+                    }
+                }
+            }
+        }
+
+        return bestTotal;
+    }
+
+    void apply_eject3(Solution& sol, ThreadArena& arena, const Instance& inst, NodeId i, NodeId j, NodeId k, NodeId m, NodeId p, NodeId q,
+                       SVCCache& cache, PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+        current_op = "apply_eject3";
+        NodeId p_i = sol.pred[i], s_i = sol.succ[i];
+        NodeId s_j = sol.succ[j];
+        NodeId p_k = sol.pred[k], s_k = sol.succ[k];
+        NodeId s_m = sol.succ[m];
+        NodeId p_p = sol.pred[p], s_p = sol.succ[p];
+        NodeId s_q = sol.succ[q];
+        int r_i = sol.routeOf[i], r_j = sol.routeOf[j], r_m = sol.routeOf[m], r_q = sol.routeOf[q];
+
+        // All removals before any insertion -- same lesson as apply_eject2 (a fatal capacity
+        // assertion the first time that ordering was gotten wrong). r_i, r_j, r_m, r_q are
+        // pairwise distinct by construction (eval_eject3 requires it), so these three removals
+        // don't interact with each other at all, in any order.
+        remove_customer(sol, i, arena, inst);
+        remove_customer(sol, k, arena, inst);
+        remove_customer(sol, p, arena, inst);
+
+        insert_customer(sol, i, j, s_j, r_j, arena, inst);
+        insert_customer(sol, k, m, s_m, r_m, arena, inst);
+        insert_customer(sol, p, q, s_q, r_q, arena, inst);
+
+        update_route_info(sol, r_i, inst);
+        update_route_info(sol, r_j, inst);
+        update_route_info(sol, r_m, inst);
+        update_route_info(sol, r_q, inst);
+
+        invalidate_svc(cache, i, j, p_i, s_i, s_j, k, pairCache, k_max, reverseIdx_lists);
+        cache.insert(p_k);
+        cache.insert(s_k);
+        cache.insert(m);
+        cache.insert(s_m);
+        cache.insert(p_p);
+        cache.insert(s_p);
+        cache.insert(p);
+        cache.insert(q);
+        cache.insert(s_q);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_k);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_k);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, m);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_m);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p_p);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_p);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, p);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, q);
+        invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_q);
+    }
+
     Cost eval_swap(const Solution& sol, const Instance& inst, NodeId i, NodeId j) {
         if (i == 0 || j == 0 || i == j) return 0;
         int r_i = sol.routeOf[i], r_j = sol.routeOf[j];
@@ -1822,11 +2000,11 @@ namespace {
             ls_iter++;
             if (ls_iter > 50000000) break; // Safety net
             NodeId i = cache.pop();
-            
+
             if (sol.routeOf[i] == -1) continue;
-            
+
             Cost bestDelta = 0;
-            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*, 5=Relocate2, 6=Relocate3, 7=Relocate2Rev, 8=Relocate3Rev, 9=E21, 10=E22, 11-13=E31/E32/E33, 14-18=Rev variants, 19=Eject2
+            int bestOp = -1; // 0=Relocate, 1=Swap, 2=2-Opt, 3=2-Opt*, 4=Swap*, 5=Relocate2, 6=Relocate3, 7=Relocate2Rev, 8=Relocate3Rev, 9=E21, 10=E22, 11-13=E31/E32/E33, 14-18=Rev variants, 19=Eject2 (20=Eject3 defined but disabled, see its comment)
             NodeId best_j = 0;
             NodeId best_p_i = 0, best_s_i = 0, best_p_j = 0, best_s_j = 0;
             NodeId best_k = 0, best_m = 0;
@@ -1945,6 +2123,12 @@ namespace {
                     // eval_eject2 is deterministic given (sol, i, j) alone, so k/m aren't
                     // stored here -- only the delta matters for this pass. The verify step
                     // below recomputes k/m fresh with real output refs if this op wins.
+                    // eval_eject3 (depth-3 extension, op 20) is NOT dispatched here -- see its
+                    // definition and report 010 SS0.20 for why: implemented, verified correct
+                    // (deterministic, feasible), but measured net-negative on both VDA (+0.083%
+                    // worse) and Lazio (+0.0116% worse) mean cost, a greedy-search-trajectory
+                    // regression, not a bug. Left in place, disabled, same precedent as T2-lite
+                    // (report 009).
                     NodeId dummy_k, dummy_m;
                     Cost delta_eject2 = eval_eject2(sol, inst, granular_lists, i, j, dummy_k, dummy_m, ejectBudget);
                     if (delta_eject2 < pairDelta) { pairDelta = delta_eject2; pairOp = 19; }
