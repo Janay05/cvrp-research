@@ -1107,6 +1107,42 @@ was a legitimate, disciplined attempt at more that turned out not to pay
 off, and the report says so plainly rather than either hiding the attempt
 or forcing it in despite the numbers.
 
+### 0.21 A third instance: Lombardia, ~950K customers — a single-seed exploratory check
+
+Everything above uses two instances (VDA ~180K, Lazio ~1M). Ran a single
+seed on a third — Lombardia (~950K customers, `data/instances/I/Lombardia.vrp`)
+— to see whether Lazio's win is a property of large scale generally, or
+something more specific to Lazio. **This is exploratory, one seed, not a
+multi-seed campaign** — treat it as a data point, not a verified result on
+the level of §0.16's ten seeds.
+
+Lombardia's capacity is Q=150 (Lazio's is Q=50, similar 1–3 demand range) —
+a genuinely different instance, not just a same-shape relabeling: roughly
+3× the customers per route, ~12,700 routes instead of Lazio's ~40,000 for a
+similar total customer count.
+
+Current build (Stage 5 + Stage 3 fixes, full segment-exchange family, depth-2
+ejection chain), same flags as every Lazio run in this report, seed 1, `-p 4`.
+FILO2 matched to our wall clock (331s). Both independently verified
+(`verifier.py` / `verify_filo2.py`):
+
+| | cost | routes | wall |
+|---|---|---|---|
+| ours | 1,350,876,414 | 12,770 | 331.3 s |
+| FILO2 | 1,349,439,951 | 12,720 | 331 s |
+| gap | **+0.106 % (behind)** | +50 routes | matched |
+
+**We lose on Lombardia, at roughly the same magnitude as VDA's 0.081 %
+gap — despite Lombardia being the same order of scale as Lazio, where we
+win by 0.183 %.** This is the useful finding: scale (customer count) alone
+does not predict which side of the gap we land on. Something else differs
+between Lazio and Lombardia — capacity ratio (Q=50 vs Q=150, hence route
+length and how often routes fill near capacity, which is exactly the
+regime the ejection-chain operators target), geographic density, or
+something not yet identified. Not investigated further here — flagged as
+the natural next question if this architecture's win/loss pattern is worth
+understanding rather than just measuring.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)

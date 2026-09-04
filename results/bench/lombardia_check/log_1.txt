@@ -1,0 +1,22 @@
+Starting CVRP Parallel...
+Worker 0 chunk 0 chunkSize=237500 stage2_time_budget_ms=45000
+Worker 0 chunk 0 routemin: live routes 3259 -> 3187
+Worker 0 chunk 0 actual_iterations_completed=28630
+Worker 0 Stage 1: 176564 ms | Stage 2: 43228.4 ms | dist_calls=0
+Worker 1 chunk 1 chunkSize=237500 stage2_time_budget_ms=45000
+Worker 1 chunk 1 routemin: live routes 3223 -> 3190
+Worker 1 chunk 1 actual_iterations_completed=23494
+Worker 1 Stage 1: 179943 ms | Stage 2: 43236.4 ms | dist_calls=0
+Worker 2 chunk 2 chunkSize=237500 stage2_time_budget_ms=45000
+Worker 2 chunk 2 routemin: live routes 3276 -> 3195
+Worker 2 chunk 2 actual_iterations_completed=28422
+Worker 2 Stage 1: 184091 ms | Stage 2: 43230.3 ms | dist_calls=0
+Worker 3 chunk 3 chunkSize=237499 stage2_time_budget_ms=45000
+Worker 3 chunk 3 routemin: live routes 3286 -> 3201
+Worker 3 chunk 3 actual_iterations_completed=28893
+Worker 3 Stage 1: 187906 ms | Stage 2: 43234.8 ms | dist_calls=0
+Cost BEFORE Stage 3 Healing: 1351521904
+Cost AFTER Stage 3 Healing: 1351486580
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Final cost: 1350876414
