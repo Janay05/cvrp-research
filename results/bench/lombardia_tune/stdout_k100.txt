@@ -1,0 +1,60 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Lombardia.vrp (n=949999, Q=150, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=100, 28 threads)...
+Running Stage 0 with P=4 chunks...
+Setting up workers...
+Launching threads...
+Worker 3 Stage 1 starting
+Worker 3 constructing chunk 3
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 2 Stage 1 starting
+Worker 2 constructing chunk 2
+Worker 0 Stage 1 finished
+Worker 3 Stage 1 finished
+Worker 2 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 2 Stage 2 starting
+Worker 2 ILS chunk 2
+Worker 3 Stage 2 starting
+Worker 3 ILS chunk 3
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 645068 ms | Stage 2: 29202.9 ms
+Worker 3 Stage 2 finished
+Worker 3 Stage 1: 572274 ms | Stage 2: 29215.7 ms
+Worker 2 Stage 2 finished
+Worker 2 Stage 1: 577506 ms | Stage 2: 29217 ms
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 565309 ms | Stage 2: 29218.7 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 1383786540
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Healing chunk pair (2,3)
+Healing chunk pair (0,2)
+Healing chunk pair (0,3)
+Healing chunk pair (1,2)
+Incremental Cost Bookkeeping: 1383689556
+Scratch Computed Final cost: 1383689556
+Cost AFTER Stage 3 Healing: 1383689556
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 30013.5 ms
+SA time budget reached! Exiting loop...
+Final cost: 1380618412
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 19410.3 ms
+Stage 1 & 2 (Parallel Construction/ILS): 674587 ms
+Stage 3 (Parallel Healing): 12379 ms
+Stage 4 & 5 (Cleanup/Polish): 30273.5 ms
+Total time: 736650 ms
+Total distance evaluations: 0
