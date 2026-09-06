@@ -16,7 +16,11 @@ void stage4_route_cleanup(Solution& globalSolution, const Instance& inst, const 
             curr = globalSolution.succ[curr];
         }
         
-        if (globalSolution.routeLoad[r] < 0.2 * inst.Q || num_customers <= 2) {
+        // g_stage4_dissolve_frac (--stage4-dissolve-frac, default 0.2 = historical) widens or
+        // narrows which routes are *attempted* for dissolution. The acceptance test further
+        // down is unchanged and still rejects any relocation that increases cost.
+        extern double g_stage4_dissolve_frac;
+        if (globalSolution.routeLoad[r] < g_stage4_dissolve_frac * inst.Q || num_customers <= 2) {
             curr = globalSolution.routeHead[r];
             while (curr != 0) {
                 NodeId c = curr;

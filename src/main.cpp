@@ -27,6 +27,22 @@ int g_max_iterations_override = -1; // overridable via --max-iterations; -1 = us
 int g_stage2_time_budget_ms = -1;
 int g_stage3_time_budget_ms = -1;
 int g_stage5_time_budget_ms = -1;
+// Multiplier on the ruin-walk length (Stage2_ILS.cpp's ruin()), overridable via --ruin-mult.
+// 1.0 = the historical ceil(log(chunkSize)) walk, which every prior report's numbers used.
+// Motivation: report 010 SS2.2 found a quality CEILING (converged, not time-starved), and
+// report 009 measured FILO2 ruining ~23 customers per iteration against our ~9-13 -- a
+// ceiling plus an undersized ruin is the signature of too little diversification. The T4.2
+// *adaptive* omega was measured net-negative and disabled, but that carried per-vertex
+// tracking overhead (35-47% throughput) that a plain larger fixed walk does not.
+double g_ruin_mult = 1.0;
+// Stage 4 (Stage4_5_CleanupPolish.cpp) only attempts to dissolve routes loaded under this
+// fraction of Q. 0.2 is the historical value. Overridable via --stage4-dissolve-frac.
+// Motivation: we land on 801 routes at VDA against FILO2's 800, and at ~27k cost per route
+// that single straggler is the same order as the whole remaining gap -- but a half-full
+// route is invisible to a 0.2*Q threshold. Raising it only widens the set of routes
+// *attempted*; the per-customer acceptance test below it is unchanged and still refuses any
+// relocation that would increase cost, so this cannot make the solution worse by itself.
+double g_stage4_dissolve_frac = 0.2;
 // RNG seed base, overridable via --seed. Default 1337 matches the previously-hardcoded
 // per-worker base (1337+i) and the Stage 3/5 offsets are chosen so the default reproduces
 // every prior report's numbers byte-for-byte (see uses in Stage3_MergeHealing.cpp and
@@ -110,6 +126,10 @@ int main(int argc, char** argv) {
             g_stage3_time_budget_ms = std::stoi(argv[++i]);
         } else if (arg == "--stage5-ms" && i + 1 < argc) {
             g_stage5_time_budget_ms = std::stoi(argv[++i]);
+        } else if (arg == "--ruin-mult" && i + 1 < argc) {
+            g_ruin_mult = std::stod(argv[++i]);
+        } else if (arg == "--stage4-dissolve-frac" && i + 1 < argc) {
+            g_stage4_dissolve_frac = std::stod(argv[++i]);
         } else if (arg == "--seed" && i + 1 < argc) {
             g_seed = std::stoi(argv[++i]);
         } else if (arg == "--routemin-iters" && i + 1 < argc) {
