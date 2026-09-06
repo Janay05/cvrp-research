@@ -1,0 +1,47 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Valle-D-Aosta.vrp (n=19999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=1000, 28 threads)...
+Running Stage 0 with P=2 chunks...
+Setting up workers...
+Launching threads...
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 0 Stage 1 finished
+Worker 1 Stage 1 finished
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 7401.98 ms | Stage 2: 37241.2 ms
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 22595.4 ms | Stage 2: 37251.6 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 21759266
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Incremental Cost Bookkeeping: 21758744
+Scratch Computed Final cost: 21758744
+Cost AFTER Stage 3 Healing: 21758744
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 1119.5 ms
+SA Iter: 100, elapsed: 6611.8 ms
+SA Iter: 200, elapsed: 11201.7 ms
+SA Iter: 300, elapsed: 15718.2 ms
+SA Iter: 400, elapsed: 20844.7 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 21756114
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 1298.35 ms
+Stage 1 & 2 (Parallel Construction/ILS): 59901.5 ms
+Stage 3 (Parallel Healing): 1041.98 ms
+Stage 4 & 5 (Cleanup/Polish): 23293.6 ms
+Total time: 85535.5 ms
+Total distance evaluations: 0

@@ -1,24 +1,33 @@
 # Report 010 — Can this architecture beat FILO2 on both time and cost?
 
-Date: 2026-08-26 (updated 2026-09-04, §0.20). Status: **VERDICT WITHDRAWN —
+Date: 2026-08-26 (updated 2026-09-06, §0.22). Status: **VERDICT WITHDRAWN —
 see §0.** Original verdict was "no, dead end"; later measurements in the same
 session invalidated the basis for it. All measurements in §1–§5 stand; the
-conclusion drawn from them in §6 does not. **§0.16/§0.17 corrected a
-stale-FILO2-budget bug affecting every prior comparison and, both sides now
-independently verified (`src/verify_filo2.py`, not just FILO2's self-report):
-Lazio is a decisive win, 0.183 % mean, all 10 seeds, t = −16.4; VDA was a
-verified loss, 0.146 %. §0.19 added a scoped-down ejection chain operator
-(FILO2's largest remaining move type, depth-2 instead of FILO2's depth-25)
-and roughly halved the VDA gap to 0.081 % — still a loss, every seed, but the
-largest single improvement to it this session — while leaving Lazio's win
-unaffected. §0.20 tried extending the chain to depth-3 and, unlike depth-2,
-measured it net-negative on both scales (VDA +0.083%, Lazio +0.0116% worse
-mean cost) — a greedy-search-trajectory regression, not a bug; implemented,
-verified-safe, and disabled rather than shipped, same precedent as report
-009's T2-lite. The honest overall claim: a verified, growing win at Lazio
-scale (~1M customers) and a verified, shrinking loss at VDA scale (~180 K)
-— not a general "better than FILO2," a scale-dependent result trending
-toward parity on the smaller instance too.**
+conclusion drawn from them in §6 does not.
+
+**Current standing, all three instances, equal wall clock, both sides
+independently verified (`src/verify_filo2.py`, not just FILO2's
+self-report):**
+
+| instance | scale | result |
+|---|---|---|
+| Lazio | ~1M, Q=50 | **win**, 0.183 % cheaper, 10 seeds, t = −16.4, also faster (§0.16) |
+| VDA | ~180K, Q=50 | **tie**, +0.023 % at n=15, \|t\| ≈ 1.0, wall clock matched (§0.22) |
+| Lombardia | ~950K, Q=150 | **loss**, 0.106 %, cause diagnosed as route count (§0.21, §0.22) |
+
+Getting there: §0.16/§0.17 corrected a stale-FILO2-budget bug that had
+affected every prior comparison. §0.19 added a depth-2 ejection chain
+(FILO2's largest remaining move type, scoped down from their depth-25),
+halving VDA's gap 0.146 % → 0.081 %. §0.20 tried depth-3, measured it
+net-negative on both scales, and disabled it rather than shipping it.
+§0.22's parameter tuning (chiefly harder ROUTEMIN) took VDA the rest of the
+way from a loss to a tie — and, importantly, showed that the same
+measurement at n=5 had pointed to a *win* that n=15 erased.
+
+**The honest overall claim: a decisive win at Lazio, a tie at VDA, a
+diagnosed loss at Lombardia — not a general "better than FILO2."** Scale
+alone does not predict the outcome (Lazio and Lombardia are the same order
+of size); the open question is what does.
 
 ---
 
@@ -1142,6 +1151,86 @@ regime the ejection-chain operators target), geographic density, or
 something not yet identified. Not investigated further here — flagged as
 the natural next question if this architecture's win/loss pattern is worth
 understanding rather than just measuring.
+
+### 0.22 A parameter-tuning campaign: VDA loss → tie, and a 5-seed "win" that 15 seeds erased
+
+Goal for this round was explicit: get a win on both axes at VDA and
+Lombardia, not just Lazio. **Outcome: VDA moved from a verified loss to a
+statistical tie; Lombardia did not move. No new win was established.** What
+follows is what was tried, what stuck, and one methodological result that
+matters more than any of the parameter values.
+
+**Levers tried, in order:**
+
+| lever | result |
+|---|---|
+| `-p` sweep at VDA (1, 2, 4) | **negative** — P=2 already optimal; P=4 worse (21,795,804), P=1 worse (21,802,684) vs P=2's 21,765,644. Extra parallel search doesn't pay for the added boundary damage, and removing partitioning entirely loses more than it saves. |
+| Stage 2 / Stage 5 budget split | **small gain** — 46/31 beat the historical 31/46 (21,761,069 vs 21,765,644) at slightly less wall clock. Stage 5 is *serial*, so shifting budget toward the parallel Stage 2 buys more total search per wall-clock second. 57/20 was worse, so the optimum is shallow and interior. |
+| `--ruin-mult` (new flag) | **gain, but smaller than it first looked** — see the noise warning below. |
+| **`--routemin-iters` (2000 → 6000)** | **the real win** — the largest single effect found. Attacks route count directly, which local search can barely change once set. |
+| `--stage4-dissolve-frac` (new flag) | **negative** — 0.5 and 0.9 both left route count at 801 and cost within 120 of the 0.2 default. The extra route isn't a near-empty straggler; Stage 4's *acceptance* rule (never increase cost) is what blocks it, not the threshold. |
+| `--routemin-k` 500 → 100 at Lombardia | **negative** — cost 1,380,618,412 (far worse) and routes 13,052 (worse), while Stage 1 dropped only ~20%. Routemin's cost is not dominated by candidate width, so width can't be traded for iterations. |
+
+**Net tuned config at VDA** (`--routemin-iters 6000 --stage2-ms 38000
+--stage5-ms 24000 --ruin-mult 1.5`, vs the old `2000 / 31000 / 46000`),
+same 5 seeds, paired (valid — same solver, same RNG stream per seed):
+mean 21,762,742 → 21,739,508, **−23,234 (−0.107 %), all 5 seeds improved,
+t = −3.87**, at 2.2 s *less* wall clock. That much is solid.
+
+**The methodological result — a 5-seed win that wasn't.** On those same 5
+seeds the tuned config's mean beat FILO2's by 0.0255 %, which reads as a
+win. It is not. Two things were wrong with that reading:
+
+1. **Pairing by seed index across two different solvers is not a valid
+   pairing.** Our seed 5 and FILO2's seed 5 share nothing — independent RNG
+   streams, no common underlying condition. A paired t-test on that is
+   meaningless; the correct test is two-sample.
+2. **n=5 was far too small for the effect size.** Extending to **15 seeds**
+   on both sides (FILO2 re-run at 86 s to match our tuned config's actual
+   86.7 s wall clock) reversed the sign:
+
+| | 5 seeds | 15 seeds |
+|---|---|---|
+| ours | 21,739,508 | 21,745,288 |
+| FILO2 | 21,745,054 | 21,740,328 |
+| gap | −0.0255 % (us ahead) | **+0.0228 % (FILO2 ahead)** |
+| Welch t | −0.78 | **+1.01** |
+| seeds won | 3 / 5 | 6 / 15 |
+
+Neither direction is significant at n=15 (|t| ≈ 1.0), and wall clock is
+matched (86.7 s vs 86 s). **The honest conclusion is that VDA is now a
+statistical tie** — genuine progress from the verified 0.146 % loss at the
+start of this work (0.081 % after §0.19's ejection chain), but not a win,
+and the 5-seed version of the same measurement pointed the wrong way. All
+15 of our solutions independently feasibility-verified.
+
+This is the same trap §0.16 caught in the opposite direction, and it is
+worth stating as a standing rule for this report: **at VDA, effects below
+roughly 0.05 % cannot be resolved at n=5.** Every single-seed parameter
+sweep above should be read with that in mind — the sweeps were used to
+*locate* candidate configurations, and only the multi-seed paired
+comparison against our own prior config is treated as established.
+
+**Lombardia: mechanism identified, but it does not fit the budget.** The
+route-count hypothesis was confirmed emphatically — pushing ROUTEMIN from
+12,000 to 50,000 iterations cut routes 12,770 → **12,737** and improved
+cost by **0.269 %** (1,350,876,414 → 1,347,242,152), more than double the
+0.106 % gap, landing below FILO2's 1,349,439,951. But it cost 923.8 s
+against a 331 s budget: ROUTEMIN runs at ~15.4 ms/iteration at this scale
+(Stage 1 alone went 184 s → ~770 s). Buying that from Stage 2/Stage 5 (87 s
+combined) affords only ~3,700 extra iterations, nowhere near enough, and
+narrowing `--routemin-k` to make iterations cheaper made quality worse
+without meaningfully reducing cost per iteration. **So Lombardia's gap is
+now understood — it is route count, and ROUTEMIN closes it — but closing it
+inside an equal-time budget needs a fundamentally faster route-minimisation
+routine, not a parameter.** That is a concrete, well-specified target for
+future work rather than a tuning knob.
+
+**Standing after this round**: Lazio a decisive win on both axes (§0.16,
+unchanged); VDA a statistical tie at matched wall clock; Lombardia a
+0.106 % loss with a diagnosed cause. The tuned VDA config is kept — it is a
+verified 0.107 % improvement to our own solver regardless of where it lands
+against FILO2.
 
 ---
 

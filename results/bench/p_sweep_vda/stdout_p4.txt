@@ -1,0 +1,68 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Valle-D-Aosta.vrp (n=19999, Q=50, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=1000, 28 threads)...
+Running Stage 0 with P=4 chunks...
+Setting up workers...
+Launching threads...
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 3 Stage 1 starting
+Worker 3 constructing chunk 3
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 2 Stage 1 starting
+Worker 2 constructing chunk 2
+Worker 1 Stage 1 finished
+Worker 0 Stage 1 finished
+Worker 3 Stage 1 finished
+Worker 2 Stage 1 finished
+Worker 2 Stage 2 starting
+Worker 2 ILS chunk 2
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+Worker 3 Stage 2 starting
+Worker 3 ILS chunk 3
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 2 Stage 2 finished
+Worker 2 Stage 1: 11205.8 ms | Stage 2: 31018.7 ms
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 8138.81 ms | Stage 2: 31022.1 ms
+Worker 3 Stage 2 finished
+Worker 3 Stage 1: 8440.97 ms | Stage 2: 31025.4 ms
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: 1171.05 ms | Stage 2: 31027.9 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 21823913
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Healing chunk pair (2,3)
+Healing chunk pair (0,2)
+Healing chunk pair (1,2)
+Incremental Cost Bookkeeping: 21821044
+Scratch Computed Final cost: 21821044
+Cost AFTER Stage 3 Healing: 21821044
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 1497.7 ms
+SA Iter: 100, elapsed: 6867.7 ms
+SA Iter: 200, elapsed: 11509.0 ms
+SA Iter: 300, elapsed: 16196.9 ms
+SA Iter: 400, elapsed: 21142.6 ms
+SA Iter: 500, elapsed: 26215.8 ms
+SA Iter: 600, elapsed: 30994.0 ms
+SA Iter: 700, elapsed: 36335.1 ms
+SA Iter: 800, elapsed: 40934.9 ms
+  LS time budget reached! Exiting while loop...
+SA time budget reached! Exiting loop...
+Final cost: 21795804
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 1457.68 ms
+Stage 1 & 2 (Parallel Construction/ILS): 42399.1 ms
+Stage 3 (Parallel Healing): 1155.23 ms
+Stage 4 & 5 (Cleanup/Polish): 44917.6 ms
+Total time: 89929.6 ms
+Total distance evaluations: 0
