@@ -9,6 +9,10 @@
 thread_local const char* current_op = "unknown";
 thread_local char debug_info[256] = {0};
 
+// Declared at file scope, not inside the anonymous namespace below -- an `extern` inside an
+// anonymous namespace resolves to that namespace, not to main.cpp's global.
+extern double g_ruin_mult;
+
 namespace {
     static std::mutex route_creation_mutex;
 }
@@ -387,7 +391,11 @@ namespace {
         cache.insert(current);
         arena.removed_customers[arena.removed_count++] = current;
         
-        int walk_length = omega ? (*omega)[seed] : (int)std::ceil(std::log(chunkSize));
+        // g_ruin_mult (--ruin-mult, default 1.0 = historical behavior) scales the walk. See
+        // its declaration in main.cpp for the motivation; applied to the fixed path only,
+        // since the adaptive omega path is disabled (T4.2). Declared at file scope above.
+        int walk_length = omega ? (*omega)[seed]
+                                : (int)std::ceil(std::log(chunkSize) * ::g_ruin_mult);
         if (walk_length < 1) walk_length = 1;
         
         for (int step = 1; step < walk_length; ++step) {
