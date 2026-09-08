@@ -1,9 +1,10 @@
 # CVRP Parallel Solver — Short Summary
 
-*Full details: `docs/reports/010_can_this_architecture_beat_filo2.md` (the working log this
-summary is drawn from). Raw numbers: `docs/reports/results_summary.xlsx`. All results below
-are independently verified — feasibility and cost are recomputed from raw route data, not
-taken from either solver's self-report (`src/verifier.py`, `src/verify_filo2.py`).*
+*Architecture and how the whole system works: `docs/reports/012_architecture_overview.md`.
+Full chronological detail behind the numbers below: `010_can_this_architecture_beat_filo2.md`.
+Raw numbers: `results_summary.xlsx`. All results below are independently verified —
+feasibility and cost are recomputed from raw route data, not taken from either solver's
+self-report (`src/verifier.py`, `src/verify_filo2.py`).*
 
 ## What this is
 
