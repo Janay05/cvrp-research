@@ -1,0 +1,64 @@
+Starting CVRP Parallel...
+Loaded VRP file: data/instances/I/Lombardia.vrp (n=949999, Q=150, depot file-id=1)
+Building neighbor lists...
+Building wide neighbor list (k=500, 28 threads)...
+Running Stage 0 with P=4 chunks...
+Setting up workers...
+Launching threads...
+Worker 2 Stage 1 starting
+Worker 2 constructing chunk 2
+Worker 1 Stage 1 starting
+Worker 1 constructing chunk 1
+Worker 0 Stage 1 starting
+Worker 0 constructing chunk 0
+Worker 3 Stage 1 starting
+Worker 3 constructing chunk 3
+[ROUTEMIN_PROFILE chunk 0] iters=3000 destroy=79ms reinsert=4059ms rescan=35ms localsearch=16969ms countlive=4ms copy_save=1631ms(n=474) copy_restore=6526ms(n=2097)
+Worker 0 Stage 1 finished
+[ROUTEMIN_PROFILE chunk 3] iters=3000 destroy=76ms reinsert=4005ms rescan=38ms localsearch=16918ms countlive=4ms copy_save=1978ms(n=575) copy_restore=6535ms(n=1888)
+Worker 3 Stage 1 finished
+[ROUTEMIN_PROFILE chunk 1] iters=3000 destroy=77ms reinsert=4018ms rescan=29ms localsearch=15859ms countlive=4ms copy_save=1467ms(n=418) copy_restore=7448ms(n=2160)
+Worker 1 Stage 1 finished
+[ROUTEMIN_PROFILE chunk 2] iters=3000 destroy=77ms reinsert=3313ms rescan=36ms localsearch=17884ms countlive=5ms copy_save=1818ms(n=525) copy_restore=6819ms(n=1977)
+Worker 2 Stage 1 finished
+Worker 2 Stage 2 starting
+Worker 2 ILS chunk Worker 3 Stage 2 starting
+Worker 3 ILS chunk 3
+Worker 0 Stage 2 starting
+Worker 0 ILS chunk 0
+2
+Worker 1 Stage 2 starting
+Worker 1 ILS chunk 1
+Worker 0 Stage 2 finished
+Worker 0 Stage 1: 39512.8 ms | Stage 2: 5218.7 ms
+Worker 1 Stage 2 finished
+Worker 1 Stage 1: Worker 40258.5 ms | Stage 2: 5223.04 ms
+3 Stage 2 finished
+Worker Worker 2 Stage 2 finished
+Worker 2 Stage 1: 40917.8 ms | Stage 2: 5226.67 ms
+3 Stage 1: 39801.1 ms | Stage 2: 5225.34 ms
+Threads joined. Merging...
+Cost BEFORE Stage 3 Healing: 1360538710
+Running Stage 3 Healing...
+Healing chunk pair (0,1)
+Healing chunk pair (2,3)
+Healing chunk pair (0,2)
+Healing chunk pair (0,3)
+Healing chunk pair (1,2)
+Incremental Cost Bookkeeping: 1360485416
+Scratch Computed Final cost: 1360485416
+Cost AFTER Stage 3 Healing: 1360485416
+Running Stage 4 Cleanup...
+Running Stage 4 Cleanup...
+Running Stage 5 Polish...
+Running Stage 5 Serial Polish...
+SA Iter: 0, elapsed: 5024.2 ms
+SA time budget reached! Exiting loop...
+Final cost: 1360210838
+--- Stage by Stage Profiling ---
+Setup (Stage 0): 43764.6 ms
+Stage 1 & 2 (Parallel Construction/ILS): 46532.2 ms
+Stage 3 (Parallel Healing): 3115.93 ms
+Stage 4 & 5 (Cleanup/Polish): 4549.15 ms
+Total time: 97961.9 ms
+Total distance evaluations: 0
