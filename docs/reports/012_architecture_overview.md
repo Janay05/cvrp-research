@@ -39,9 +39,11 @@ The goal of this project was to build a solver competitive with **FILO2** (Accor
 published, single-threaded, state-of-the-art heuristic specifically designed for very large
 CVRP instances, and to do so by exploiting multi-core parallelism — a resource FILO2's design
 does not use. The benchmark instances (Valle-D'Aosta ~180K customers, Lazio ~1M, Lombardia
-~950K) are themselves drawn from FILO2's own published benchmark suite ("Routing One Million
-Customers in a Handful of Minutes," Accorsi & Vigo 2023), so every comparison in this project
-is against the specific numbers that paper's own solver produces.
+~950K) were deliberately chosen to be FILO2's own published benchmark suite ("Routing One
+Million Customers in a Handful of Minutes," Accorsi & Vigo 2023) specifically so that every
+comparison in this project is against numbers FILO2's own paper already reports, on the exact
+instances it was designed and tuned for — the standard, correct way to run a fair, direct
+comparison against a specific baseline, rather than an incidental fact about the project.
 
 ## 2. Pipeline at a glance
 
