@@ -1997,8 +1997,29 @@ namespace {
         invalidate_pair_cache_one(pairCache, k_max, reverseIdx_lists, s_j);
     }
 
+    // swapstar_cap: how many distinct candidate routes may receive SWAP*'s top-3 precompute
+    // per popped customer. -1 (default) = unlimited, i.e. exactly the historical behaviour for
+    // every existing caller. A finite cap trades SWAP* coverage for speed.
+    //
+    // Why this knob exists: get_top3_insertions walks an ENTIRE candidate route per
+    // (i, route) pair, so its cost scales with route length -- report 009 already identified
+    // it as local_search's real hot spot (it is why T2-lite, which cached the Step 2 evals
+    // instead, bought nothing). At Lombardia (Q=150, ~75 customers/route vs Lazio's ~25) it is
+    // ~3x worse than anywhere else, and profiling ROUTEMIN there put local_search at ~72% of
+    // its total time. Dropping SWAP* outright (cap=0) made local_search 3.5x cheaper but cost
+    // more per-iteration route-reduction quality than the extra iterations bought back
+    // (22k capped iterations reached 12,764 routes vs 50k uncapped reaching 12,737), so a
+    // middle ground is the point: candidate lists are distance-sorted, so the nearest few
+    // routes carry most of SWAP*'s value.
+    //
+    // Correctness note: Step 2 must only evaluate swap_star for routes/nodes that Step 1
+    // actually precomputed THIS pass, otherwise it reads stale top3 arrays left over from a
+    // previous ls_iter. With an unlimited cap the two loops walk the same candidates so they
+    // stay in sync implicitly; with a finite cap they do not, so Step 2 now checks
+    // route_visited_iter/node_visited_iter explicitly. That check is correct either way.
     bool local_search(Solution& sol, ThreadArena& arena, SVCCache& cache, const Instance& inst, const NeighborLists& granular_lists, int chunkSize, std::mutex* mtx = nullptr, int t1 = -1, int t2 = -1, std::vector<int>* routeToChunk = nullptr,
-                      PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr) {
+                      PairCacheEntry* pairCache = nullptr, int k_max = 0, const NeighborLists* reverseIdx_lists = nullptr,
+                      int swapstar_cap = -1) {
         bool improved = false;
         int ls_iter = 0;
         // Call-wide safety net for eval_eject2, not a normal-case throttle -- see its comment.
@@ -2025,8 +2046,18 @@ namespace {
                 if (c_r_i != t1 && c_r_i != t2) continue;
             }
             
-            // Step 1: Precompute top-3 insertions for SWAP*
+            // Step 1: Precompute top-3 insertions for SWAP*. swapstar_cap limits how many
+            // node-side precomputes run (-1 = unlimited = historical behaviour).
+            //
+            // The cap counts the NODE side (top3_j_to_U), not the route side, because that is
+            // where the cost actually is: top3_i_to_V is guarded per-route and the k nearest
+            // neighbours of a customer span only a handful of distinct routes (~6 measured at
+            // Lombardia), whereas top3_j_to_U is guarded per-candidate and so runs up to k=30
+            // times, each walking a whole route. Capping the route side alone was measured to
+            // change local_search's cost not at all.
+            int swapstar_nodes_done = 0;
             for (int j_idx = 0; j_idx < k; ++j_idx) {
+                if (swapstar_cap >= 0 && swapstar_nodes_done >= swapstar_cap) break;
                 NodeId j = granular_lists.nbr[i][j_idx];
                 int r_j = sol.routeOf[j];
                 if (r_j == -1 || r_i == r_j) continue;
@@ -2049,6 +2080,7 @@ namespace {
                 if (arena.node_visited_iter[j] != ls_iter) {
                     arena.node_visited_iter[j] = ls_iter;
                     get_top3_insertions(sol, inst, j, r_i, arena.top3_j_to_U[j]);
+                    ++swapstar_nodes_done;
                 }
             }
             
@@ -2149,7 +2181,12 @@ namespace {
 
                     // top3_i_to_V is route-indexed (ThreadArena.hpp) -- see the identical guard
                     // and comment on the precompute loop above (Phase 4.1).
-                    if (r_i != r_j && r_j < (int)arena.top3_i_to_V.size()) {
+                    // Only use top3 data Step 1 actually populated THIS pass -- with a finite
+                    // swapstar_cap the two loops no longer cover the same candidates, and a
+                    // stale top3 array from an earlier ls_iter would be silently wrong.
+                    if (r_i != r_j && r_j < (int)arena.top3_i_to_V.size() &&
+                        arena.route_visited_iter[r_j] == ls_iter &&
+                        arena.node_visited_iter[j] == ls_iter) {
                         // Capacity short-circuit BEFORE distance lookups
                         if (sol.routeLoad[r_i] - inst.demand[i] + inst.demand[j] <= inst.Q &&
                             sol.routeLoad[r_j] - inst.demand[j] + inst.demand[i] <= inst.Q) {
@@ -2616,6 +2653,25 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
     }
 
     constexpr int kRoutemimLocalSearchK = 30;
+    // How many distinct routes get SWAP*'s top-3 precompute per popped customer inside
+    // ROUTEMIN's local_search. See local_search's swapstar_cap comment: unlimited made
+    // local_search ~72% of ROUTEMIN's runtime at Lombardia scale (Q=150, ~75 customers/route);
+    // 0 (SWAP* off) was 3.5x faster but lost more per-iteration quality than the extra
+    // iterations bought back; capping at 6 was the sweet spot there.
+    //
+    // But capacity, not instance size, is what drives get_top3_insertions' cost -- it walks
+    // whole ROUTES, and route length tracks Q (VDA and Lazio are both Q=50, ~25 customers/
+    // route; Lombardia is Q=150, ~75). A flat cap=6 applied everywhere was verified to
+    // regress VDA (+0.049% over 5 seeds, results/bench/swapstarcap_vda_5seed/) even though it
+    // helped Lombardia -- at Q=50 the precompute was never expensive enough to need capping,
+    // so capping only threw away SWAP* coverage for nothing.
+    //
+    // Threshold is a step function on Q, not a continuous formula: the two data points we
+    // actually have (Q=50 uncapped is fine, Q=150 uncapped is not) don't justify fitting a
+    // curve between them, and a threshold is easier to verify and to explain in a writeup
+    // than an unvalidated interpolation would be.
+    constexpr int kRoutemimSwapStarCapQThreshold = 100;
+    const int kRoutemimSwapStarCap = (inst.Q > kRoutemimSwapStarCapQThreshold) ? 6 : -1;
     NeighborLists local_narrow_lists;
     local_narrow_lists.k = std::min(local_granular_lists.k, kRoutemimLocalSearchK);
     local_narrow_lists.nbr.assign(inst.n + 1, std::vector<NodeId>());
@@ -2740,8 +2796,13 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
 
         bool improved = true;
         while (improved) {
-            // NARROW list here on purpose -- see the two-list comment above.
-            improved = local_search(current, arena, cache, inst, local_narrow_lists, chunkSize);
+            // NARROW list here on purpose -- see the two-list comment above. cheap_ls=true
+            // additionally drops SWAP*: profiling put local_search at ~72% of ROUTEMIN's
+            // total time at Lombardia scale, and SWAP*'s top-3 precompute walks whole routes,
+            // which is worst exactly where routes are longest. See local_search's comment.
+            improved = local_search(current, arena, cache, inst, local_narrow_lists, chunkSize,
+                                    nullptr, -1, -1, nullptr, nullptr, 0, nullptr,
+                                    /*swapstar_cap=*/kRoutemimSwapStarCap);
         }
         // remove_customer/insert_customer/local_search only accumulate into
         // arena.pendingDelta (see local_search's own doc comment above) -- the caller must
@@ -2773,6 +2834,7 @@ Solution stage1_5_routemin(Solution sol, ThreadArena& arena, SVCCache& cache,
         t *= cool;
         arena.doCount = 0; arena.undoCount = 0; arena.pendingDelta = 0;
     }
+
 
 #ifdef ROUTEMIN_DEBUG_CHECK
     for (int r = 0; r < bestSol.numRoutes; ++r) {

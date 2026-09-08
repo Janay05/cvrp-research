@@ -1232,6 +1232,47 @@ unchanged); VDA a statistical tie at matched wall clock; Lombardia a
 verified 0.107 % improvement to our own solver regardless of where it lands
 against FILO2.
 
+### 0.23 Stabilization: making the Lombardia fix capacity-adaptive instead of global
+
+§0.22's ROUTEMIN profiling found `get_top3_insertions` (SWAP*'s top-3
+precompute) at ~72 % of ROUTEMIN's runtime at Lombardia scale, because it
+walks a whole candidate *route* per call and Lombardia's routes are ~3×
+longer than VDA's or Lazio's (Q=150 vs Q=50, ~75 vs ~25 customers/route at
+similar demand distributions). Capping how many routes get that precompute
+inside ROUTEMIN's local search (`swapstar_cap`, `Stage2_ILS.cpp`) fixed
+Lombardia — but as a flat constant applied everywhere, it silently regressed
+VDA by 0.049 % over 5 seeds (`results/bench/swapstarcap_vda_5seed/`),
+because at Q=50 the precompute was never expensive enough to need capping —
+capping there only threw away SWAP* coverage for nothing.
+
+Fixed by making the cap a function of `inst.Q` instead of a global constant:
+uncapped (historical behavior) when Q ≤ 100, capped at 6 when Q > 100. This
+is a step threshold, not a fitted curve — the only two data points actually
+measured are Q=50 (uncapped is fine) and Q=150 (uncapped is not), which
+justifies a threshold between them but not a specific interpolation.
+
+Re-verified after the fix, all three instances, single seed each, all
+feasibility-verified (`verifier.py`):
+
+| instance | Q | cap applied | cost | consistent with prior finding? |
+|---|---|---|---|---|
+| VDA (seed 1) | 50 | none (unlimited) | 21,726,833 | yes — within time-budget-mode jitter of the pre-regression 21,726,943 |
+| Lazio (seed 1) | 50 | none (unlimited) | 3,157,842,772 | yes — within jitter of §0.19's 3,158,719,112, no regression |
+| Lombardia (seed 1) | 150 | capped at 6 | 1,350,742,904 | yes — within jitter of §0.22's 1,350,622,738, Lombardia gain retained |
+
+(VDA and Lazio are time-budgeted, not iteration-budgeted, so exact
+byte-identical reproduction isn't expected — real-clock-based SA scheduling
+introduces small run-to-run jitter, established earlier in this report. The
+`X-n1001-k43` determinism check, which runs in iteration-budget mode, gave
+`Final cost: 74374` — byte-identical to every prior check in this report,
+confirming the default `local_search` path for every non-ROUTEMIN caller is
+untouched by this change.)
+
+This closes the one loose end left after §0.22: the Lombardia gain is kept,
+the VDA regression is gone, and the fix is now principled (tied to the
+diagnosed mechanism, capacity-driven route length) rather than a global
+constant tuned on one instance.
+
 ---
 
 ## Original report follows (measurements valid; §6's conclusion withdrawn)
