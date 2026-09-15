@@ -175,19 +175,22 @@ struct alignas(64) ThreadArena {
         // doList/undoList just log the sequence of edit operations within a single SA
         // iteration (ruin + recreate + local_search cascade) -- that cascade length isn't
         // proportional to instance size, so this must be capped independent of
-        // max_chunk_size. A later change raised the cap to min(10_000_000, max_chunk_size*100)
-        // to give the new multi-string ruin (up to 40 strings/iteration) more headroom, but
-        // 10,000,000 entries is 400MB per list (800MB/arena) -- at Lazio scale (P=16), Stage
-        // 3's arena_pool pre-allocates one such arena per thread in its largest color class,
-        // easily exceeding this machine's ~7.6GB WSL memory budget and crashing the whole VM
-        // (not a graceful OOM) rather than the process. Even 40 strings x ~15 removals/string
-        // (ln(n) walk length) plus recreate's reinsertions is only ~1,200 entries; local_search's
-        // own cascade adds at most a few thousand more per iteration (route lengths are capacity-
-        // bounded, not instance-size-bounded). 2,000,000 is 4x the original proven-safe 500,000
-        // ceiling -- ample headroom for the new multi-string ruin -- while cutting worst-case
-        // memory by 5x from the 10,000,000 figure.
-        doList.resize(std::min(2000000, std::max(max_chunk_size * 50, 100000)));
-        undoList.resize(std::min(2000000, std::max(max_chunk_size * 50, 100000)));
+        // max_chunk_size. History: raised once to min(10_000_000, max_chunk_size*100) for
+        // the multi-string ruin (up to 40 strings/iteration); that setting reproducibly
+        // crashes the whole WSL VM (not a graceful OOM) at Lazio scale with a high thread
+        // count (-p 16), so it was cut to 2,000,000 as a compromise. A stability re-check
+        // (2026-09) found that compromise still leaves the actual settled Lazio benchmark
+        // config (-p 4) with as little as ~84MB of headroom on this machine's 10GB WSL cap --
+        // no observed crash at -p 4, but too thin a margin to call comfortable. Cut back to
+        // the original 500,000 ceiling: 40 strings x ~15 removals/string (ln(n) walk length)
+        // plus recreate's reinsertions is only ~1,200 entries; local_search's own cascade adds
+        // at most a few thousand more per iteration (route lengths are capacity-bounded, not
+        // instance-size-bounded) -- 500,000 is still ~100x that actual usage, just no longer
+        // paying for headroom nothing uses. Re-verified: same Lazio config re-run after this
+        // change reproduces the same result (cost unchanged within noise, same win margin
+        // over FILO2 -- see docs/reports/010) with roughly double the memory headroom.
+        doList.resize(std::min(500000, std::max(max_chunk_size * 50, 100000)));
+        undoList.resize(std::min(500000, std::max(max_chunk_size * 50, 100000)));
         removed_customers.resize(max_chunk_size + 100);
         scratchTop3Pos.reserve(3);
 
