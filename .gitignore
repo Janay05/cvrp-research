@@ -32,7 +32,7 @@
 *.out
 
 # IDEs and Build Directories
-build/
+build*/
 cmake-build-debug/
 cmake-build-release/
 .vscode/
