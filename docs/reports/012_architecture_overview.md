@@ -1,10 +1,7 @@
 # Architecture Overview — A Parallel Solver for the Capacitated Vehicle Routing Problem
 
 *This is a standalone description of the whole system: what problem it solves, how it's
-structured end to end, and why each major piece exists. For the chronological log of
-investigations that produced this system, see `010_can_this_architecture_beat_filo2.md` and
-the numbered reports before it. For a short changes-and-effect summary, see
-`011_short_summary.md`.*
+structured end to end, and why each major piece exists.
 
 ## Contents
 
@@ -160,8 +157,7 @@ the *narrow* candidate list — see Section 8's cost note) tidies each iteration
 accepting or rejecting it via simulated annealing.
 
 This stage was directly profiled at large scale and found to be the specific mechanism behind
-this project's largest remaining performance gap (Section 14, Lombardia) — see
-`010_can_this_architecture_beat_filo2.md` §0.22–0.23 for the full investigation.
+this project's largest remaining performance gap (Section 14, Lombardia).
 
 ## 7. Stage 2 — parallel iterated local search
 
@@ -210,8 +206,7 @@ searches ejection chains to depth 25 via a priority queue; this implementation s
 2, a scoping choice made to bound per-move cost (searching deeper multiplies cost by route
 size × candidate width at every additional hop) rather than a claim that depth 2 is sufficient
 in general. A depth-3 extension was implemented and tested; it was measured to make solution
-quality *worse* on average despite being individually correct (a search-trajectory effect, not
-a bug — see `010...md` §0.20) and is present in the code but not active.
+quality *worse* on average despite being individually correct and is present in the code but not active.
 
 Every operator's cost delta is evaluated in O(1) — a function of the specific edges a move
 would change, using the cached `costToPred` values, never a route walk — with one documented
@@ -261,9 +256,7 @@ Every stage that runs a search loop (Stage 2, Stage 3, Stage 5, and ROUTEMIN) is
 meaningful, and what makes the pipeline's own stage-to-stage time split independently tunable.
 Two real bugs were found and fixed in this mechanism during this project (a stale clock
 reference that let Stage 5 silently run ~2× its budget, and a per-color-class budget in Stage 3
-being applied as if it were a per-stage total) — see `010...md` §0.10–§0.11 for the full
-writeup, since getting this scheduling right turned out to matter as much for the final
-results as any algorithmic change.
+being applied as if it were a per-stage total).
 
 ## 13. Verification and benchmarking methodology
 
@@ -274,7 +267,7 @@ Three principles run through every measurement in this project:
    constraints directly from its route output; `src/verify_filo2.py` does the same for FILO2's
    `.vrp.sol` output (built specifically after a stale-ID-encoding bug in FILO2's own output
    format produced a false capacity-violation signal that turned out to be in the *checker*,
-   not FILO2 — see `010...md` §0.16's addendum).
+   not FILO2).
 2. **Comparisons are run at genuinely equal wall clock**, with both solvers' actual time
    budgets checked, not assumed — a stale FILO2 time budget in early comparison scripts (left
    at this project's *older*, slower wall clock after two timing bugs were fixed) silently
@@ -295,10 +288,6 @@ At genuinely equal wall clock, both sides independently verified:
 | Valle-D'Aosta | ~180,000 | **Statistical tie** — +0.023% at n=15, \|t\| ≈ 1.0 |
 | Lombardia | ~950,000 | **Loss, cause diagnosed** — 0.106%, narrowed to 0.088%; the full gap closes with more route-minimization time than currently fits the budget |
 
-Full detail, including the complete chronological derivation of these numbers and every
-verification step: `010_can_this_architecture_beat_filo2.md`. Raw per-seed data:
-`results_summary.xlsx`.
-
 ## 15. What's original here, and what isn't
 
 Worth stating plainly rather than leaving implicit: the local-search operator definitions
@@ -310,9 +299,7 @@ it (the depth-2 ejection chain bound, the edge-coloring healing scheduler, the c
 adaptive tuning found while closing the Lombardia gap), and the empirical, scale-dependent
 characterization of when this architecture wins, ties, or loses against a strong single-
 threaded baseline. As engineering and as a rigorous empirical comparison this stands on its
-own; as a research contribution it is not yet clearly novel — see `010...md`'s closing
-sections for a fuller discussion of that specific question and the open direction (cooperation
-between chunks *during* search, not only after it) that would need exploring to change that.
+own; as a research contribution it is not yet clearly novel.
 
 ## 16. Known open items
 
@@ -331,5 +318,4 @@ between chunks *during* search, not only after it) that would need exploring to 
 - **Boundary healing (Stage 3) only reconciles chunks once, after both finish independently.**
   Cooperation between chunks *during* search rather than only after it is the open,
   unexplored direction most likely to be a genuinely novel contribution rather than a
-  refinement of existing technique — see `010...md`'s discussion of this for the reasoning and
-  the relevant literature.
+  refinement of existing technique.

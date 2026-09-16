@@ -1,104 +1,209 @@
 # Parallel Chunked CVRP Solver
 
-This repository contains a high-performance, multi-threaded C++ solver for the Capacitated Vehicle Routing Problem (CVRP). It accelerates traditional Iterated Local Search (ILS) and Hybrid Genetic Search (HGS) paradigms by geographically partitioning the routing graph and solving the sub-problems concurrently, followed by a parallel boundary-healing phase.
+A multi-threaded C++ solver for the Capacitated Vehicle Routing Problem (CVRP). Instead of
+running one search over the whole instance, it partitions the graph geographically into
+independent chunks, runs iterated local search on each chunk in parallel, then heals the
+boundaries the partitioning created. It's benchmarked directly against
+[FILO2](https://arxiv.org/abs/2306.14205) (Accorsi & Vigo), the published state-of-the-art
+CVRP solver, on FILO2's own Italian-region benchmark instances (Valle-D'Aosta, Lazio,
+Lombardia — 180K to ~1M customers), so every comparison below is against numbers that
+solver's own paper reports, on the instances it was designed and tuned for.
 
-**Performance vs. FILO2:** Under verified benchmarking with identical compilers, the solver currently runs **1.30x-1.36x faster** than the FILO2 baseline across instance sizes from 20,000 to ~1,000,000 customers, while maintaining highly competitive solution quality (within **0.77-1.51%** of FILO2's cost). See [report 007](docs/reports/007_algorithms_and_speed_analysis.md) for the technical algorithms driving this performance.
+## Current results, at equal wall clock
 
-## Current State & Results (August 2026)
-The pipeline is **stable and feasible under its default configuration** (no data races, no dropped/duplicated nodes, independently verified) and now **loads real CVRPLIB `.vrp` files** via `-f <path>` (it previously only ran on its own synthetic 2000-node instance). See [`docs/reports/`](docs/reports/) for the full sequential history (stage-by-stage breakdowns, FILO2 comparisons, bugs found/fixed, and what changed between each report).
+| Instance | Scale | Result |
+|---|---|---|
+| **Lazio** | ~1,000,000 customers | **Win, both axes.** 0.183% cheaper (10 seeds, t = -16.4), 27% faster, zero overlap between the two solvers' cost distributions. |
+| **Valle-D'Aosta** | ~180,000 customers | **Statistical tie.** +0.023% at n=15, \|t\| ~ 1.0 (a real ILS win requires \|t\| well above that). |
+| **Lombardia** | ~950,000 customers | **Loss, cause diagnosed.** 0.106%, narrowed to 0.088% under budget; closing it outright needs ~3x the current time budget in one specific pass — a known, scoped engineering target, not an open question. |
 
-**Scale testing ([report 003](docs/reports/003_scale_testing.md)):** verified correct and feasible from 50 to ~1,000,000 customers (CMT1 → Valle-D-Aosta → Lazio, the same instance family FILO2 ships). At 50 nodes the solver is essentially optimal against the published best-known solution (525 vs. 524.611). *(This report's FILO2 timings — 237s at Valle-D-Aosta, 641s at Lazio — were single unverified-compiler-flag Windows runs; see [report 008](docs/reports/008_verified_linux_benchmarking.md) for corrected, verified numbers.)*
+Every number above is independently recomputed from raw route data (`src/verifier.py` for
+our own output, `src/verify_filo2.py` for FILO2's), never taken from either solver's own
+self-reported cost. Full methodology, the seed counts behind each result, and a
+5-seed-vs-15-seed reversal that's the reason those seed counts are what they are:
+[`docs/reports/010_can_this_architecture_beat_filo2.md`](docs/reports/010_can_this_architecture_beat_filo2.md).
 
-**Time-budget scheduling & cost tuning ([report 004](docs/reports/004_time_budget_scheduling.md)):** replaced the not-scale-aware iteration-budget formula with wall-clock time budgets per stage (`--stage2-ms`/`--stage3-ms`/`--stage5-ms`), modeled on FILO2's own time-based cooling schedule — the same requested budget now behaves sensibly at any instance size, and this also fixed a per-thread timing imbalance found in report 003 (workers used to finish up to 175s apart on equal-sized chunks; now within milliseconds of each other). Using the new mechanism to tune cost: **at 20,000 nodes, now 2.3x faster than FILO2 at only +1.45% cost** (beating the previous default on both speed and quality); **at 1,000,000 nodes, 3.87x faster at +1.10% cost**. *(Speed figures superseded — see [report 008](docs/reports/008_verified_linux_benchmarking.md): FILO2 was compared unfairly on unverified compiler flags; the cost figures are largely unaffected.)* Legacy behavior (no time-budget flags) is unchanged and regression-tested against reports 001/002's exact numbers.
+## How the pipeline works (summary — full depth in [`docs/reports/012_architecture_overview.md`](docs/reports/012_architecture_overview.md))
 
-**Cost optimization & two concurrency bugs ([report 005](docs/reports/005_cost_optimization.md)):** built a real multi-seed/multi-instance measurement harness (`tools/bench.py`) and used it to stress-test at scale for the first time, which surfaced two previously-unknown Stage 3 concurrency bugs — a data-loss race (one healing thread's rejected move could silently erase another thread's legitimately-created route) and a crash (a route-slot buffer resize racing with an unlocked reader) — alongside five wasted-search-budget defects found by reading the code against FILO2 (a ruin seed drawn in the wrong index space wasting ~75% of Stage 2's budget at P=4; a rollback rescan capped at 10 routes; a hardcoded SA temperature ~11-32x too cold at large scale; three "seed every node" loops that silently only seeded the last 50 due to a ring-buffer cap). All fixed and independently measured: Tier-1 (170 runs across 34 instances x 5 seeds) improved -0.42% in cost with zero crashes/infeasibility (down from 1 crash + 6 infeasible/lost-node runs during stress testing); Lazio's cost gap to FILO2 improved to **+0.88%** (from +1.10%) while staying 2.5-3.1x faster. Also fixed Stage 5's O(N)-per-iteration full-route rescan (report 004's open question, half-answered — an O(N) `Solution` copy on every improving iteration remains open). Route counts already near-optimal (~1-1.3% over the bin-packing lower bound) so route minimization was evaluated and skipped.
+```
+Stage 0: Hilbert-curve partition + k-NN candidate lists
+   |
+Stage 1: per-chunk construction (MST+DFS or Clarke-Wright, --construction)
+   |
+T3/ROUTEMIN: per-chunk route-count minimization (ported from FILO2)
+   |
+Stage 2: per-chunk parallel ILS (ruin / recreate / local_search), P threads, no cross-chunk visibility
+   |
+Stage 3: graph-colored parallel boundary healing (disjoint chunk-pairs run concurrently, lock-free)
+   |
+Stage 4: route cleanup (dissolve near-empty routes where it doesn't cost anything)
+   |
+Stage 5: single-threaded polish over the full, un-partitioned graph
+```
 
-**Throughput, parallelism, and re-tuned budgets ([report 006](docs/reports/006_throughput_and_parallelism.md)):** fixed the throughput waste behind the remaining gap — a malloc+`std::sort` in the innermost loop of the entire solver (**-42% Tier-1 wall time**), a 24MB `Solution` struct copy on every improving iteration, a fully unbounded local-search sweep that sat entirely outside its own `--stageX-ms` time budget (measured overrunning a 20s budget by 56s in report 005; now bounds to within 0.5%), and a single-threaded kNN build parallelized over independent per-node queries. Found and fixed a real regression along the way via bisection — an arena "right-sizing" that accidentally removed a generous safety margin, causing capacity violations and heap corruption; the fix was reusing the same already-proven-generous bound Stage 3 already commits to, not computing a new "precise" one. Every throughput change validated **byte-identical cost** at Tier-1 (170/170 clean) — the same standard report 005 set. Re-tuning the resulting time-budget slack: Lazio's gap to FILO2 improved to **+0.74%** (from +0.88%) at **2.43x** speed; Valle-D-Aosta to **+1.63%** at **2.29x**. *(Speed figures superseded — see [report 008](docs/reports/008_verified_linux_benchmarking.md): corrected to **1.30x** at Lazio and **1.36x** at Valle-D-Aosta once FILO2 is built with the same compiler; the cost-gap figures above hold up closely, +0.77%/+1.51% under the corrected measurement.)* Neither instance beats FILO2 on cost yet. Re-measured Stage 3's mutex contention post-fixes — now 5.85% of runtime (was 32% pre-fixes) — and skipped de-serializing it as not worth the risk at that scale. Missing local-search neighborhoods (5 operators here vs. FILO2's 23) remain the leading candidate for the rest of the gap.
+Threads never touch another thread's chunk during Stage 1/2 — that's what makes them
+embarrassingly parallel. The cost of that isolation is chunk-boundary artifacts, which Stage 3
+(parallel, still no cross-thread locking on the hot path — chunk-pairs are edge-colored so a
+color class's pairs are pairwise disjoint) and Stage 5 (serial, whole graph, cheap because it's
+short) exist specifically to fix.
 
-**Algorithms and why it's fast ([report 007](docs/reports/007_algorithms_and_speed_analysis.md)):** a mentor-facing memo (no code changes) explaining what's behind the report 003/004 runtime results — attributes the speedup over FILO2 (see report 008 below for the corrected figure) to solving P independent chunks in parallel at equal per-thread search effort, algorithmically cheap O(1) search steps, a lock-free parallel boundary-repair phase (~6% of runtime, not a bottleneck), and report 006's removal of implementation overhead that was quietly taxing the other three. Also explains the remaining small cost gap (5 local-search moves vs FILO2's 23, frozen depot edges) as a scoped, understood next step.
+**Local search** (`local_search` in `Stage2_ILS.cpp`) dispatches 20 operators from one shared
+sweep: relocate/relocate2/relocate3 (+reversed variants), swap, 2-opt, 2-opt\*, SWAP\*,
+E21/E22/E31/E32/E33 (+reversed variants, FILO2's segment-exchange family), and a depth-2
+ejection chain (`eject2`). A depth-3 extension (`eject3`) is implemented and kept in the code
+but not dispatched — measured net-negative in multi-seed testing (see report 012, "Known open
+items").
 
-**⚠️ Verified-flags Linux rebenchmarking — corrects prior speed claims ([report 008](docs/reports/008_verified_linux_benchmarking.md)):** every FILO2 comparison up to this point compared **two different compilers** — our solver's Windows build used MSVC, FILO2's used g++ (MSYS2) — not just a missing flag on one side. Fixed by rebuilding both binaries under WSL with the same g++, `-O3 -march=native` verified directly in the compile invocation line, and re-running Valle-D-Aosta (5 seeds) and Lazio (3 seeds) for both solvers on the same machine. **Result: the cost-gap-to-FILO2 claims roughly hold up** (Valle-D-Aosta +1.51% vs. the previously reported +1.63%; Lazio +0.77% vs. +0.74%), **but the speed claims do not** — FILO2's fairly-measured wall time is 40-47% faster than the old single-run Windows figures suggested. The corrected speedup is **1.36x at Valle-D-Aosta and 1.30x at Lazio — not the 2.29x/2.43x reported in report 006**, and this supersedes every "2.3x-3.9x faster" figure quoted below and in reports 003/004/006/007 for timing purposes (their cost-gap figures are largely unaffected). Report 008 also makes BKS-relative gap a co-equal headline metric alongside the FILO2-relative gap (`tools/bench.py` was already computing it — it just hadn't been surfaced), and sets WSL/g++-verified builds as the standing benchmarking baseline going forward.
+**Core data structures**: `Solution` is a flattened linked list (`pred`/`succ` arrays) with
+`routeOf`, `routeHead`/`routeTail`/`routeLoad`, `routePosition`/`cumLoad` (both kept current in
+O(route length), never O(N)), and an incrementally-tracked `totalCost`. Each thread owns a
+`ThreadArena` (do/undo log for rollback, SWAP\*'s top-3-insertion cache, an `SVCCache` gating
+queue so idle nodes aren't re-evaluated every iteration) — no heap allocation happens in the
+search hot path.
 
-The N=2000 numbers below are kept for continuity with reports 001/002; see report 003 for the more representative large-scale results. **Note: this N=2000 FILO2 timing (114s) predates report 008's compiler-parity fix and has the same unverified-flags caveat — not yet re-measured under WSL.**
+## Building
 
-**Benchmark on `test_2000.vrp` (N=2000 nodes), rebuilt Release binary, re-run and independently re-verified 2026-08-09 (post report 006's fixes — numbers shifted slightly again from report 005 since `get_top3_insertions`'s rewrite (report 006 §1) uses a well-defined tie-break where `std::sort` never guaranteed one; only visible on this synthetic instance's degenerate ties, not on any of the 34 real CVRPLIB Tier-1 instances):**
-- **FILO2 (Baseline, Single-Threaded, 100,000 iterations):** 114s | Cost: 51,878 | *(real measurement — actual `filo2.exe` binary run against our exact instance, feasibility confirmed independently)*
-- **Our Solver (P=1, 100,000 ILS iterations):** ~50s (much faster than report 005's ~77-110s thanks to report 006's throughput fixes) | Cost: 54,860
-- **Our Solver (P=4, default config — 100,000 ILS iterations *per thread*, same as P=1):** ~24-41s (run-to-run variance observed) | Cost: 55,024
+Requires CMake and a C++17 compiler. **Benchmark/timing claims must be built this way** — see
+"A note on compilers" below.
 
-Both of our solver's default-config outputs (P=1 and P=4) pass full independent verification: every node visited exactly once, no route over capacity, and cost/route-count headers cross-checked against a from-scratch recomputation.
+```bash
+# WSL / Linux (the verified benchmarking baseline)
+cd src
+mkdir build_wsl && cd build_wsl
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . -j
+```
 
-**Verification:**
-An independent Python script (`verifier.py`) strictly verifies the C++ outputs (`results/final_solution.txt`): every node visited exactly once, no route exceeds capacity, Euclidean distances recomputed from scratch (not trusted from the solver), and the recomputed cost and route count are asserted to match the `Final Cost:`/`Num Routes:` header the solver reports, rather than just being printed alongside it.
+```powershell
+# Windows / MSVC (fine for day-to-day development, not for speed comparisons)
+cd src
+mkdir build; cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --config Release
+```
 
-**Bugs found and fixed:**
-- ~~Stale `Num Routes` header~~ ([report 001](docs/reports/001_p1_p4_filo2_baseline.md)) — **fixed**. `main.cpp` now counts and reports only the routes it actually writes, rather than trusting a stale allocated-slot count.
-- ~~Stage 3 incremental cost bookkeeping drift~~ ([report 001](docs/reports/001_p1_p4_filo2_baseline.md)) — **fixed**. Accepted healing moves never updated `totalCost`; each healing thread now accumulates its own delta and deltas are summed once per graph-coloring class after that class's threads join (no shared-scalar race).
-- ~~Capacity constraint violations under sustained optimization pressure~~ ([report 002](docs/reports/002_capacity_fix_and_rebalance.md)) — **fixed**. Root cause: `stage5_serial_polish` (`Stage2_ILS.cpp`) was missing a full route-info rescan between `recreate()` and `local_search()` that `stage2_ils` and `stage3_healing_ils_pass` both have, so `eval_2opt_star`'s capacity check could read stale `cumLoad[]` and pass an over-capacity move. Fixed by adding the missing rescan; verified via bisection instrumentation and independently reconfirmed feasible by `verifier.py`.
-- ~~Stage 3 data-loss race~~ ([report 005](docs/reports/005_cost_optimization.md)) — **fixed**. `stage3_healing_ils_pass` snapshotted `numRoutes` outside its mutex and unconditionally restored it on rejection; with multiple threads sharing one solution, one thread's rejection could silently erase another thread's legitimately-created route. Fixed by removing the snapshot/restore — `apply_undo_list` already fully unwinds a rejected iteration.
-- ~~Stage 3 crash (access violation)~~ ([report 005](docs/reports/005_cost_optimization.md)) — **fixed**. The route-slot pre-allocation (`inst.n + 100`) was a cushion, not a proven bound; exceeding it triggered a `vector::resize()` reallocation while another thread held an unlocked pointer into the same vector. Fixed by sizing to a provable bound (`2 * inst.n + 10000`).
-- ~~Five wasted-search-budget defects~~ ([report 005](docs/reports/005_cost_optimization.md)) — **fixed**. A ruin seed drawn in the wrong index space (wasting ~75% of Stage 2's budget at P=4), a 10-route rollback cap, a hardcoded SA temperature ~11-32x too cold at large scale, and three "seed every node" loops silently truncated to the last 50 by `SVCCache`'s ring-buffer capacity. All independently measured; see report 005 for the per-fix attribution table.
-- ~~Stage 5 arena undersized after Stage 4 compaction~~ ([report 006](docs/reports/006_throughput_and_parallelism.md)) — **fixed**. An arena "right-sizing" change read `globalSolution.routeHead.size()` *after* Stage 4's route compaction, giving Stage 5's own route-creating `recreate()` calls zero headroom to grow into — capacity violations and `STATUS_HEAP_CORRUPTION` crashes, found via bisection. Fixed by reusing the same provably-generous bound Stage 3 already commits to (`2 * inst.n + 10000`) instead of a point-in-time snapshot.
-- ~~`main.cpp` unconditionally included the MSVC-only `<crtdbg.h>`~~ ([report 008](docs/reports/008_verified_linux_benchmarking.md)) — **fixed**. Blocked building with any non-MSVC compiler at all (needed to build a verified-flags Linux binary for a fair FILO2 comparison). Guarded behind `#if defined(_MSC_VER)`; the Windows/MSVC build's behavior is unchanged.
-- ~~FILO2-vs-solver timing comparisons used two different compilers~~ ([report 008](docs/reports/008_verified_linux_benchmarking.md)) — **fixed**. Our solver's Windows build used MSVC; FILO2's Windows build actually used g++ (MSYS2) — every prior speed comparison compared codegen quality, not the solvers themselves. Fixed by rebuilding both under WSL with the same g++ and `-O3 -march=native` verified in the actual compile invocation line; corrected speedup is 1.30x-1.36x, not the previously reported 2.3-2.4x (cost-gap figures were largely unaffected).
+**A note on compilers**: MSVC on Windows silently ignores `-O3 -march=native`. Every FILO2
+comparison in this repo is run with both solvers rebuilt from scratch under WSL with the same
+g++ invocation, verified directly from the compile command line — not just trusted from
+CMake's summary — because an earlier round of benchmarking accidentally compared two different
+compilers' codegen instead of the two solvers (`docs/reports/008_verified_linux_benchmarking.md`).
+Building on Windows is fine for iterating on the code; don't use it to produce a timing claim.
 
-**Why P=4 is fast, and what the remaining gap looks like:** `Stage2_ILS.cpp`'s iteration budget is now `inst.n * 50` per thread (was `chunkSize * 50`), so P=4 threads do the *same absolute* search as P=1, just on smaller, cheaper 500-node sub-problems in parallel. P=4 is now within **+6.1% of FILO2** and **+0.3% of P=1** on cost, at 1.2-2x the speed of P=1 at N=2,000 (the real speed story is at scale — see the Valle-D-Aosta/Lazio numbers above, where the architecture's parallelism dividend actually shows up). At the large scales that matter, our solver beats FILO2 on speed by **1.3x (verified — see [report 008](docs/reports/008_verified_linux_benchmarking.md); the previously reported 2.3-2.4x compared two different compilers)** but is not yet cheaper — see [report 006](docs/reports/006_throughput_and_parallelism.md) for the current best account of where the remaining cost gap lives (missing neighborhoods relative to FILO2's 23 operators, and a frozen-depot-edge restriction, are the leading candidates) and [report 002 §5](docs/reports/002_capacity_fix_and_rebalance.md#5-whats-actually-causing-the-remaining-7-gap-and-what-to-do-about-it) for the original diagnosis this built on.
+## Running
 
----
+```bash
+./cvrp_parallel -f <path/to/instance.vrp> -p <num_threads> [flags...]
+```
 
-## Project Structure & Pipeline Architecture
+| Flag | Meaning | Default |
+|---|---|---|
+| `-f <path>` | CVRPLIB-format `.vrp` instance to load | (generates a synthetic 2000-node instance) |
+| `-p <n>` | number of parallel chunks/threads | 4 |
+| `--seed <n>` | RNG seed | — |
+| `--out <path>` | output solution path | `results/final_solution.txt` |
+| `--log <path>` | per-worker log path | — |
+| `--stage2-ms <n>` | Stage 2 (per-chunk ILS) time budget, ms | — (legacy iteration mode if unset) |
+| `--stage3-ms <n>` | Stage 3 (boundary healing) time budget, ms | — |
+| `--stage5-ms <n>` | Stage 5 (serial polish) time budget, ms | — |
+| `--iters-per-node <k>` | legacy mode only: per-thread iterations = `inst.n * k` | 50 |
+| `--max-iterations <n>` | legacy mode only: absolute per-thread iteration override | — |
+| `--construction <cw\|mst>` | Stage 1 construction heuristic | mst |
+| `--cw-neighbors <n>` | candidate-list width for Clarke-Wright construction | — |
+| `--routemin-iters <n>` | ROUTEMIN (route-count minimization) iteration budget; 0 disables it | 0 |
+| `--routemin-k <n>` | candidate-list width used by ROUTEMIN | — |
+| `--ruin-mult <x>` | scales ruin-walk length (`ceil(ln(chunkSize) * x)`) | 1.0 |
+| `--stage4-dissolve-frac <x>` | Stage 4's route-dissolution load threshold, as a fraction of `Q` | 0.2 |
 
-The pipeline executes in 5 discrete stages:
+Time-budget mode (`--stageN-ms`) is what every reported benchmark number in this repo uses —
+it gives every thread the same wall-clock allowance regardless of instance size, which the
+older iteration-count flags don't (see report 012, "Time-budget scheduling"). The legacy flags
+still work and are regression-tested, but are mainly useful for exact-iteration-count
+reproducibility, not for a real benchmark.
 
-### Stage 0: Partitioning & Setup (`Stage0_Partitioning.hpp`)
-- Reads the VRP instance and builds spatial $k$-Nearest Neighbor ($k$-NN) lists.
-- Partitions the $N$-node graph into $P$ geographic chunks by sorting nodes along a **Hilbert space-filling curve** and cutting the sorted order into $P$ equal-sized contiguous runs — not $k$-means (an earlier description in this file was wrong; see `Stage0_Partitioning.cpp`).
-- Identifies **boundary nodes** (nodes in one chunk that share $k$-NN edges with nodes in another chunk) and builds a `boundaryChunkPair` graph.
+**Example** (Lazio, the actual settled configuration behind this repo's headline result — see `docs/reports/010_can_this_architecture_beat_filo2.md`):
+```bash
+./cvrp_parallel -f data/instances/I/Lazio.vrp -p 4 --seed 1 \
+  --routemin-k 500 --routemin-iters 12000 \
+  --stage2-ms 45000 --stage3-ms 12000 --stage5-ms 45000
+```
+Note the low `-p`: this project's own benchmarking settled on `-p 4` even at ~1M customers — a
+higher `-p` was tried in earlier work (see reports 003/008) but isn't the current validated
+configuration for any of the three headline instances. Don't assume a higher `-p` is safe or
+beneficial without re-measuring; see "Memory" below.
 
-### Stage 1: Parallel Construction (`Stage1_Construction.cpp`)
-- Threads are spawned for each chunk ($P$ threads).
-- Each thread runs a Greedy Insertion heuristic restricted purely to the nodes assigned to its chunk, building an initial set of valid routes.
+## Verifying a result
 
-### Stage 2: Parallel Iterated Local Search (`Stage2_ILS.cpp`)
-- The threads continue operating strictly within their isolated chunks.
-- Each thread runs Simulated Annealing with Iterated Local Search (ILS) consisting of `ruin`, `recreate`, and exhaustive `local_search` (relocate, swap, 2-opt, SWAP*).
-- **$O(1)$ State Management:** To keep the inner loop incredibly fast, we avoid $O(N)$ route scans:
-  - `routePosition[]` and `cumLoad[]`: Dense integer arrays tracking node positions and cumulative route loads. Re-calculated in robust $O(L)$ time during `update_route_info` (where $L \le 50$, the route length).
-  - **Top-3 SWAP* Precomputation**: Precomputes the top-3 best insertion points for nodes before the inner $O(N^2)$ customer pair loop.
-  - **`SVCCache` Gating**: A ring buffer cache that tracks recently modified nodes. The local search only evaluates neighborhoods around nodes in the cache, preventing redundant scans of stagnant routes.
+Never trust a solver's self-reported cost — independently recompute it:
+```bash
+python src/verifier.py <instance.vrp> <solution_output>       # our solver's output
+python src/verify_filo2.py <instance.vrp> <filo2.sol>         # FILO2's native .sol format
+```
+Both recompute every edge cost from raw coordinates and check every customer is visited
+exactly once with no route over capacity, rather than trusting either solver's own printed
+header.
 
-### Stage 3: Parallel Merge Healing (`Stage3_MergeHealing.cpp`)
-- To fix the sub-optimal routes artificially created along the chunk boundaries, we perform Merge Healing.
-- **Concurrency Safety (Graph Coloring):** The `boundaryChunkPair` graph is edge-colored. All chunk-pairs within a single color class are guaranteed to be mutually disjoint. Threads are mapped to these disjoint pairs, allowing them to concurrently perform ILS on the boundaries without any data races or locking overhead.
-- Note: Stage 3 `stage3_healing_ils_pass` relies on greedy descent in-place rather than making full `Solution` object copies, successfully avoiding C++ vector memory data races.
-
-### Stage 4 & 5: Cleanup and Serial Polish (`Stage2_ILS.cpp` & `main.cpp`)
-- Stage 4 performs internal memory cleanups.
-- Stage 5 runs a brief, single-threaded serial polish across the entire un-partitioned $N$-node graph to smooth out any remaining global inefficiencies that the chunked boundaries missed.
-
----
-
-## Codebase Map
+## Codebase map
 
 | File | Purpose |
-|------|---------|
-| `main.cpp` | Entry point. Orchestrates the 5 stages, manages the timing profilers, and outputs to `results/final_solution.txt`. |
-| `Types.hpp` | Defines base types (`NodeId`, `Cost`, `Solution` struct containing linked-list arrays `pred`, `succ`, and dense-state arrays). |
-| `ThreadArena.hpp` | Defines the lock-free memory arenas (`DoUndoEntry`, `SVCCache`, `Top3Insertions`) used by individual threads to avoid heap allocations during search. |
-| `Stage0_Partitioning.hpp` | Hilbert-curve chunking and $k$-NN list generation. |
-| `Stage1_Construction.cpp` | Greedy route construction. |
-| `Stage2_ILS.cpp` | Core $O(1)$ state evaluation logic (`eval_relocate`, `eval_swap_star`), `apply_undo_list` for rollback, `ruin`/`recreate`, and the main SA loop. |
-| `Stage3_MergeHealing.cpp` | Graph coloring and disjoint thread scheduling for boundary healing. |
-| `verifier.py` | Independent Python script to validate CVRP constraints and recompute total cost. |
-| `run_loop.ps1` | PowerShell stress-test script that runs the solver sequentially to hunt for non-deterministic thread behavior. |
-| `run_p1.ps1` | PowerShell script to run the single-threaded baseline (`-p 1`). |
+|---|---|
+| `main.cpp` | Entry point: CLI parsing, orchestrates all 6 stages, writes `results/final_solution.txt`. |
+| `Types.hpp` | `NodeId`, `Cost`, and the `Solution` struct (linked-list + dense-state arrays). |
+| `ThreadArena.hpp` | Per-thread scratch: do/undo log, SWAP\* top-3 cache, `SVCCache`. |
+| `Stage0_Partitioning.{hpp,cpp}` | Hilbert-curve chunking, k-NN candidate list construction. |
+| `Stage1_Construction.{hpp,cpp}` | Per-chunk MST+DFS / Clarke-Wright construction. |
+| `Stage2_ILS.{hpp,cpp}` | The bulk of the solver: all 20 `eval_*`/`apply_*` local-search operators, `ruin`/`recreate`, `local_search`, `stage2_ils`, ROUTEMIN (`stage1_5_routemin`), Stage 5's `stage5_serial_polish`. |
+| `Stage3_MergeHealing.{hpp,cpp}` | Boundary-pair graph coloring and the parallel healing pass. |
+| `Stage4_5_CleanupPolish.{hpp,cpp}` | Stage 4 route cleanup. |
+| `Worker.{hpp,cpp}` | Per-thread orchestration (Stage 1 -> ROUTEMIN -> Stage 2), called from `main.cpp`. |
+| `VrpParser.{hpp,cpp}` | CVRPLIB `.vrp` file reader. |
+| `verifier.py` / `verify_filo2.py` | Independent cost/feasibility checkers, see above. |
+| `tools/bench.py`, `tools/compare_bench.py`, `tools/score_sol.py` | Multi-seed benchmarking harness, BKS/FILO2 comparison scoring. |
 
----
+## Documentation
 
-## Notes for Claude Code (AI Assistant Context)
-If you are taking over this project, please note the following architectural invariants:
-1. **Never use full `Solution` copies in parallel threads**: Reverting to `bestSol = globalSolution` inside concurrent execution spaces (like Stage 3) will immediately trigger undefined behavior data races due to `std::vector` internal pointer mutations.
-2. **`apply_undo_list` design**: The `apply_undo_list` logic in `Stage2_ILS.cpp` handles rollback by flipping `INSERT` logs to `REMOVE` actions (and vice-versa) on the `pred`/`succ` pointers. Crucially, it then aggregates the modified routes and calls `update_route_info()` to regenerate the `routePosition` and `cumLoad` arrays in $O(L)$ time. Do not attempt to reverse these dense integer arrays manually using delta offsets; the current $O(L)$ full-rebuild is mathematically safer and microsecond-fast.
-3. **Stage 5 capacity crash**: Stage 5 previously crashed because the `ThreadArena` arrays (like `route_visited_iter`) were sized to `N+1`. Stage 3 pre-allocates an expanded route limit (currently `2*N+10000`, see report 005 — this must be a *provable* bound, not a cushion: `local_search`'s evaluation phase reads `routeHead`/`routeTail`/`routeLoad` without the mutex by design, so if `recreate()`'s route creation ever needs to actually reallocate one of those vectors while another thread holds an unlocked pointer into it, that's a real crash, confirmed in report 005). Ensure any new `ThreadArena` structures accommodate the expanded route capacity.
-4. **`numRoutes` snapshot/restore is only safe where a `Solution` is thread-local.** `stage2_ils` (per-chunk `Solution`) and `stage5_serial_polish` (single-threaded) both snapshot `numRoutes` before an iteration and restore it on rejection — safe there. `stage3_healing_ils_pass` shares one `globalSolution` across multiple concurrently-running chunk-pair threads and deliberately does **not** do this (report 005): restoring a process-wide counter from a thread-local snapshot races with any other thread's concurrent route creation and can silently erase its work. Do not "fix" this by adding the snapshot/restore back to Stage 3 — `apply_undo_list` already correctly unwinds a rejected iteration's own changes, leaving any route it created merely empty (a harmless, already-handled dead slot), which is the intended behavior there.
-4. **Compiler Support**: MSVC on Windows does not support `-fsanitize=thread` (TSan). Concurrency integrity is verified empirically via `run_loop.ps1` (expecting bit-identical costs across 20+ runs).
+- **[`docs/reports/012_architecture_overview.md`](docs/reports/012_architecture_overview.md)** — the full standalone architecture deep-dive: every stage in detail, the complete operator catalog, verification/benchmarking methodology, and an explicit "what's original here vs. what's a port of FILO2" section.
+- **[`docs/reports/011_short_summary.md`](docs/reports/011_short_summary.md)** — a 2-page summary of what changed in the most recent work pass and its measured effect.
+- **[`docs/reports/010_can_this_architecture_beat_filo2.md`](docs/reports/010_can_this_architecture_beat_filo2.md)** — the detailed, still-growing research log behind the current results table above.
+- **[`docs/reports/`](docs/reports/)** — the full numbered history (001-010) this project's results were built up through. Kept for provenance: several source-code comments cite specific reports/phases by name as the record of *why* a non-obvious piece of code is the way it is (e.g. `Stage2_ILS.cpp`'s SA temperature, `ThreadArena.hpp`'s cap sizing) — grep for `docs/reports/` in `src/` before removing any of them. Most readers taking over this project should start with 012 or 011 above, not this log.
+
+## Notes for future maintainers (architectural invariants)
+
+1. **Never use full `Solution` copies inside concurrently-running threads.** Reverting via
+   `bestSol = globalSolution` inside Stage 3 (which shares one `globalSolution` across threads)
+   causes real data races on `std::vector`'s internal pointers. Per-chunk `Solution`s in Stage 2
+   are thread-local and fine to copy.
+2. **`apply_undo_list` (`Stage2_ILS.cpp`) rolls back by flipping logged `INSERT`/`REMOVE`
+   entries on the `pred`/`succ` pointers**, then calls `update_route_info()` to rebuild
+   `routePosition`/`cumLoad` in O(route length). Don't try to reverse those dense arrays via
+   manual delta offsets — the full O(L) rebuild is both simpler and fast enough (routes are
+   short) that there's no real performance case for avoiding it.
+3. **Route-slot capacity must be a provable bound, not a cushion.** `local_search`'s evaluation
+   phase reads `routeHead`/`routeTail`/`routeLoad` without a lock by design; if `recreate()`
+   ever needs to actually reallocate one of those vectors while another thread holds an
+   unlocked pointer into it, that's a real crash (this happened twice historically — a stale
+   `N+1` sizing and later an under-sized "right-sized" arena). The current bound is
+   `2 * inst.n + 10000`, used consistently by Stage 3, Stage 5's arena, and anything else that
+   creates routes. Any new per-route array must use the same bound.
+4. **`numRoutes` snapshot/restore-on-rejection is only safe for a thread-local `Solution`.**
+   `stage2_ils` and `stage5_serial_polish` both do it safely. `stage3_healing_ils_pass` shares
+   one `globalSolution` across concurrently-running threads and deliberately does **not** —
+   restoring a shared counter from a thread-local snapshot would race with another thread's
+   concurrent route creation and silently erase its work. `apply_undo_list` already unwinds a
+   rejected iteration correctly on its own (any route it created is just left empty, which is
+   harmless); don't "fix" this by adding the snapshot/restore back to Stage 3.
+5. **MSVC doesn't support ThreadSanitizer.** Concurrency correctness here is checked
+   empirically: `run_loop.ps1` runs the solver repeatedly at a fixed seed and expects
+   bit-identical cost every time; any divergence means a race, not float non-determinism (the
+   solver has none — costs are integer/deterministic given a seed).
+
+## Honest scope note
+
+The local-search operators and ROUTEMIN are close ports of FILO2's published techniques,
+adapted to this codebase's data structures. What's original here is the parallel
+partition/heal architecture itself, the specific scoping decisions in the operators ported
+into it (e.g. the ejection chain's depth-2 cutoff), and the empirical scale-dependent
+characterization in the results table above (the finding that Lazio and Lombardia, similar
+scale, similar architecture, land on opposite sides of a win/loss is not something this
+project set out looking for). See report 012's "What's original here, and what isn't" section
+for the full accounting, and report 011's closing note for where this stands relative to a
+publishable research contribution.
