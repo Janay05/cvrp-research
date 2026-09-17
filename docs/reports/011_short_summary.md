@@ -65,6 +65,14 @@ compared (a Hilbert space-filling curve, minimum-spanning-tree-based clustering,
 concentric angular sweep from the depot), and dispatching each resulting sub-problem to
 HGS-CVRP did successfully produce a routed solution for every sub-problem.
 
+Beyond the boundary-quality gap described below, there was a second, simpler reason this
+approach was dropped: **runtime.** Its per-sub-problem results were produced under a fixed
+40-45 minute time cap per HGS-CVRP run — multiple orders of magnitude slower than this
+project's current architecture, which produces its headline results (see the standing table
+below) in single-digit minutes across the same real-world instance sizes. That gap alone would
+have made the older approach impractical at the scale this project targets, independent of the
+unresolved boundary issue.
+
 **What that approach never finished is exactly what this project's Stage 3 is.** Its codebase
 includes a designed-but-never-implemented `BoundaryOptimizer` component, explicitly intended to
 "resolve stragglers across boundary lines" — the same chunk-boundary quality loss described
