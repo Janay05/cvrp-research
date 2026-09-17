@@ -1,5 +1,7 @@
 # Parallel Chunked CVRP Solver
 
+**Author:** Janay Bhanushali · [github.com/Janay05](https://github.com/Janay05) · [MIT licensed](LICENSE)
+
 A multi-threaded C++ solver for the Capacitated Vehicle Routing Problem (CVRP). Instead of
 running one search over the whole instance, it partitions the graph geographically into
 independent chunks, runs iterated local search on each chunk in parallel, then heals the
@@ -131,6 +133,22 @@ higher `-p` was tried in earlier work (see reports 003/008) but isn't the curren
 configuration for any of the three headline instances. Don't assume a higher `-p` is safe or
 beneficial without re-measuring; see "Memory" below.
 
+## Memory
+
+Each worker thread's scratch memory (`ThreadArena`) is sized against the *full* instance, not
+its chunk share — so peak memory scales with `P` (thread count) at a given instance size, not
+just with instance size alone. Measured directly (`/usr/bin/time -v`, Lazio, ~1M customers,
+`-p 4`, the real settled config above): **9.29 GB peak resident memory**, about 23% more than
+FILO2's 7.17 GB on the identical instance and machine. At `-p 16` on the same instance this
+reliably exceeds a 10GB memory ceiling and crashes rather than degrading gracefully — confirmed
+directly, not theoretical.
+
+**Practical implication:** running the three headline instances (all ~180K-1M customers) at
+their validated configs wants **10GB+ of available RAM**; on a tighter budget, use a lower `-p`
+first rather than a shorter time budget. This is a known, understood cost of the per-thread
+arena design (see `docs/reports/012_architecture_overview.md`, "Known open items") — not
+something a config flag currently works around.
+
 ## Verifying a result
 
 Never trust a solver's self-reported cost — independently recompute it:
@@ -192,9 +210,16 @@ header.
    rejected iteration correctly on its own (any route it created is just left empty, which is
    harmless); don't "fix" this by adding the snapshot/restore back to Stage 3.
 5. **MSVC doesn't support ThreadSanitizer.** Concurrency correctness here is checked
-   empirically: `run_loop.ps1` runs the solver repeatedly at a fixed seed and expects
-   bit-identical cost every time; any divergence means a race, not float non-determinism (the
-   solver has none — costs are integer/deterministic given a seed).
+   empirically: `run_loop.ps1` runs the solver repeatedly at a fixed seed. **In legacy
+   iteration-count mode, this must be bit-identical every time** — any divergence there means a
+   real race, not float non-determinism (the solver has none — costs are integer/deterministic
+   given a seed). **In time-budget mode (`--stageN-ms`, what every real benchmark uses), small
+   run-to-run cost variance is expected and not a bug**: Stage 5's polish loop stops on elapsed
+   wall-clock time, so ordinary scheduling jitter changes how many iterations complete.
+   Confirmed directly (2026-09): 3 repeated runs at a fixed seed in time-budget mode gave
+   slightly different final costs, while the same seed in legacy mode gave the exact same cost
+   3/3 times — both outputs were fully feasible in every case. If you need bit-identical output
+   for debugging, use legacy mode (`--max-iterations`), not `--stageN-ms`.
 
 ## Honest scope note
 
