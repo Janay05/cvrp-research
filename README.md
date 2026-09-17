@@ -11,6 +11,16 @@ CVRP solver, on FILO2's own Italian-region benchmark instances (Valle-D'Aosta, L
 Lombardia — 180K to ~1M customers), so every comparison below is against numbers that
 solver's own paper reports, on the instances it was designed and tuned for.
 
+**An earlier approach was tried and set aside before this one**: partition the instance
+geographically (as here), but dispatch each region to [HGS-CVRP](https://github.com/vidalt/HGS-CVRP)
+as an external per-region solver rather than running a custom in-process search. That work is
+kept separately at [github.com/Janay05/Partitioned-Hgs](https://github.com/Janay05/Partitioned-Hgs) —
+it's not mixed into this repo, but the connection matters: that codebase includes a
+designed-but-never-implemented boundary-reconciliation component, and this repo's Stage 3
+(boundary healing, below) is effectively a completed, working version of that same idea, built
+independently. See `docs/reports/011_short_summary.md`, "What came before this," for the fuller
+account of why that approach was set aside.
+
 ## Current results, at equal wall clock
 
 | Instance | Scale | Result |

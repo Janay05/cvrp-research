@@ -47,6 +47,34 @@ about 1 million customers each) — are FILO2's own published benchmark set, cho
 deliberately so every result below is a direct comparison against a specific, credible,
 already-published baseline, on the exact instances it was designed and tuned for.
 
+## What came before this, and how it led here
+
+Before settling on the architecture above, an earlier approach was tried and set aside:
+partition the instance the same way (geographically), but instead of running a custom search
+on each region, dispatch each one as an independent sub-problem to
+[HGS-CVRP](https://github.com/vidalt/HGS-CVRP) (Vidal et al.'s Hybrid Genetic Search solver) —
+essentially, use an existing strong solver as the per-region engine rather than writing one.
+That work is kept in its own repository,
+[Partitioned-Hgs](https://github.com/Janay05/Partitioned-Hgs), rather than mixed into this one.
+
+The motivation was concrete: run directly (unpartitioned) on the same large real-world
+instances used here, HGS-CVRP ran out of memory outright on every instance above roughly
+100,000 customers — partitioning wasn't a nice-to-have there, it was the only way to get an
+answer at all at that scale. Three different geographic partitioning strategies were built and
+compared (a Hilbert space-filling curve, minimum-spanning-tree-based clustering, and a
+concentric angular sweep from the depot), and dispatching each resulting sub-problem to
+HGS-CVRP did successfully produce a routed solution for every sub-problem.
+
+**What that approach never finished is exactly what this project's Stage 3 is.** Its codebase
+includes a designed-but-never-implemented `BoundaryOptimizer` component, explicitly intended to
+"resolve stragglers across boundary lines" — the same chunk-boundary quality loss described
+above — but it was never wired into the pipeline, so partitioning's boundary cost was never
+actually addressed there. This project's parallel boundary-healing phase is, in effect, a
+completed and working version of that same unfinished idea, built from scratch rather than
+picking up that code directly — along with the separate decision to replace "dispatch to an
+external solver process per region" with an in-process custom search, which is what makes the
+tight, per-region time-budget control this project relies on possible in the first place.
+
 ## Result: the trade-off pays off, but not uniformly, and the reason why is the interesting part
 
 Both solvers were given the same amount of real time to work with, then compared on the
